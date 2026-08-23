@@ -1,0 +1,17 @@
+FROM node:20-bookworm-slim
+
+WORKDIR /app
+
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+
+COPY package*.json ./
+COPY prisma/ ./prisma/
+RUN npm install --no-audit --no-fund
+
+COPY . .
+
+RUN npm run prisma:generate
+
+EXPOSE 4000
+
+CMD ["npm", "run", "start:dev", "--", "--host", "0.0.0.0", "--port", "4000"]

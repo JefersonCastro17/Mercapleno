@@ -1,0 +1,68 @@
+services:
+  db:
+    build:
+      context: .
+      dockerfile: Dockerfile.db
+    environment:
+      MARIADB_ROOT_PASSWORD: root123
+      MARIADB_DATABASE: mercapleno
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -uroot -proot123 --silent || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ../mercapleno-backend
+      dockerfile: Dockerfile.dev
+    env_file:
+      - ../mercapleno-backend/.env.docker
+    environment:
+      PORT: 4000
+      DATABASE_URL: mysql://root:root123@db:3306/mercapleno
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: root123
+      DB_NAME: mercapleno
+      JWT_SECRET: yogui
+      JWT_EXPIRES_IN: 2h
+      ADMIN_ROLE_ID: 1
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_SECURE: false
+      SMTP_USER: mercapleno@gmail.com
+      SMTP_PASS: bjco veem vzie ubda
+      SMTP_FROM_EMAIL: mercapleno@gmail.com
+      APP_NAME: mercapleno
+      EMAIL_VERIFICATION_TTL_MIN: 15
+      LOGIN_2FA_TTL_MIN: 10
+      PASSWORD_RESET_TTL_MIN: 15
+      INTERNAL_API_KEY: mercapleno123456789
+      LOW_STOCK_THRESHOLD: 5
+      CORS_ORIGINS: http://localhost:3000,http://localhost:5173,http://127.0.0.1:5173
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "4000:4000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ../Propio
+      dockerfile: Dockerfile.dev
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+    restart: unless-stopped
+
+volumes:
+  mysql_data:

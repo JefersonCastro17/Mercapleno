@@ -1,0 +1,3 @@
+FROM mariadb:10.11
+
+COPY mercapleno.sql /docker-entrypoint-initdb.d/mercapleno.sql

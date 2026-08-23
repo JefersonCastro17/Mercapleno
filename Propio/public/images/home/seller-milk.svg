@@ -1,0 +1,9 @@
+<svg width="280" height="220" viewBox="0 0 280 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="280" height="220" rx="28" fill="#F4F8FF"/>
+  <rect x="88" y="56" width="54" height="116" rx="20" fill="#FFFFFF"/>
+  <rect x="98" y="44" width="34" height="24" rx="10" fill="#0066CC"/>
+  <rect x="154" y="72" width="44" height="100" rx="18" fill="#FFFFFF"/>
+  <circle cx="176" cy="126" r="18" fill="#F9B300"/>
+  <path d="M52 170C52 143.49 73.4903 122 100 122H194C220.51 122 242 143.49 242 170V178H52V170Z" fill="#E7F0FF"/>
+  <text x="58" y="40" fill="#0F4F96" font-family="Arial, sans-serif" font-size="22" font-weight="700">Lacteos</text>
+</svg>

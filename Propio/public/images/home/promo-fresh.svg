@@ -1,0 +1,12 @@
+<svg width="520" height="280" viewBox="0 0 520 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="520" height="280" rx="28" fill="#F3FAE7"/>
+  <circle cx="406" cy="84" r="58" fill="#0066CC" fill-opacity="0.12"/>
+  <rect x="54" y="74" width="126" height="126" rx="34" fill="#FFFFFF"/>
+  <circle cx="116" cy="137" r="42" fill="#FF6F61"/>
+  <rect x="176" y="122" width="44" height="74" rx="18" fill="#68A83D"/>
+  <circle cx="255" cy="143" r="34" fill="#F9B300"/>
+  <circle cx="311" cy="151" r="28" fill="#68A83D"/>
+  <path d="M346 170C346 146.804 364.804 128 388 128H424C447.196 128 466 146.804 466 170V194H346V170Z" fill="#FFFFFF"/>
+  <text x="54" y="50" fill="#0F4F96" font-family="Arial, sans-serif" font-size="28" font-weight="700">Frutas y verduras</text>
+  <text x="54" y="236" fill="#627187" font-family="Arial, sans-serif" font-size="20">seleccion fresca para tu semana</text>
+</svg>

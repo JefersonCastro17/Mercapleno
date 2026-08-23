@@ -1,0 +1,239 @@
+:root {
+  --proveedores-primary: #0B4A8B;
+  --proveedores-danger: #dc2626;
+  --proveedores-success: #22c55e;
+  --proveedores-bg: #f1f5f9;
+}
+
+.proveedores-page {
+  min-height: 100vh;
+  background: var(--proveedores-bg);
+  padding: 24px;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.proveedores-shell {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+.proveedores-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.proveedores-overline {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--proveedores-primary);
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.proveedores-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.proveedores-toolbar {
+  margin-bottom: 16px;
+}
+
+.proveedores-input {
+  width: 100%;
+  max-width: 360px;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+}
+
+.proveedores-table-wrap {
+  overflow-x: auto;
+}
+
+.proveedores-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.proveedores-table th,
+.proveedores-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+}
+
+.proveedores-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-weight: 600;
+  margin-right: 6px;
+}
+
+.proveedores-btn--primary {
+  background: var(--proveedores-primary);
+  color: white;
+}
+
+.proveedores-btn--secondary {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.proveedores-btn--danger {
+  background: var(--proveedores-danger);
+  color: white;
+}
+
+.proveedores-btn--ghost {
+  background: #f8fafc;
+  color: #334155;
+  border: 1px solid #d1d5db;
+}
+
+.proveedores-state,
+.proveedores-empty {
+  padding: 18px;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #475569;
+}
+
+.proveedores-state--error {
+  color: var(--proveedores-danger);
+  background: #fef2f2;
+}
+
+.proveedores-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  color: white;
+  font-weight: 700;
+  z-index: 2100;
+}
+
+.proveedores-toast.success {
+  background: var(--proveedores-success);
+}
+
+.proveedores-toast.error {
+  background: var(--proveedores-danger);
+}
+
+.proveedores-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 2000;
+}
+
+.proveedores-modal {
+  background: white;
+  border-radius: 12px;
+  width: min(480px, 100%);
+  padding: 20px;
+}
+
+.proveedores-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.proveedores-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.proveedores-modal__body input {
+  padding: 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+.proveedores-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+/* ── Botones nuevos ── */
+.proveedores-btn--warning {
+  background: #f59e0b;
+  color: white;
+  border: none;
+}
+.proveedores-btn--warning:hover:not(:disabled) { background: #d97706; }
+
+.proveedores-btn--success {
+  background: #10b981;
+  color: white;
+  border: none;
+}
+.proveedores-btn--success:hover:not(:disabled) { background: #059669; }
+
+.proveedores-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ── Celda de acciones ── */
+.proveedores-cell-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ── Badges de estado ── */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.badge--active { background: #d1fae5; color: #065f46; }
+.badge--disabled { background: #fee2e2; color: #991b1b; }
+
+/* ── Chips de estadísticas ── */
+.proveedores-stats {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.stat-chip {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  background: #f1f5f9;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  user-select: none;
+}
+.stat-chip:hover { background: #e2e8f0; }
+.stat-chip--green { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
+.stat-chip--red { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+

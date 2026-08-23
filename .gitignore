@@ -1,0 +1,26 @@
+# Node / NestJS (Backend)
+**/node_modules/
+**/dist/
+**/.npm
+**.log
+
+# Flutter (Mobile)
+**/flutter/.dart_tool/
+**/flutter/.idea/
+**/flutter/.packages
+**/flutter/.pub-cache/
+**/flutter/.pub/
+**/flutter/build/
+
+# Cypress (E2E)
+**/cypress/screenshots/
+**/cypress/videos/
+
+# SonarQube & Quality
+.scannerwork/
+.sonar/
+
+# IDEs & System
+.DS_Store
+Thumbs.db
+*.tmp

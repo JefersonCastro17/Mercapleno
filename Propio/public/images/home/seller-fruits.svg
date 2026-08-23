@@ -1,0 +1,8 @@
+<svg width="280" height="220" viewBox="0 0 280 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="280" height="220" rx="28" fill="#F4F9FF"/>
+  <circle cx="88" cy="116" r="34" fill="#FF6F61"/>
+  <circle cx="144" cy="108" r="30" fill="#F9B300"/>
+  <circle cx="192" cy="120" r="28" fill="#68A83D"/>
+  <path d="M58 148C58 128.118 74.1178 112 94 112H190C209.882 112 226 128.118 226 148V164H58V148Z" fill="#FFFFFF"/>
+  <text x="28" y="40" fill="#0F4F96" font-family="Arial, sans-serif" font-size="22" font-weight="700">Canasta fresca</text>
+</svg>

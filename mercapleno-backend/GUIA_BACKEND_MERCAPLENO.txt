@@ -1,0 +1,511 @@
+MERCAPLENO BACKEND - GUIA COMPLETA DE CARPETAS, ARCHIVOS Y BLOQUES DE CODIGO
+=========================================================================
+
+Fecha: 2026-02-25
+Proyecto backend: mercapleno-backend
+Proyecto frontend relacionado: mercapleno-react
+
+
+1) VISTA GENERAL DE ARQUITECTURA
+--------------------------------
+Este backend esta hecho en NestJS con arquitectura modular.
+
+Patron base por modulo:
+- controller: recibe HTTP
+- service: implementa logica de negocio
+- dto: valida payload de entrada
+- module: registra controller/service en Nest
+
+Capas de datos:
+- Prisma ORM: usado en auth, users-admin, products
+- mysql2 pool: usado en inventory, sales, reports (consultas SQL y transacciones)
+
+Seguridad:
+- JWT guard global (todas las rutas protegidas por defecto)
+- rutas publicas solo con decorador @Public()
+
+
+2) RAIZ DEL PROYECTO (CARPETAS Y ARCHIVOS)
+-------------------------------------------
+Carpetas:
+- src/: codigo fuente principal NestJS
+- prisma/: esquema Prisma
+- dist/: compilado TypeScript -> JavaScript
+- node_modules/: dependencias npm
+
+Archivos raiz:
+- .env
+  Que hace:
+  - variables reales locales (PORT, DB, JWT, SMTP)
+  Bloques:
+  - conexion DB
+  - seguridad JWT
+  - correo SMTP
+
+- .env.example
+  Que hace:
+  - plantilla de variables para clonar proyecto
+
+- .gitignore
+  Que hace:
+  - ignora dist, node_modules, .env
+
+- nest-cli.json
+  Que hace:
+  - configuracion del CLI de Nest (sourceRoot, compilacion)
+
+- package.json
+  Que hace:
+  - scripts npm y dependencias
+  Scripts clave:
+  - npm run start
+  - npm run start:dev
+  - npm run build
+  - npm run prisma:generate
+
+- package-lock.json
+  Que hace:
+  - lock exacto de versiones npm
+
+- tsconfig.json
+  Que hace:
+  - reglas TypeScript globales
+
+- tsconfig.build.json
+  Que hace:
+  - reglas TS para build de produccion
+
+- README.md
+  Que hace:
+  - doc general del proyecto
+
+
+3) SRC - EXPLICACION ARCHIVO POR ARCHIVO
+-----------------------------------------
+
+3.1) CORE
+----------
+- src/main.ts
+  Funcion:
+  - bootstrap de la aplicacion Nest
+  Bloques de codigo:
+  1. Crear app:
+     const app = await NestFactory.create(AppModule)
+  2. Prefijo global API:
+     app.setGlobalPrefix('api')
+     Resultado: todas las rutas quedan en /api/...
+  3. CORS:
+     app.enableCors()
+  4. ValidationPipe global:
+     - whitelist: elimina campos no permitidos
+     - forbidNonWhitelisted: rechaza campos extras
+     - transform: convierte tipos automatico
+  5. Swagger:
+     - genera docs en /api/docs
+  6. Listen:
+     - usa envs.port
+
+- src/app.module.ts
+  Funcion:
+  - modulo raiz que conecta todos los modulos
+  Bloques:
+  1. imports: MysqlModule, PrismaModule, AuthModule, etc.
+  2. providers globales:
+     - APP_GUARD -> JwtAuthGuard
+     Esto protege globalmente la API
+
+
+3.2) CONFIG
+------------
+- src/config/envs.ts
+  Funcion:
+  - carga .env, valida con Joi y exporta objeto envs
+  Bloques:
+  1. interface EnvVars: define tipos esperados
+  2. schema Joi: validaciones + defaults
+  3. validate(process.env): falla si config invalida
+  4. buildDatabaseUrl():
+     - usa DATABASE_URL si existe
+     - o construye mysql://user:pass@host:port/db
+  5. export const envs: objeto final para todo el app
+
+- src/config/index.ts
+  Funcion:
+  - reexport de envs para import simple
+
+
+3.3) BASE DE DATOS (MYSQL DIRECTO)
+-----------------------------------
+- src/common/database/mysql.module.ts
+  Funcion:
+  - hace global el MysqlService
+
+- src/common/database/mysql.service.ts
+  Funcion:
+  - administra pool mysql2
+  Bloques:
+  1. constructor: createPool con host/port/user/pass/db
+  2. query(sql, params): helper para ejecutar SQL
+  3. getConnection(): devuelve conexion para transacciones
+  4. onModuleDestroy(): cierra pool al apagar app
+
+
+3.4) PRISMA
+------------
+- src/prisma/prisma.module.ts
+  Funcion:
+  - hace global el PrismaService
+
+- src/prisma/prisma.service.ts
+  Funcion:
+  - extiende PrismaClient
+  Bloques:
+  1. constructor: configura datasource db.url con envs.databaseUrl
+  2. onModuleInit(): intenta connect
+     Nota actual:
+     - si MySQL no responde, loggea error y no tumba app al inicio
+  3. onModuleDestroy(): disconnect
+
+
+3.5) AUTH
+----------
+- src/auth/auth.module.ts
+  Funcion:
+  - registra JWT/Passport + controller/service auth
+
+- src/auth/auth.controller.ts
+  Funcion:
+  - define endpoints HTTP de auth
+  Bloques (rutas):
+  - POST /api/auth/register
+  - POST /api/auth/login
+  - POST /api/auth/verify-email
+  - POST /api/auth/resend-verification
+  - POST /api/auth/request-password-reset
+  - POST /api/auth/reset-password
+  - POST /api/auth/logout
+
+- src/auth/auth.service.ts
+  Funcion:
+  - logica auth completa
+  Bloques:
+  1. helpers privados:
+     - generateCode() (codigo 6 digitos)
+     - hashCode() SHA256
+     - buildExpiresAt()
+     - isExpired()
+  2. register():
+     - valida duplicados email/doc
+     - hash password bcrypt
+     - crea usuario
+     - crea codigo verificacion hash
+     - intenta enviar email
+  3. login():
+     - busca usuario
+     - compara password
+     - exige email_verified
+     - genera JWT
+  4. verifyEmail():
+     - valida codigo y expiracion
+     - marca correo verificado
+  5. resendVerification():
+     - regenera codigo y envia correo
+  6. requestPasswordReset():
+     - genera codigo de recuperacion
+  7. resetPassword():
+     - valida codigo + expiracion
+     - guarda nueva password hash
+  8. logout():
+     - respuesta de cierre lado cliente
+
+- src/auth/guards/jwt-auth.guard.ts
+  Funcion:
+  - guard global JWT
+  Bloque:
+  - si ruta tiene @Public() => permite sin token
+  - si no => exige Bearer JWT
+
+- src/auth/strategies/jwt.strategy.ts
+  Funcion:
+  - valida payload JWT y crea user auth del request
+
+- src/auth/decorators/public.decorator.ts
+  Funcion:
+  - marca endpoint como publico
+
+- src/auth/decorators/current-user.decorator.ts
+  Funcion:
+  - extrae req.user en controllers
+
+- src/auth/interfaces/auth-user.interface.ts
+  Funcion:
+  - tipo del usuario autenticado (id, id_rol, email)
+
+DTOs auth:
+- src/auth/dto/login.dto.ts
+- src/auth/dto/register.dto.ts
+- src/auth/dto/verify-email.dto.ts
+- src/auth/dto/resend-verification.dto.ts
+- src/auth/dto/request-password-reset.dto.ts
+- src/auth/dto/reset-password.dto.ts
+  Funcion comun:
+  - validar entradas con class-validator
+
+
+3.6) EMAIL
+-----------
+- src/email/email.module.ts
+  Funcion:
+  - modulo global de correo
+
+- src/email/email.service.ts
+  Funcion:
+  - envia correos con nodemailer
+  Bloques:
+  1. getTransporter():
+     - valida SMTP_USER/SMTP_PASS
+     - valida SMTP_HOST o SMTP_SERVICE
+  2. fromAddress():
+     - arma remitente
+  3. sendVerificationCode()
+  4. sendPasswordResetCode()
+
+
+3.7) USERS-ADMIN
+-----------------
+- src/users-admin/users-admin.module.ts
+  Funcion:
+  - modulo CRUD administrativo de usuarios
+
+- src/users-admin/users-admin.controller.ts
+  Funcion:
+  - endpoints admin users
+  Rutas:
+  - GET /api/admin/users
+  - POST /api/admin/users
+  - PATCH /api/admin/users/:id
+  - PUT /api/admin/users/:id  (compatibilidad agregada)
+  - DELETE /api/admin/users/:id
+
+- src/users-admin/users-admin.service.ts
+  Funcion:
+  - CRUD con Prisma sobre tabla usuarios
+  Bloques:
+  1. findAll(): incluye roles y tipos_identificacion
+  2. create(): hash password y crea usuario
+  3. update(): valida existencia + update parcial
+  4. remove(): valida existencia + delete
+
+DTOs:
+- src/users-admin/dto/create-user-admin.dto.ts
+- src/users-admin/dto/update-user-admin.dto.ts
+
+
+3.8) PRODUCTS
+--------------
+- src/products/products.module.ts
+- src/products/products.controller.ts
+  Rutas:
+  - GET /api/productos
+  - POST /api/productos
+  - PUT /api/productos/:id
+  - DELETE /api/productos/:id
+
+- src/products/products.service.ts
+  Funcion:
+  - CRUD de productos con Prisma
+  Bloques:
+  1. findAll()
+  2. create()
+  3. update()
+  4. remove()
+  5. mapEstado(): mapea texto -> enum productos_estado
+
+DTOs:
+- src/products/dto/create-product.dto.ts
+- src/products/dto/update-product.dto.ts
+
+
+3.9) INVENTORY
+---------------
+- src/inventory/inventory.module.ts
+- src/inventory/inventory.controller.ts
+  Rutas:
+  - GET /api/movimientos/productos
+  - POST /api/movimientos/registrar
+
+- src/inventory/inventory.service.ts
+  Funcion:
+  - movimientos de inventario en transaccion SQL
+  Bloques:
+  1. getProductsWithStock(): consulta JOIN productos/categoria/stock
+  2. registerMovement(dto, userId):
+     - begin transaction
+     - ENTRADA: inserta entrada_productos y suma stock
+     - SALIDA: bloquea stock FOR UPDATE, valida stock, inserta salida y resta
+     - commit / rollback
+
+DTO:
+- src/inventory/dto/register-movement.dto.ts
+
+
+3.10) SALES
+------------
+- src/sales/sales.module.ts
+- src/sales/sales.controller.ts
+  Rutas:
+  - GET /api/sales/products
+  - GET /api/sales/categories
+  - POST /api/sales/orders
+
+- src/sales/sales.service.ts
+  Funcion:
+  - catalogo filtrado + creacion de venta transaccional
+  Bloques:
+  1. resolvePaymentMethod(value):
+     - acepta M1/M2..., 1/2..., o numero
+     - normaliza a formato Mx
+  2. getFilteredProducts(filters)
+  3. getAvailableCategories()
+  4. createOrder(dto, userId):
+     - valida metodo pago
+     - valida que metodo exista en tabla metodo
+     - crea venta
+     - por cada item: lock stock, valida, inserta detalle, inserta salida, descuenta stock
+     - commit / rollback
+
+DTOs:
+- src/sales/dto/order-item.dto.ts
+- src/sales/dto/create-order.dto.ts
+  Nota cambio importante:
+  - id_metodo y metodo_pago ahora son string para recibir M1/M2 del frontend
+
+
+3.11) REPORTS
+--------------
+- src/reports/reports.module.ts
+- src/reports/reports.controller.ts
+  Rutas:
+  - GET /api/sales/reports/ventas-mes
+  - GET /api/sales/reports/top-productos
+  - GET /api/sales/reports/resumen
+  - GET /api/sales/reports/resumen-mes
+  - GET /api/sales/reports/pdf-resumen
+
+- src/reports/reports.service.ts
+  Funcion:
+  - reportes SQL + PDF con pdfkit
+  Bloques:
+  1. getVentasMes(inicio, fin)
+  2. getTopProductos()
+  3. getResumen()
+  4. getResumenMes()
+  5. buildResumenPdf():
+     - arma layout PDF
+     - inyecta KPIs y tablas
+     - devuelve Buffer
+
+
+4) PRISMA/SCHEMA
+-----------------
+- prisma/schema.prisma
+  Bloques principales:
+  1. generator client
+  2. datasource db (mysql + env DATABASE_URL)
+  3. models (tablas): categoria, productos, usuarios, venta, venta_productos, etc.
+  4. enum productos_estado
+
+Nota:
+- schema esta valido con prisma validate
+
+
+5) APIS - COMO QUEDA FUNCIONANDO DESPUES DE LOS ARREGLOS
+---------------------------------------------------------
+Base URL backend:
+- http://localhost:4000/api
+
+Swagger:
+- http://localhost:4000/api/docs
+
+Auth:
+- JWT guard global activo
+- rutas publicas: auth/* (register/login/verificacion/reset)
+- rutas protegidas: admin/users, productos, movimientos, sales, reports
+
+Arreglos aplicados a APIs:
+1. Admin users update:
+   - antes: frontend usaba PUT y backend solo PATCH
+   - ahora: backend acepta PATCH y PUT
+
+2. Sales orders metodo de pago:
+   - antes: DTO esperaba int y frontend mandaba M1/M2
+   - ahora: DTO acepta string y service normaliza/valida metodo
+
+3. Prisma startup:
+   - antes: si DB no estaba arriba, backend se caia en onModuleInit
+   - ahora: backend arranca y loggea error; endpoints que dependen DB fallan hasta que DB suba
+
+4. Frontend integrado con backend:
+   - URLs API centralizadas en frontend (apiConfig)
+   - sin hardcode disperso de localhost:4000
+   - usuarios admin usa PATCH
+   - inventario usa servicio dedicado correcto
+   - productos admin manda Authorization token
+
+
+6) FLUJO FINAL (END-TO-END)
+----------------------------
+1. Usuario se registra
+   - POST /api/auth/register
+   - backend crea usuario + codigo email
+
+2. Usuario verifica correo
+   - POST /api/auth/verify-email
+
+3. Usuario hace login
+   - POST /api/auth/login
+   - recibe token JWT
+
+4. Frontend guarda token y lo envia como Bearer en rutas protegidas
+
+5. Modulos operativos:
+   - admin/users CRUD
+   - productos CRUD
+   - movimientos entradas/salidas
+   - ventas y decremento stock
+   - reportes JSON + PDF
+
+
+7) COMANDOS PARA PROBAR
+------------------------
+Backend:
+- npm install
+- npm run build
+- npm run start:dev
+
+Frontend (en carpeta mercapleno-react):
+- npm install
+- npm start
+
+Prisma:
+- npx prisma validate --schema prisma/schema.prisma
+- npm run prisma:generate
+
+MySQL requerido:
+- debe estar activo en host/puerto de .env
+
+
+8) RESUMEN CORTO
+----------------
+Si: las APIs quedaron corregidas para la integracion front-back.
+Estado actual:
+- Build backend: OK
+- Build frontend: OK
+- Prisma schema validate: OK
+- Integracion de rutas y contratos API: alineada
+
+Si ves error al consumir datos, normalmente sera por:
+- MySQL apagado o credenciales DB incorrectas en .env
+- token vencido/no enviado en peticiones protegidas
+
+Fin.

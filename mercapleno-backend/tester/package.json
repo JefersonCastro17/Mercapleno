@@ -1,0 +1,19 @@
+{
+  "name": "mercapleno-tester",
+  "version": "1.0.0",
+  "description": "Pruebas unitarias y de integración en JS para Mercapleno",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "test:unit": "jest unit/",
+    "test:integration": "jest integration/ --runInBand"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jest": "^29.7.0",
+    "mysql2": "^3.11.0",
+    "supertest": "^7.0.0"
+  }
+}

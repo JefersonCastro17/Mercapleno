@@ -1,0 +1,287 @@
+:root{
+  --blue: var(--color-principal, #0B4A8B);
+  --orange: var(--color-acento, #F59E0B);
+  --card-red: #e66464;
+  --muted: #f3f3f3;
+  --row-gray: #efefef;
+
+}
+
+*{
+box-sizing:border-box;
+font-family: 'Segoe UI', Roboto, Arial, sans-serif
+}
+
+body{
+    margin:0;
+    background:#fff
+}
+
+.top-bar{
+    background:var(--blue);
+    height:64px;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 18px;
+    border-bottom:6px solid var(--orange)
+}
+
+.logo-wrap{
+    display:flex;
+    align-items:center;
+    gap:10px
+}
+
+.logo-circle{
+    width:46px;
+    height:46px;
+    border-radius:8px;
+    background:#fff;
+    color:var(--blue);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700
+}
+
+.brand{
+    font-weight:700
+}
+
+.top-right .btn{
+    margin-left:12px
+}
+
+.page-title{
+    text-align:center;
+    margin:22px 0 12px;
+    font-size:30px
+}
+
+.card-area{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:10px
+}
+
+.card{
+    width:90%;
+    background:var(--card-red);
+    border-radius:6px;
+    padding:20px 18px 36px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.08)
+}
+
+.list-card {
+    background: #fff; 
+    padding: 10px;
+} 
+
+.btn{
+    padding:8px 14px;
+    border-radius:18px;
+    border:none;
+    cursor:pointer;
+    font-weight:600
+}
+
+.btn.yellow.outline{
+    background:var(--orange);
+    border:2px solid rgba(255,255,255,0.2);
+    color:#fff
+}
+
+.btn.green{
+    background:var(--orange);
+    color:#fff;
+    padding:10px 26px
+}
+
+.btn.red{
+    background:var(--card-red);
+    color:#fff
+}
+
+.btn.small {
+    padding: 4px 8px; 
+    margin: 0 4px; 
+    border-radius: 4px; 
+    font-size: 12px;
+}
+
+.table-container{
+    background:#fff;
+    padding:10px;
+    border-radius:4px;
+    overflow-x:auto
+}
+
+.product-table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:980px
+}
+
+.product-table thead th{
+    font-weight:600;
+    padding:12px 10px;
+    background:#fff;
+    border-bottom:2px solid #ddd;
+    text-align:left
+}
+
+.product-table tbody td{
+    padding:12px 10px;
+    border-bottom:1px solid #e3e3e3;
+    vertical-align:middle
+}
+
+.product-table tbody .desc{
+    max-width:250px;
+    color:#666
+}
+
+.product-table tbody .img-cell img{
+    width:48px;
+    height:48px;
+    object-fit:cover;
+    border-radius:4px
+}
+
+.row-odd{
+    background:var(--row-gray)
+}
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Asegura que esté por encima de todo */
+}
+
+.modal-content {
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    color: #333;
+}
+
+.modal-content h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #ccc;
+    padding-bottom: 10px;
+}
+
+.modal-content label {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+.modal-content input[type="text"],
+.modal-content input[type="number"],
+.modal-content input[type="file"],
+.modal-content textarea,
+.modal-content select {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.modal-content textarea {
+    resize: vertical;
+    min-height: 88px;
+}
+
+.field-help {
+    margin: 8px 0 0;
+    color: #5f6b7a;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.image-preview {
+    margin-top: 14px;
+    padding: 12px;
+    border: 1px dashed #c7d1db;
+    border-radius: 10px;
+    background: #f8fafc;
+    display: flex;
+    justify-content: center;
+}
+
+.image-preview img {
+    max-width: 100%;
+    max-height: 220px;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.modal-actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.site-footer {
+    background:rgb(66, 66, 66);               /* Fondo oscuro elegante */
+    color: #fffcfc;                    /* Texto blanco */
+    padding: 20px 0;
+    margin-top: 40px;
+    font-family: "Inter", sans-serif;
+}
+
+.footer-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;                /* Responsive */
+    gap: 10px;
+}
+
+.site-footer div {
+    font-size: 0.95rem;
+}
+
+.socials {
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+.socials span {
+    margin: 0 6px;
+}
+
+/* Hover bonito para los nombres de redes (si los haces botones o links) */
+.socials a {
+    color: #fff;
+    text-decoration: none;
+    margin: 0 8px;
+    transition: 0.3s;
+}
+
+.socials a:hover {
+    color: #00e676;                 /* Verde tipo WhatsApp */
+}

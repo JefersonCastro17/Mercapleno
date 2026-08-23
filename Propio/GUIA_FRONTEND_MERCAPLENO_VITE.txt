@@ -1,0 +1,433 @@
+﻿GUIA FRONTEND MERCAPLENO (REACT + VITE)
+Ruta del proyecto frontend:
+
+
+============================================================
+1) RESPUESTA DIRECTA A TU DUDA
+============================================================
+Si: el frontend es quien CONSUME la API.
+Y el backend es quien EXPONE/ATIENDE esas rutas.
+
+En este proyecto:
+- Frontend consume rutas como /api/auth/login, /api/sales/products, etc.
+- Backend las atiende en controllers NestJS (auth.controller.ts, sales.controller.ts, etc.).
+
+============================================================
+2) FLUJO GENERAL DE LA APP
+============================================================
+1. El navegador abre la app Vite.
+2. src/main.jsx monta app/root.jsx.
+3. root.jsx envuelve App dentro de providers.jsx.
+4. providers.jsx activa BrowserRouter + AuthProvider.
+5. App.jsx define rutas publicas y protegidas por rol.
+6. Las paginas hacen requests HTTP con httpRequest() (app/lib/api/httpClient.js).
+7. httpRequest usa API_URL definida en app/lib/config/env.js (VITE_API_URL).
+8. Backend responde en rutas /api/*.
+
+============================================================
+3) ESTRUCTURA DE CARPETAS Y ARCHIVOS (FRONTEND)
+============================================================
+
+3.1 Carpeta raiz
+- .env
+  Variable activa: VITE_API_URL=http://localhost:4000
+- .env.example
+  Ejemplo de la misma variable VITE_API_URL.
+- package.json
+  Scripts y dependencias (React, Vite, React Router, Recharts).
+- package-lock.json
+  Lockfile de npm.
+- vite.config.js
+  Configuracion base de Vite.
+- eslint.config.js
+  Configuracion de lint.
+- index.html
+  HTML base donde se monta React en <div id="root">.
+- README.md
+  Documentacion general.
+- dist/
+  Build de produccion (generado).
+- node_modules/
+  Dependencias instaladas.
+
+3.2 src/
+- src/main.jsx
+  Punto de entrada.
+  Bloques:
+  - Importa StrictMode, createRoot y Root.
+  - Renderiza <Root /> en #root.
+
+3.3 app/
+- app/root.jsx
+  Bloques:
+  - Importa App y Providers.
+  - Envuelve <App /> dentro de <Providers>.
+
+- app/providers.jsx
+  Bloques:
+  - BrowserRouter (enrutamiento).
+  - AuthProvider (estado global de sesion).
+
+- app/App.jsx
+  Archivo central de rutas.
+  Bloques:
+  - RoleRoute: valida rol y redirige si no tiene permiso.
+  - getHomeRoute: rol 3 -> /catalogo; rol 1/2 -> /usuarioC.
+  - Rutas publicas: /login, /registro, /verificar, /recuperar.
+  - Rutas protegidas:
+    /catalogo, /cart, /ticket, /usuarioC,
+    /products/admin, /products/employee,
+    /admin/users, /estadisticas.
+
+- app/logo.svg
+  Logo visual.
+
+3.4 app/contexts/
+- app/contexts/AuthContext.jsx
+  Estado de autenticacion global.
+  Bloques:
+  - getInitialAuthState(): lee user/token desde localStorage.
+  - login(): guarda user/token en estado y localStorage.
+  - logout(): limpia estado y localStorage.
+  - helpers: getUserId, getUserEmail, getUserName.
+
+- app/contexts/CartContext.jsx
+  Proveedor simple del hook useCart.
+
+3.5 app/lib/config/
+- app/lib/config/env.js
+  Define API_URL usando VITE_API_URL (sin slash final).
+
+- app/lib/config/api.config.js
+  Mapa central de endpoints:
+  - auth: /api/auth/*
+  - admin.users: /api/admin/users
+  - products.crud: /api/productos
+  - sales.base: /api/sales
+  - movements.base: /api/movimientos
+
+3.6 app/lib/api/
+- app/lib/api/httpClient.js
+  Cliente HTTP unificado.
+  Bloques:
+  - normalizePath(): normaliza ruta.
+  - extractErrorMessage(): arma mensaje de error.
+  - buildApiUrl(): API_URL + path.
+  - httpRequest():
+    - agrega Authorization si auth=true.
+    - serializa JSON o FormData.
+    - soporta responseType blob.
+    - parsea respuesta JSON/texto.
+    - lanza Error con status y data en respuestas no OK.
+
+3.7 app/lib/hooks/
+- app/lib/hooks/useCart.js
+  Logica del carrito.
+  Bloques:
+  - Estado cart persistido en localStorage.
+  - addToCart, setItemQuantity, removeFromCart, clearCart.
+  - Calculo de totales con useMemo.
+  - processCheckout(id_metodo): envia orden al backend con sendOrder().
+
+3.8 app/lib/services/
+- app/lib/services/productData.js
+  Servicio de ventas para catalogo/carrito.
+  Bloques:
+  - authorizedFetch(): request con auth.
+  - getProducts(): GET /api/sales/products con filtros.
+  - getCategories(): GET /api/sales/categories.
+  - sendOrder(): POST /api/sales/orders.
+
+- app/lib/services/reportesService.js
+  Servicio para reportes.
+  Bloques:
+  - getVentasMes, getTopProductos, getResumen, getResumenMes.
+  - fetchReportPdf(): descarga blob PDF.
+
+- app/lib/services/imageUtils.js
+  Resuelve URL de imagen y fallback.
+
+- app/lib/services/inventarioService.js
+  IMPORTANTE: archivo legacy/inconsistente.
+  Contiene codigo de componente viejo y rutas/imports que no coinciden con la arquitectura actual.
+  No es el flujo principal usado por las rutas activas.
+
+- app/lib/supabaseClient.js
+  Cliente Supabase configurado.
+  En el flujo actual principal de APIs (NestJS), este archivo no es el eje de consumo.
+
+3.9 app/components/ui/
+- app/components/ui/Header.jsx
+  Header para usuario autenticado.
+  - Muestra usuario.
+  - Boton cerrar sesion.
+  - Navegacion a catalogo y carrito.
+
+- app/components/ui/ProductCard.jsx
+  Tarjeta de producto del catalogo.
+  - Muestra imagen, nombre, precio.
+  - Boton agregar al carrito.
+
+- app/components/ui/CartItem.jsx
+  Fila de item en carrito.
+  - Subir/bajar cantidad.
+  - Eliminar item.
+
+3.10 app/components/features/
+- app/components/features/FilterBar.jsx
+  Formulario de filtros (nombre/categoria/precios) con debounce para nombre.
+
+- app/components/features/TotalsSummary.jsx
+  Resumen de subtotal/impuestos/total.
+
+3.11 app/routes/
+- app/routes/Login.jsx
+  Login + flujo de segundo factor por correo para roles 1 y 2.
+  APIs: POST /api/auth/login y POST /api/auth/verify-login-code.
+
+- app/routes/Registro.jsx
+  Registro de usuario cliente.
+  API: POST /api/auth/register.
+
+- app/routes/Verificar.jsx
+  Verificacion de email y reenvio de codigo.
+  API: POST /api/auth/verify-email y /api/auth/resend-verification.
+
+- app/routes/Recuperar.jsx
+  Solicitud y cambio de contraseña con codigo.
+  API: POST /api/auth/request-password-reset y /api/auth/reset-password.
+
+- app/routes/InventoryPage.jsx
+  Catalogo para compra con filtros.
+  APIs: GET /api/sales/categories y /api/sales/products.
+
+- app/routes/CartPage.jsx
+  Carrito + checkout.
+  API: POST /api/sales/orders.
+
+- app/routes/TicketPage.jsx
+  Muestra ticket usando localStorage de ultima compra.
+
+- app/routes/AdminDashboard.jsx
+  Panel de accesos por rol.
+
+- app/routes/usuarioC.jsx
+  Gestion de usuarios (admin).
+  APIs: GET/POST/PUT/DELETE /api/admin/users.
+
+- app/routes/Lista_productos.jsx
+  CRUD productos (admin).
+  APIs: GET/POST/PUT/DELETE /api/productos.
+
+- app/routes/RegistroMovimientos.jsx
+  Entradas/salidas inventario (admin/empleado).
+  APIs: GET /api/movimientos/productos y POST /api/movimientos/registrar.
+
+- app/routes/Estadisticas.jsx
+  Dashboard de reportes + PDF.
+  APIs:
+  GET /api/sales/reports/ventas-mes
+  GET /api/sales/reports/top-productos
+  GET /api/sales/reports/resumen
+  GET /api/sales/reports/resumen-mes
+  GET /api/sales/reports/pdf-resumen
+
+3.12 app/styles/
+- base.css
+  Estilos base globales.
+- login.css
+  Vista login.
+- registro.css
+  Vistas registro/verificacion/recuperacion.
+- inventory.css
+  Vista catalogo.
+- cart.css
+  Vista carrito.
+- ticket.css
+  Vista ticket.
+- adminDashboard.css
+  Panel admin/empleado.
+- usuarioC.css
+  CRUD usuarios.
+- Lista_productos.css
+  CRUD productos y movimientos.
+- estadisticas.css
+  Dashboard de reportes.
+- crudU.css
+  Estilos heredados de CRUD usuarios.
+
+3.13 public/
+- public/robots.txt
+- public/favicon.ico
+- public/vite.svg
+- public/images/placeholder.svg
+- public/images/productos/ariel.jpg
+
+============================================================
+4) DONDE CONSUME API EL FRONTEND (ARCHIVOS CLAVE)
+============================================================
+Centro tecnico:
+- app/lib/config/api.config.js  -> define rutas
+- app/lib/api/httpClient.js     -> ejecuta fetch
+- app/lib/config/env.js         -> host base
+
+Pantallas que consumen API:
+- app/routes/Login.jsx
+- app/routes/Registro.jsx
+- app/routes/Verificar.jsx
+- app/routes/Recuperar.jsx
+- app/routes/InventoryPage.jsx
+- app/routes/CartPage.jsx
+- app/routes/usuarioC.jsx
+- app/routes/Lista_productos.jsx
+- app/routes/RegistroMovimientos.jsx
+- app/routes/Estadisticas.jsx
+
+Servicios que consumen API:
+- app/lib/services/productData.js
+- app/lib/services/reportesService.js
+
+============================================================
+5) DONDE SE ATIENDEN ESAS APIS EN EL BACKEND
+============================================================
+Ruta backend funcional usada para mapear:
+C:\Users\jefer\OneDrive\Escritorio\mercaplen_final_version\mercapleno-backend
+
+Nota importante:
+- src/main.ts define prefijo global: app.setGlobalPrefix('api')
+  Por eso todas las rutas reales empiezan con /api.
+
+Controllers backend:
+- src/auth/auth.controller.ts
+  /auth/register
+  /auth/login
+  /auth/verify-login-code
+  /auth/verify-email
+  /auth/resend-verification
+  /auth/request-password-reset
+  /auth/reset-password
+
+- src/users-admin/users-admin.controller.ts
+  /admin/users
+  /admin/users/:id
+
+- src/products/products.controller.ts
+  /productos
+  /productos/:id
+
+- src/inventory/inventory.controller.ts
+  /movimientos/productos
+  /movimientos/registrar
+
+- src/sales/sales.controller.ts
+  /sales/products
+  /sales/categories
+  /sales/orders
+
+- src/reports/reports.controller.ts
+  /sales/reports/ventas-mes
+  /sales/reports/top-productos
+  /sales/reports/resumen
+  /sales/reports/resumen-mes
+  /sales/reports/pdf-resumen
+
+============================================================
+6) MAPEO EXACTO FRONT -> BACK
+============================================================
+- Front: app/routes/Login.jsx
+  llama: POST /api/auth/login
+  Back: src/auth/auth.controller.ts -> @Post('login')
+
+- Front: app/routes/Registro.jsx
+  llama: POST /api/auth/register
+  Back: src/auth/auth.controller.ts -> @Post('register')
+
+- Front: app/routes/Verificar.jsx
+  llama: POST /api/auth/verify-email
+  Back: src/auth/auth.controller.ts -> @Post('verify-email')
+
+- Front: app/routes/Verificar.jsx
+  llama: POST /api/auth/resend-verification
+  Back: src/auth/auth.controller.ts -> @Post('resend-verification')
+
+- Front: app/routes/Recuperar.jsx
+  llama: POST /api/auth/request-password-reset
+  Back: src/auth/auth.controller.ts -> @Post('request-password-reset')
+
+- Front: app/routes/Recuperar.jsx
+  llama: POST /api/auth/reset-password
+  Back: src/auth/auth.controller.ts -> @Post('reset-password')
+
+- Front: app/lib/services/productData.js
+  llama: GET /api/sales/products
+  Back: src/sales/sales.controller.ts -> @Get('products')
+
+- Front: app/lib/services/productData.js
+  llama: GET /api/sales/categories
+  Back: src/sales/sales.controller.ts -> @Get('categories')
+
+- Front: app/lib/services/productData.js
+  llama: POST /api/sales/orders
+  Back: src/sales/sales.controller.ts -> @Post('orders')
+
+- Front: app/routes/usuarioC.jsx
+  llama: GET/POST/PUT/DELETE /api/admin/users
+  Back: src/users-admin/users-admin.controller.ts
+
+- Front: app/routes/Lista_productos.jsx
+  llama: GET/POST/PUT/DELETE /api/productos
+  Back: src/products/products.controller.ts
+
+- Front: app/routes/RegistroMovimientos.jsx
+  llama: GET /api/movimientos/productos
+  Back: src/inventory/inventory.controller.ts -> @Get('productos')
+
+- Front: app/routes/RegistroMovimientos.jsx
+  llama: POST /api/movimientos/registrar
+  Back: src/inventory/inventory.controller.ts -> @Post('registrar')
+
+- Front: app/lib/services/reportesService.js
+  llama: /api/sales/reports/*
+  Back: src/reports/reports.controller.ts
+
+============================================================
+7) CORRECCION APLICADA EN ESTA SESION
+============================================================
+Archivo corregido:
+- app/routes/Lista_productos.jsx
+
+Problema detectado:
+- El CRUD de productos llamaba /api/productos sin token.
+- Ese modulo en backend esta protegido por JWT (guard global).
+
+Cambio aplicado:
+- Se agrego envio de autenticacion en GET/POST/PUT/DELETE:
+  auth: true,
+  token
+- Se agrego manejo basico para 401/403 (logout + mensaje).
+
+Resultado:
+- El CRUD de productos queda alineado con el backend protegido.
+
+Verificacion tecnica:
+- Se ejecuto build del frontend con exito:
+  npm run build
+
+============================================================
+8) COMO DEBE QUEDAR FUNCIONANDO TODO
+============================================================
+Checklist rapido:
+1. Backend arriba en puerto 4000 (o el que pongas en VITE_API_URL).
+2. Frontend con VITE_API_URL apuntando al backend correcto.
+3. Login exitoso guarda token en localStorage.
+4. Pantallas protegidas usan ese token para consumir APIs protegidas.
+5. Si token expira o falta, debe redirigir/forzar nuevo login.
+
+============================================================
+9) RECOMENDACION IMPORTANTE
+============================================================
+- Revisar o retirar app/lib/services/inventarioService.js (legacy),
+  para evitar confusion con app/routes/RegistroMovimientos.jsx,
+  que es el flujo real activo de inventario.
+
+FIN.

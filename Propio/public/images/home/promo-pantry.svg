@@ -1,0 +1,14 @@
+<svg width="520" height="280" viewBox="0 0 520 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="520" height="280" rx="28" fill="#FFF7E1"/>
+  <circle cx="425" cy="76" r="52" fill="#0066CC" fill-opacity="0.1"/>
+  <rect x="72" y="84" width="58" height="118" rx="20" fill="#FFFFFF"/>
+  <rect x="143" y="74" width="64" height="128" rx="22" fill="#0066CC"/>
+  <rect x="221" y="96" width="72" height="106" rx="18" fill="#FFFFFF"/>
+  <rect x="305" y="110" width="44" height="92" rx="16" fill="#F9B300"/>
+  <rect x="362" y="98" width="78" height="104" rx="20" fill="#FFFFFF"/>
+  <rect x="88" y="98" width="26" height="14" rx="7" fill="#F9B300"/>
+  <rect x="160" y="92" width="30" height="16" rx="8" fill="#FFD76A"/>
+  <rect x="238" y="110" width="38" height="14" rx="7" fill="#68A83D"/>
+  <text x="56" y="50" fill="#0F4F96" font-family="Arial, sans-serif" font-size="28" font-weight="700">Despensa</text>
+  <text x="56" y="236" fill="#627187" font-family="Arial, sans-serif" font-size="20">basicos para resolver la semana</text>
+</svg>

@@ -1,0 +1,9 @@
+<svg width="280" height="220" viewBox="0 0 280 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="280" height="220" rx="28" fill="#EEF7FF"/>
+  <rect x="70" y="74" width="54" height="96" rx="18" fill="#FFFFFF"/>
+  <rect x="86" y="54" width="22" height="32" rx="11" fill="#F9B300"/>
+  <rect x="138" y="62" width="72" height="108" rx="22" fill="#FFFFFF"/>
+  <rect x="156" y="82" width="36" height="18" rx="9" fill="#0066CC"/>
+  <circle cx="174" cy="132" r="22" fill="#68A83D"/>
+  <text x="42" y="40" fill="#0F4F96" font-family="Arial, sans-serif" font-size="22" font-weight="700">Aseo hogar</text>
+</svg>

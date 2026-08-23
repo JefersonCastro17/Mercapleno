@@ -1,0 +1,515 @@
+{
+  "info": {
+    "_postman_id": "3f2a4d3e-7a9e-4ed0-9b4a-c7f8df5f0d11",
+    "name": "Mercapleno Backend",
+    "description": "Coleccion Postman organizada por carpetas segun los modulos del backend y Swagger.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "codex"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:4000/api" },
+    { "key": "bearerToken", "value": "" },
+    { "key": "pendingToken", "value": "" },
+    { "key": "apiKey", "value": "mercapleno123456789" },
+    { "key": "authEmail", "value": "admin@mercapleno.com" },
+    { "key": "authPassword", "value": "123456" },
+    { "key": "verificationCode", "value": "123456" },
+    { "key": "resetCode", "value": "123456" },
+    { "key": "adminUserId", "value": "1" },
+    { "key": "productId", "value": "1" },
+    { "key": "categoryId", "value": "1" },
+    { "key": "providerId", "value": "1" },
+    { "key": "reportStart", "value": "2026-01" },
+    { "key": "reportEnd", "value": "2026-12" },
+    { "key": "paymentMethod", "value": "M1" },
+    { "key": "movementDocumentId", "value": "AJ" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Juan\",\n  \"apellido\": \"Perez\",\n  \"email\": \"usuario@mercapleno.com\",\n  \"password\": \"123456\",\n  \"direccion\": \"Calle 123\",\n  \"fecha_nacimiento\": \"2000-01-01\",\n  \"id_rol\": 3,\n  \"id_tipo_identificacion\": 1,\n  \"numero_identificacion\": \"123456789\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/register",
+            "description": "Registrar usuario nuevo"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Login (Admin requiere 2FA)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  var data = pm.response.json();",
+                  "  if (data && data.pendingToken) {",
+                  "    pm.collectionVariables.set('pendingToken', data.pendingToken);",
+                  "    if (pm.environment) {",
+                  "      pm.environment.set('pendingToken', data.pendingToken);",
+                  "    }",
+                  "    console.log('IMPORTANTE: Se envio un codigo de 2FA a tu correo. Usa el siguiente endpoint: Verify Login Code 2FA');",
+                  "    console.log('Codigo temporal: ' + data.twoFactorExpiresInMinutes + ' minutos');",
+                  "  }",
+                  "  if (data && data.token) {",
+                  "    pm.collectionVariables.set('bearerToken', data.token);",
+                  "    if (pm.environment) {",
+                  "      pm.environment.set('bearerToken', data.token);",
+                  "    }",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{authEmail}}\",\n  \"password\": \"{{authPassword}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Iniciar sesion. Para admin devuelve pendingToken + requiere codigo 2FA."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Verify Login Code 2FA",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  var data = pm.response.json();",
+                  "  if (data && data.token) {",
+                  "    pm.collectionVariables.set('bearerToken', data.token);",
+                  "    if (pm.environment) {",
+                  "      pm.environment.set('bearerToken', data.token);",
+                  "    }",
+                  "    console.log('Login exitoso! Token guardado automaticamente.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pendingToken\": \"{{pendingToken}}\",\n  \"code\": \"{{verificationCode}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/verify-login-code",
+            "description": "Verificar codigo 2FA enviado al email. Devuelve token de acceso."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Verify Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{authEmail}}\",\n  \"code\": \"{{verificationCode}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/verify-email",
+            "description": "Verificar correo con codigo"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Resend Verification",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{authEmail}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/resend-verification",
+            "description": "Reenviar codigo de verificacion"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Request Password Reset",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{authEmail}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/request-password-reset",
+            "description": "Solicitar codigo de recuperacion"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{authEmail}}\",\n  \"code\": \"{{resetCode}}\",\n  \"newPassword\": \"12345678\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/reset-password",
+            "description": "Cambiar contrasena con codigo"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/auth/logout",
+            "description": "Cerrar sesion del lado cliente"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin Users",
+      "item": [
+        {
+          "name": "GET List Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{bearerToken}}" },
+              { "key": "x-api-key", "value": "{{apiKey}}" }
+            ],
+            "url": "{{baseUrl}}/admin/users",
+            "description": "Listar usuarios administrativos. Requiere rol 1 y x-api-key."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{bearerToken}}" },
+              { "key": "x-api-key", "value": "{{apiKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Maria\",\n  \"apellido\": \"Gomez\",\n  \"email\": \"maria.gomez@mercapleno.com\",\n  \"password\": \"123456\",\n  \"direccion\": \"Calle 45\",\n  \"fecha_nacimiento\": \"1998-05-10\",\n  \"id_rol\": 2,\n  \"id_tipo_identificacion\": 1,\n  \"numero_identificacion\": \"987654321\",\n  \"email_verified\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/admin/users",
+            "description": "Crear usuario administrativo"
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH Update User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{bearerToken}}" },
+              { "key": "x-api-key", "value": "{{apiKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Maria Actualizada\",\n  \"direccion\": \"Cra 50 #10-20\",\n  \"id_rol\": 2\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/admin/users/{{adminUserId}}",
+            "description": "Actualizar usuario por PATCH"
+          },
+          "response": []
+        },
+        {
+          "name": "PUT Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{bearerToken}}" },
+              { "key": "x-api-key", "value": "{{apiKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Maria Put\",\n  \"apellido\": \"Gomez\",\n  \"email\": \"maria.put@mercapleno.com\",\n  \"password\": \"123456\",\n  \"direccion\": \"Av 30\",\n  \"fecha_nacimiento\": \"1998-05-10\",\n  \"id_rol\": 2,\n  \"id_tipo_identificacion\": 1,\n  \"numero_identificacion\": \"987654321\",\n  \"email_verified\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/admin/users/{{adminUserId}}",
+            "description": "Actualizar usuario por PUT"
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE Remove User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{bearerToken}}" },
+              { "key": "x-api-key", "value": "{{apiKey}}" }
+            ],
+            "url": "{{baseUrl}}/admin/users/{{adminUserId}}",
+            "description": "Eliminar usuario"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Productos",
+      "item": [
+        {
+          "name": "GET List Products",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{bearerToken}}" }
+            ],
+            "url": "{{baseUrl}}/productos",
+            "description": "Listar productos. Requiere rol 1."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Create Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{bearerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Arroz\",\n  \"precio\": 3500,\n  \"id_categoria\": {{categoryId}},\n  \"id_proveedor\": {{providerId}},\n  \"descripcion\": \"Arroz premium\",\n  \"estado\": \"Disponible\",\n  \"imagen\": \"uploads/arroz.jpg\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/productos",
+            "description": "Crear producto"
+          },
+          "response": []
+        },
+        {
+          "name": "PUT Update Product",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{bearerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Arroz x 500g\",\n  \"precio\": 3900,\n  \"id_categoria\": {{categoryId}},\n  \"id_proveedor\": {{providerId}},\n  \"descripcion\": \"Actualizado\",\n  \"estado\": \"Disponible\",\n  \"imagen\": \"uploads/arroz-500.jpg\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/productos/{{productId}}",
+            "description": "Actualizar producto"
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE Remove Product",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{bearerToken}}" }
+            ],
+            "url": "{{baseUrl}}/productos/{{productId}}",
+            "description": "Eliminar producto"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Movimientos",
+      "item": [
+        {
+          "name": "GET Products With Stock",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{bearerToken}}" }
+            ],
+            "url": "{{baseUrl}}/movimientos/productos",
+            "description": "Obtener productos con stock actual. Requiere rol 1 o 2."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Register Movement",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{bearerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_producto\": {{productId}},\n  \"tipo_movimiento\": \"SALIDA\",\n  \"cantidad\": 1,\n  \"id_documento\": \"{{movementDocumentId}}\",\n  \"comentario\": \"Ajuste de inventario\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/movimientos/registrar",
+            "description": "Registrar entrada o salida. id_documento acepta maximo 2 caracteres."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Sales",
+      "item": [
+        {
+          "name": "GET Products",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{bearerToken}}" }
+            ],
+            "url": "{{baseUrl}}/sales/products?search=&category=todas&precioMin=&precioMax=",
+            "description": "Catalogo filtrado de productos"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{bearerToken}}" }
+            ],
+            "url": "{{baseUrl}}/sales/categories",
+            "description": "Categorias disponibles para venta"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Orders",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{bearerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"id\": \"{{productId}}\",\n      \"cantidad\": 1\n    }\n  ],\n  \"total\": 3500,\n  \"id_metodo\": \"{{paymentMethod}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/sales/orders",
+            "description": "Registrar orden de compra"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Reportes",
+      "item": [
+        {
+          "name": "GET Ventas Mes",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{bearerToken}}" },
+              { "key": "x-api-key", "value": "{{apiKey}}" }
+            ],
+            "url": "{{baseUrl}}/sales/reports/ventas-mes?inicio={{reportStart}}&fin={{reportEnd}}",
+            "description": "Ventas agrupadas por mes. Requiere rol 1 o 2 y x-api-key."
+          },
+          "response": []
+        },
+        {
+          "name": "GET Top Productos",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{bearerToken}}" },
+              { "key": "x-api-key", "value": "{{apiKey}}" }
+            ],
+            "url": "{{baseUrl}}/sales/reports/top-productos",
+            "description": "Top 10 productos mas vendidos"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Resumen",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{bearerToken}}" },
+              { "key": "x-api-key", "value": "{{apiKey}}" }
+            ],
+            "url": "{{baseUrl}}/sales/reports/resumen",
+            "description": "KPIs generales de ventas"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Resumen Mes",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{bearerToken}}" },
+              { "key": "x-api-key", "value": "{{apiKey}}" }
+            ],
+            "url": "{{baseUrl}}/sales/reports/resumen-mes",
+            "description": "Resumen mensual de ventas"
+          },
+          "response": []
+        },
+        {
+          "name": "GET PDF Resumen",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{bearerToken}}" },
+              { "key": "x-api-key", "value": "{{apiKey}}" }
+            ],
+            "url": "{{baseUrl}}/sales/reports/pdf-resumen",
+            "description": "Descargar PDF de ventas"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

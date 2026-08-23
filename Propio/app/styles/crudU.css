@@ -1,0 +1,41 @@
+/* 🟢 src/styles/crud.css 
+   Propósito: Estilos específicos para la vista del CRUD de Usuarios (usuarioC.css)
+*/
+
+/* NOTA: body y * de este archivo deben ser eliminados y reemplazados por la importación de base.css en el componente CRUD */
+
+/* === CONTENEDOR PRINCIPAL === */
+.crud-container {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--color-crud-primary) 0%, #764ba2 100%);
+}
+
+/* ==================================== SIDEBAR ==================================== */
+.sidebar {
+  width: 280px;
+  background: var(--color-crud-dark);
+  color: #ffffff;
+  /* ... resto de estilos de sidebar y nav ... */
+}
+/* ... Todos los estilos de .sidebar, .sidebar-header, .sidebar-nav, .nav-link, .btn-logout de usuarioC.css ... */
+
+/* ==================================== CONTENIDO PRINCIPAL ==================================== */
+.contenido {
+  flex: 1;
+  margin-left: 280px;
+  padding: 2rem;
+  /* ... resto de estilos de contenido, formulario, tabla, etc. ... */
+}
+/* ... Todos los estilos de .formulario-section, .tabla-section, .tabla, .btn-guardar, .btn-eliminar de usuarioC.css ... */
+
+/* Usamos las media queries de usuarioC.css */
+@media (max-width: 1024px) { 
+    /* ... estilos de usuarioC.css ... */ 
+}
+@media (max-width: 768px) { 
+    /* ... estilos de usuarioC.css ... */ 
+}
+@media (max-width: 480px) { 
+    /* ... estilos de usuarioC.css ... */ 
+}

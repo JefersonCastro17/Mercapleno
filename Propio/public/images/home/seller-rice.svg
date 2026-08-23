@@ -1,0 +1,8 @@
+<svg width="280" height="220" viewBox="0 0 280 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="280" height="220" rx="28" fill="#FFF8E9"/>
+  <rect x="86" y="58" width="108" height="116" rx="22" fill="#FFFFFF"/>
+  <rect x="102" y="80" width="76" height="22" rx="11" fill="#0066CC"/>
+  <rect x="108" y="116" width="64" height="30" rx="15" fill="#F9B300"/>
+  <rect x="104" y="150" width="72" height="10" rx="5" fill="#E9EEF5"/>
+  <text x="48" y="38" fill="#0F4F96" font-family="Arial, sans-serif" font-size="22" font-weight="700">Arroz premium</text>
+</svg>

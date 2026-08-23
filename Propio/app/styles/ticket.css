@@ -1,0 +1,175 @@
+/* 🟢 src/styles/ticket.css 
+    Propósito: Estilos específicos para la vista del Ticket de Compra.
+*/
+
+.ticket-page-container {
+    padding: 0 15px; 
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/* 🟥 CLASE CONTENEDORA PRINCIPAL DEL TICKET (ticket-content) */
+.ticket-content { 
+    /* MODIFICADO: Estilo visual de ticket impreso */
+    background-color: #ffffff; /* Fondo blanco limpio */
+    width: 90%;
+    max-width: 400px; /* Estrecho como un recibo real */
+    margin: 40px auto;
+    padding: 30px 20px; /* Padding ajustado */
+    border-radius: 2px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    border: 1px solid #eee;
+    font-family: monospace; /* Fuente estilo matriz/código para autenticidad */
+    color: #333;
+    line-height: 1.5;
+}
+
+/* --- SECCIÓN ENCABEZADO Y TÍTULOS --- */
+
+.ticket-header {
+    text-align: center;
+    font-size: 1.5em;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.ticket-logo {
+    text-align: center;
+    font-size: 1.1em;
+    font-weight: bold;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed #333; /* Separador de guiones */
+}
+
+/* --- SECCIÓN DETALLES DE USUARIO Y TRANSACCIÓN --- */
+
+.ticket-details-user p {
+    margin: 3px 0;
+    font-size: 0.9em;
+}
+.ticket-details-user {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px dashed #333;
+}
+
+
+/* --- SECCIÓN DETALLE DE PRODUCTOS --- */
+
+.productos-titulo {
+    text-align: center;
+    margin: 20px 0 10px;
+    font-size: 0.95em;
+}
+
+.detalle-productos {
+    border-top: 1px dashed #333;
+    padding-top: 10px;
+    margin-bottom: 10px;
+}
+
+/* Estilo para las filas de detalle (Productos) */
+.producto-linea {
+    margin: 8px 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 0.9em;
+}
+
+.producto-nombre {
+    font-weight: 600;
+}
+
+/* --- SECCIÓN TOTALES Y FINAL --- */
+
+.ticket-totals p {
+    margin: 8px 0;
+    display: flex;
+    justify-content: space-between;
+    font-size: 1em;
+}
+
+.total-final {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.2em; /* Más grande y destacado */
+    font-weight: bold;
+    padding-top: 10px;
+    margin-top: 10px;
+    border-top: 2px solid #333; /* Línea de separación sólida para el total */
+    color: #000;
+}
+
+.agradecimiento {
+    text-align: center;
+    margin-top: 30px;
+    font-size: 0.9em;
+}
+
+
+.alinear-derecha {
+    text-align: right;
+    /* Esto es importante para que el precio no envuelva el texto */
+    white-space: nowrap; 
+}
+
+/* BOTÓN DE NAVEGACIÓN */
+.volver-catalogo-btn {
+    display: block;
+    width: 100%;
+    margin: 30px auto 0;
+    padding: 10px 0;
+    text-align: center;
+    background-color: var(--color-acento);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+
+.volver-catalogo-btn:hover {
+    background-color: var(--color-acento-dark);
+}
+
+.ticket-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.print-btn {
+    background-color: #1e40af;
+}
+
+.print-btn:hover {
+    background-color: #1e3a8a;
+}
+
+@media print {
+    body {
+        background: white;
+    }
+
+    .ticket-page-container {
+        max-width: none;
+        padding: 0;
+    }
+
+    .ticket-content {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        box-shadow: none;
+        border: none;
+    }
+
+    .ticket-actions {
+        display: none;
+    }
+}

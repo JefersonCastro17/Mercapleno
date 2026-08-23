@@ -1,0 +1,195 @@
+:root {
+  --primary: var(--color-principal, #0B4A8B);
+  --success: var(--color-exito, #22c55e);
+  --danger: var(--color-peligro, #dc2626);
+  --bg: var(--color-fondo-base, #f1f5f9);
+}
+
+.container {
+  min-height: 100vh;
+  background: var(--bg);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.main {
+  padding: 30px;
+}
+
+.controles {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.controles-busqueda {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.input-busqueda {
+  padding: 10px;
+  border-radius: 8px;
+  border: 2px solid #e5e7eb;
+  flex: 1;
+  min-width: 180px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input-busqueda:focus {
+  border-color: var(--primary);
+}
+
+.input-busqueda--small {
+  max-width: 110px;
+  min-width: 90px;
+}
+
+.select-filtro-rol {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 2px solid #e5e7eb;
+  background: white;
+  font-size: 14px;
+  cursor: pointer;
+  outline: none;
+  min-width: 160px;
+  transition: border-color 0.2s;
+}
+
+.select-filtro-rol:focus {
+  border-color: var(--primary);
+}
+
+.btn-limpiar {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 2px solid #e5e7eb;
+  background: white;
+  color: #6b7280;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.btn-limpiar:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.btn-crear {
+  background: var(--success);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tabla-container {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.thead-row {
+  background: var(--primary);
+}
+
+.th {
+  color: white;
+  padding: 14px;
+}
+
+.td {
+  padding: 12px;
+  text-align: center;
+}
+
+.tbody-row:hover {
+  background: #eef2ff;
+}
+
+.btn-modificar {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 20px;
+  margin-right: 6px;
+}
+
+.btn-eliminar {
+  background: var(--danger);
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 20px;
+}
+
+.badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  color: white;
+}
+
+.badge.admin {
+  background: var(--danger);
+}
+
+.badge.empleado {
+  background: var(--primary);
+}
+
+.badge.cliente {
+  background: var(--success);
+}
+
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 16px 24px;
+  color: white;
+  border-radius: 10px;
+  font-weight: 600;
+  z-index: 2000;
+}
+
+.toast.success {
+  background: var(--success);
+}
+
+.toast.error {
+  background: var(--danger);
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 14px;
+  width: 500px;
+  padding: 20px;
+}

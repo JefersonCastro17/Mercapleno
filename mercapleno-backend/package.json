@@ -1,0 +1,86 @@
+{
+  "name": "mercapleno-backend",
+  "version": "2.0.0",
+  "description": "Backend de Mercapleno migrado a NestJS",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "nest build",
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "start:prod": "node dist/main.js",
+    "seed:base": "node scripts/seed-base-system.js",
+    "seed:catalog": "node scripts/seed-catalog-products.js",
+    "prisma:migrate": "prisma migrate deploy --schema prisma/schema.prisma",
+    "prisma:pull": "prisma db pull --schema prisma/schema.prisma",
+    "prisma:generate": "prisma generate --schema prisma/schema.prisma",
+    "prisma:studio": "prisma studio --schema prisma/schema.prisma",
+    "postinstall": "prisma generate --schema prisma/schema.prisma",
+    "test": "jest --config jest.config.js",
+    "test:report": "jest --config jest.config.js",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --config jest.config.js --coverage",
+    "test:sonar": "jest --config jest.config.js --coverage --forceExit",
+    "test:unit-only": "jest --config jest.config.js --coverage --forceExit --testPathPattern=unitarias"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.9",
+    "@nestjs/core": "^11.1.9",
+    "@nestjs/jwt": "^11.0.1",
+    "@nestjs/passport": "^11.0.5",
+    "@nestjs/platform-express": "^11.1.9",
+    "@nestjs/swagger": "^11.4.5",
+    "@prisma/client": "^6.19.0",
+    "bcryptjs": "^2.4.3",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.2.4",
+    "joi": "^18.0.1",
+    "mysql2": "^3.10.1",
+    "nodemailer": "^8.0.1",
+    "passport-jwt": "^4.0.1",
+    "pdfkit": "^0.17.2",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.0",
+    "@nestjs/schematics": "^11.0.0",
+    "@nestjs/testing": "^11.1.9",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cookie-parser": "^1.4.7",
+    "@types/express": "^5.0.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.10.7",
+    "@types/nodemailer": "^7.0.2",
+    "@types/passport-jwt": "^4.0.1",
+    "@types/pdfkit": "^0.17.3",
+    "jest": "^30.4.2",
+    "jest-html-reporters": "^3.1.7",
+    "prisma": "^6.19.0",
+    "supertest": "^7.2.2",
+    "ts-jest": "^29.2.5",
+    "ts-loader": "^9.6.2",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.7.3"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "rootDir": ".",
+    "testMatch": [
+      "**/tester/**/*.test.js",
+      "**/?(*.)+(spec|test).[tj]s?(x)"
+    ],
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "testEnvironment": "node"
+  }
+}
