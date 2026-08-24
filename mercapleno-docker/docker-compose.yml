@@ -11,7 +11,31 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -uroot -proot123 --silent || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "mariadb-admin ping -h 127.0.0.1 -uroot -proot123 --silent || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  test-db:
+    image: mariadb:10.11
+    environment:
+      MARIADB_ROOT_PASSWORD: root123
+      MARIADB_DATABASE: mercapleno_test
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_test_data:/var/lib/mysql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mariadb-admin ping -h 127.0.0.1 -uroot -proot123 --silent || exit 1",
+        ]
       interval: 10s
       timeout: 5s
       retries: 12
@@ -21,8 +45,6 @@ services:
     build:
       context: ../mercapleno-backend
       dockerfile: Dockerfile.dev
-    env_file:
-      - ../mercapleno-backend/.env.docker
     environment:
       PORT: 4000
       DATABASE_URL: mysql://root:root123@db:3306/mercapleno
@@ -66,3 +88,4 @@ services:
 
 volumes:
   mysql_data:
+  mysql_test_data:

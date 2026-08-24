@@ -4,6 +4,7 @@ uploads/
 .env
 .env.*
 !.env.example
+!.env.test.example
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

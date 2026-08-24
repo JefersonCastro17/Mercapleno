@@ -1,15 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersAdminService } from '../../../src/users-admin/users-admin.service';
 import { PrismaService } from '../../../src/prisma/prisma.service';
-import { ConflictException } from '@nestjs/common';
+import { BadRequestException, ConflictException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
+import { Prisma } from '@prisma/client';
 
 describe('UsersAdminService (Unitarias)', () => {
-  // Se almacenan la instancia del servicio y la base de datos simulada para cada prueba.
   let service: UsersAdminService;
   let prismaService: PrismaService;
 
-  // En cada prueba se crea un módulo de Nest con un mock de Prisma para aislar la lógica del servicio.
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -41,22 +40,46 @@ describe('UsersAdminService (Unitarias)', () => {
     jest.clearAllMocks();
   });
 
-  // Este bloque prueba la creación de usuarios por parte del administrador y las reglas de negocio de duplicidad y rol.
+  describe('parseUserId & Validaciones de ID', () => {
+    it('debe lanzar BadRequestException si el id no es un número válido o <= 0', async () => {
+      await expect(service.findOne('invalido')).rejects.toThrow(BadRequestException);
+      await expect(service.findOne('-5')).rejects.toThrow(BadRequestException);
+      await expect(service.findOne('0')).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('findRoles', () => {
+    it('debe retornar la lista de roles ordenados', async () => {
+      const mockRoles = [
+        { id: 1, nombre: 'Admin' },
+        { id: 2, nombre: 'Gerente' },
+      ];
+      jest.spyOn(prismaService.roles, 'findMany').mockResolvedValue(mockRoles as any);
+
+      const result = await service.findRoles();
+
+      expect(prismaService.roles.findMany).toHaveBeenCalledWith({ orderBy: { id: 'asc' } });
+      expect(result).toEqual({
+        success: true,
+        roles: mockRoles,
+      });
+    });
+  });
+
   describe('Crear Usuario (Admin)', () => {
     const createUserDto = {
       nombre: 'Admin',
       apellido: 'User',
-      email: 'admin@test.com',
+      email: 'Admin@Test.com',
       password: 'Password123!',
       direccion: 'Admin St',
       fecha_nacimiento: '1990-01-01',
-      id_rol: 2, // CP-056
+      id_rol: 2,
       id_tipo_identificacion: 1,
       numero_identificacion: '987654321',
       email_verified: true,
     };
 
-    // CP-049
     it('CP-049 - debe registrar correctamente un nuevo usuario con datos válidos', async () => {
       const findFirstSpy = jest.spyOn(prismaService.usuarios, 'findFirst');
       findFirstSpy.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
@@ -66,7 +89,7 @@ describe('UsersAdminService (Unitarias)', () => {
       const result = await service.create(createUserDto);
 
       expect(findFirstSpy).toHaveBeenNthCalledWith(1, expect.objectContaining({
-        where: { email: createUserDto.email },
+        where: { email: 'admin@test.com' },
         select: { id: true },
       }));
       expect(findFirstSpy).toHaveBeenNthCalledWith(2, expect.objectContaining({
@@ -77,20 +100,19 @@ describe('UsersAdminService (Unitarias)', () => {
       expect(createSpy).toHaveBeenCalledWith(expect.objectContaining({
         data: expect.objectContaining({
           id_rol: createUserDto.id_rol,
+          email: 'admin@test.com',
           numero_identificacion: createUserDto.numero_identificacion,
         }),
       }));
       expect(result).toEqual({ success: true, message: 'Usuario agregado correctamente' });
     });
 
-    // CP-050
     it('CP-050 - debe rechazar si el correo electrónico ya está registrado', async () => {
       jest.spyOn(prismaService.usuarios, 'findFirst').mockResolvedValue({ id: 1 } as any);
 
       await expect(service.create(createUserDto)).rejects.toThrow(ConflictException);
     });
 
-    // CP-051
     it('CP-051 - debe rechazar si el número de identificación ya está registrado', async () => {
       const findFirstSpy = jest.spyOn(prismaService.usuarios, 'findFirst');
       findFirstSpy.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: 2 } as any);
@@ -98,76 +120,107 @@ describe('UsersAdminService (Unitarias)', () => {
       await expect(service.create(createUserDto)).rejects.toThrow(ConflictException);
     });
 
-    // CP-052
-    it('CP-052 - debe propagar un error si la BD rechaza por campos obligatorios', async () => {
+    it('debe manejar error P2002 de Prisma al crear usuario', async () => {
       jest.spyOn(prismaService.usuarios, 'findFirst').mockResolvedValue(null);
       jest.spyOn(bcrypt, 'hash').mockResolvedValue('hash' as never);
-      jest.spyOn(prismaService.usuarios, 'create').mockRejectedValue(new Error('Prisma ValidationError: Missing required fields'));
+      const p2002Error = new Prisma.PrismaClientKnownRequestError('Unique constraint', {
+        code: 'P2002',
+        clientVersion: '6.0.0',
+        meta: { target: 'email' },
+      });
+      jest.spyOn(prismaService.usuarios, 'create').mockRejectedValue(p2002Error);
 
-      await expect(service.create(createUserDto)).rejects.toThrow();
+      await expect(service.create(createUserDto)).rejects.toThrow(ConflictException);
     });
 
-    // CP-054
-    it('CP-054 - debe almacenar correctamente el rol asignado al nuevo usuario', async () => {
+    it('debe manejar error P2003 de Prisma al crear usuario por rol o tipo_identificacion inexistente', async () => {
       jest.spyOn(prismaService.usuarios, 'findFirst').mockResolvedValue(null);
       jest.spyOn(bcrypt, 'hash').mockResolvedValue('hash' as never);
-      jest.spyOn(prismaService.usuarios, 'create').mockResolvedValue({ id: 1 } as any);
-
-      const result = await service.create(createUserDto);
-
-      expect(prismaService.usuarios.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            id_rol: 2,
-          }),
-        }),
-      );
-      expect(result).toEqual({
-        success: true,
-        message: 'Usuario agregado correctamente',
+      const p2003Error = new Prisma.PrismaClientKnownRequestError('Foreign key constraint', {
+        code: 'P2003',
+        clientVersion: '6.0.0',
       });
+      jest.spyOn(prismaService.usuarios, 'create').mockRejectedValue(p2003Error);
+
+      await expect(service.create(createUserDto)).rejects.toThrow(ConflictException);
     });
   });
 
   describe('RF-002.2 Consultar Usuario', () => {
-    // CP-055
     it('CP-055 - debe consultar el listado de usuarios registrados', async () => {
       jest.spyOn(prismaService.usuarios, 'findMany').mockResolvedValue([
-        { id: 1, nombre: 'Admin', apellido: 'User', email: 'admin@test.com' },
+        {
+          id: 1,
+          nombre: 'Admin',
+          apellido: 'User',
+          email: 'admin@test.com',
+          direccion: 'Calle 1',
+          fecha_nacimiento: new Date('1990-01-01'),
+          id_rol: 1,
+          id_tipo_identificacion: 1,
+          numero_identificacion: '123',
+          roles: { id: 1, nombre: 'Admin' },
+          tipos_identificacion: { id: 1, nombre: 'CC' },
+        },
       ] as any);
 
       const result = await service.findAll('');
 
       expect(prismaService.usuarios.findMany).toHaveBeenCalled();
-      expect(result).toMatchObject({
-        success: true,
-        usuarios: [
-          {
-            id: 1,
-            nombre: 'Admin',
-            apellido: 'User',
-            email: 'admin@test.com',
-          },
-        ],
-      });
+      expect(result.success).toBe(true);
+      expect(result.usuarios.length).toBe(1);
+      expect(result.usuarios[0].rol).toBe('Admin');
     });
 
-    // CP-056
-    it('CP-056 - debe informar cuando no existen usuarios o resultados para la consulta', async () => {
+    it('CP-056 - debe buscar usuarios con criterio de búsqueda', async () => {
       jest.spyOn(prismaService.usuarios, 'findMany').mockResolvedValue([]);
 
-      const result = await service.findAll('criterio_que_no_existe');
+      const result = await service.findAll('criterio_busqueda');
 
-      expect(prismaService.usuarios.findMany).toHaveBeenCalled();
+      expect(prismaService.usuarios.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            OR: expect.any(Array),
+          }),
+        }),
+      );
       expect(result).toEqual({
         success: true,
         usuarios: [],
       });
     });
+
+    it('debe obtener un usuario por ID', async () => {
+      jest.spyOn(prismaService.usuarios, 'findUnique').mockResolvedValue({
+        id: 1,
+        nombre: 'Admin',
+        apellido: 'User',
+        email: 'admin@test.com',
+        direccion: 'Calle 1',
+        fecha_nacimiento: new Date('1990-01-01'),
+        id_rol: 1,
+        id_tipo_identificacion: 1,
+        numero_identificacion: '123',
+        email_verified: true,
+        roles: { id: 1, nombre: 'Admin' },
+        tipos_identificacion: { id: 1, nombre: 'CC' },
+      } as any);
+
+      const result = await service.findOne('1');
+
+      expect(result.success).toBe(true);
+      expect(result.usuario.id).toBe(1);
+      expect(result.usuario.rol).toBe('Admin');
+    });
+
+    it('debe lanzar NotFoundException si el usuario no existe en findOne', async () => {
+      jest.spyOn(prismaService.usuarios, 'findUnique').mockResolvedValue(null);
+
+      await expect(service.findOne('999')).rejects.toThrow(NotFoundException);
+    });
   });
 
   describe('RF-002.3 Editar Usuario', () => {
-    // CP-058
     it('CP-058 - debe actualizar correctamente la información de un usuario', async () => {
       jest.spyOn(prismaService.usuarios, 'findUnique').mockResolvedValue({ id: 1 } as any);
       jest.spyOn(prismaService.usuarios, 'findFirst').mockResolvedValue(null);
@@ -177,6 +230,11 @@ describe('UsersAdminService (Unitarias)', () => {
         nombre: 'Nuevo',
         apellido: 'Usuario',
         email: 'nuevo@test.com',
+        direccion: 'Direccion Nueva',
+        fecha_nacimiento: '1995-05-05',
+        id_rol: 2,
+        id_tipo_identificacion: 2,
+        numero_identificacion: '55555',
       });
 
       expect(prismaService.usuarios.update).toHaveBeenCalled();
@@ -186,7 +244,35 @@ describe('UsersAdminService (Unitarias)', () => {
       });
     });
 
-    // CP-059
+    it('debe actualizar la contraseña encriptándola cuando se provee', async () => {
+      jest.spyOn(prismaService.usuarios, 'findUnique').mockResolvedValue({ id: 1 } as any);
+      jest.spyOn(bcrypt, 'hash').mockResolvedValue('new_hashed_pwd' as never);
+      jest.spyOn(prismaService.usuarios, 'update').mockResolvedValue({ id: 1 } as any);
+
+      const result = await service.update('1', {
+        password: 'NewSecurePassword123!',
+      });
+
+      expect(bcrypt.hash).toHaveBeenCalledWith('NewSecurePassword123!', 10);
+      expect(prismaService.usuarios.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            password: 'new_hashed_pwd',
+          }),
+        }),
+      );
+      expect(result).toEqual({
+        success: true,
+        message: 'Usuario actualizado correctamente',
+      });
+    });
+
+    it('debe lanzar NotFoundException si el usuario a actualizar no existe', async () => {
+      jest.spyOn(prismaService.usuarios, 'findUnique').mockResolvedValue(null);
+
+      await expect(service.update('999', { nombre: 'Test' })).rejects.toThrow(NotFoundException);
+    });
+
     it('CP-059 - debe impedir actualizar un correo registrado por otro usuario', async () => {
       jest.spyOn(prismaService.usuarios, 'findUnique').mockResolvedValue({ id: 1 } as any);
       jest.spyOn(prismaService.usuarios, 'findFirst').mockResolvedValue({ id: 2 } as any);
@@ -194,7 +280,6 @@ describe('UsersAdminService (Unitarias)', () => {
       await expect(service.update('1', { email: 'exist@test.com' })).rejects.toThrow(ConflictException);
     });
 
-    // CP-060
     it('CP-060 - debe impedir actualizar un número de identificación registrado por otro usuario', async () => {
       jest.spyOn(prismaService.usuarios, 'findUnique').mockResolvedValue({ id: 1 } as any);
       jest.spyOn(prismaService.usuarios, 'findFirst').mockResolvedValue({ id: 2 } as any);
@@ -202,8 +287,7 @@ describe('UsersAdminService (Unitarias)', () => {
       await expect(service.update('1', { numero_identificacion: '222222222' })).rejects.toThrow(ConflictException);
     });
 
-    // CP-061
-    it('CP-061 - debe validar los campos obligatorios al actualizar la información de un usuario', async () => {
+    it('CP-061 - debe devolver sin cambios si no hay campos que actualizar', async () => {
       jest.spyOn(prismaService.usuarios, 'findUnique').mockResolvedValue({ id: 1 } as any);
 
       const result = await service.update('1', {
@@ -217,22 +301,19 @@ describe('UsersAdminService (Unitarias)', () => {
       });
     });
 
-    // CP-062
-    it('CP-062 - debe ignorar valores vacíos y devolver sin cambios cuando no hay información útil para actualizar', async () => {
+    it('debe manejar error P2003 de Prisma al actualizar usuario', async () => {
       jest.spyOn(prismaService.usuarios, 'findUnique').mockResolvedValue({ id: 1 } as any);
-
-      const result = await service.update('1', { nombre: '   ', apellido: '' });
-
-      expect(result).toEqual({
-        success: true,
-        message: 'Sin cambios para actualizar',
+      const p2003Error = new Prisma.PrismaClientKnownRequestError('Foreign key', {
+        code: 'P2003',
+        clientVersion: '6.0.0',
       });
-      expect(prismaService.usuarios.update).not.toHaveBeenCalled();
+      jest.spyOn(prismaService.usuarios, 'update').mockRejectedValue(p2003Error);
+
+      await expect(service.update('1', { id_rol: 99 })).rejects.toThrow(ConflictException);
     });
   });
 
   describe('RF-002.4 Eliminar Usuario', () => {
-    // CP-063
     it('CP-063 - debe eliminar correctamente un usuario que no tiene registros asociados', async () => {
       jest.spyOn(prismaService.usuarios, 'findUnique').mockResolvedValue({ id: 1 } as any);
       jest.spyOn(prismaService.usuarios, 'delete').mockResolvedValue({ id: 1 } as any);
@@ -246,32 +327,22 @@ describe('UsersAdminService (Unitarias)', () => {
       });
     });
 
-    // CP-064
-    it('CP-064 - debe impedir eliminar un usuario que tiene registros asociados', async () => {
-      const relationError = new Error('Foreign key constraint failed');
-      Object.assign(relationError, {
+    it('debe lanzar NotFoundException si el usuario a eliminar no existe', async () => {
+      jest.spyOn(prismaService.usuarios, 'findUnique').mockResolvedValue(null);
+
+      await expect(service.remove('999')).rejects.toThrow(NotFoundException);
+    });
+
+    it('CP-064 - debe impedir eliminar un usuario que tiene registros asociados (P2003)', async () => {
+      const relationError = new Prisma.PrismaClientKnownRequestError('Foreign key constraint failed', {
         code: 'P2003',
-        meta: { modelName: 'usuarios' },
+        clientVersion: '6.0.0',
       });
 
       jest.spyOn(prismaService.usuarios, 'findUnique').mockResolvedValue({ id: 1 } as any);
       jest.spyOn(prismaService.usuarios, 'delete').mockRejectedValue(relationError);
 
-      await expect(service.remove('1')).rejects.toThrow('Error al eliminar usuario');
-    });
-
-    // CP-065
-    it('CP-065 - debe ejecutar la eliminación solo después de validar el usuario y la confirmación del flujo', async () => {
-      jest.spyOn(prismaService.usuarios, 'findUnique').mockResolvedValue({ id: 1 } as any);
-      const deleteSpy = jest.spyOn(prismaService.usuarios, 'delete').mockResolvedValue({ id: 1 } as any);
-
-      const result = await service.remove('1');
-
-      expect(deleteSpy).toHaveBeenCalledTimes(1);
-      expect(result).toEqual({
-        success: true,
-        message: 'Usuario eliminado correctamente',
-      });
+      await expect(service.remove('1')).rejects.toThrow(ConflictException);
     });
   });
 });

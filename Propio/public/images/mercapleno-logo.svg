@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 120" role="img" aria-labelledby="title desc">
+  <title id="title">Mercapleno</title>
+  <desc id="desc">Logo de Mercapleno</desc>
+  <rect width="520" height="120" rx="18" fill="#0b4a8b"/>
+  <circle cx="62" cy="60" r="34" fill="#f6c945"/>
+  <path d="M44 51h36l-4 25H48l-4-25Zm-5-10h10l3 10h32" fill="none" stroke="#0b4a8b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="55" cy="84" r="4" fill="#0b4a8b"/>
+  <circle cx="73" cy="84" r="4" fill="#0b4a8b"/>
+  <text x="116" y="75" font-family="Trebuchet MS, sans-serif" font-size="42" font-weight="700" letter-spacing="1" fill="#ffffff">MERCAPLENO</text>
+</svg>
