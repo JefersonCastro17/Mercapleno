@@ -47,7 +47,7 @@ export class AuthService {
   }
 
   private compareHashSafe(hashA: string, hashB?: string | null): boolean {
-    if (!hashA || !hashB || hashA.length !== hashB.length) {
+    if (!hashA || !hashB || hashA.length !== hashB?.length) {
       return false;
     }
     return crypto.timingSafeEqual(Buffer.from(hashA), Buffer.from(hashB));

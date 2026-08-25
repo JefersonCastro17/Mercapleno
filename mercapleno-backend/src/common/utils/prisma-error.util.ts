@@ -8,14 +8,14 @@ export function handlePrismaPersistenceError(
 ): never {
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     if (error.code === 'P2002') {
-      const target = String(error.meta?.target || '');
-      if (target.includes('email')) {
+      const targetArray = Array.isArray(error.meta?.target) ? error.meta?.target : [];
+      if (targetArray.includes('email')) {
         throw new ConflictException({
           success: false,
           message: 'El correo electronico ya esta registrado.',
         });
       }
-      if (target.includes('numero_identificacion')) {
+      if (targetArray.includes('numero_identificacion')) {
         throw new ConflictException({
           success: false,
           message: 'El numero de identificacion ya esta registrado.',

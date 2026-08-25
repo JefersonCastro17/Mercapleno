@@ -71,12 +71,12 @@ describe('Productos (e2e)', () => {
   });
 
 
-  it('CP-047: POST /api/productos con nombre que contiene números -> 400', async () => {
+  it('CP-047: POST /api/productos con caracteres especiales inválidos -> 400', async () => {
     const response = await request(app.getHttpServer())
       .post('/api/productos')
       .set('Authorization', `Bearer ${tokenAdminValido}`)
       .send({
-        nombre: 'Pan123',
+        nombre: 'Pan#@$123!',
         id_categoria: 1,
         id_proveedor: 1,
         precio: 3500,

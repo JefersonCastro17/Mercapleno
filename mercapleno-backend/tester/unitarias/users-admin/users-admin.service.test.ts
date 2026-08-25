@@ -168,7 +168,7 @@ describe('UsersAdminService (Unitarias)', () => {
 
       expect(prismaService.usuarios.findMany).toHaveBeenCalled();
       expect(result.success).toBe(true);
-      expect(result.usuarios.length).toBe(1);
+      expect(result.usuarios).toHaveLength(1);
       expect(result.usuarios[0].rol).toBe('Admin');
     });
 
