@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { InventoryService } from './inventory.service';
-import { MysqlService } from '../common/database/mysql.service';
-import { EmailService } from '../email/email.service';
+import { InventoryService } from '../../../src/inventory/inventory.service';
+import { MysqlService } from '../../../src/common/database/mysql.service';
+import { EmailService } from '../../../src/email/email.service';
 import { BadRequestException, InternalServerErrorException } from '@nestjs/common';
 
 describe('InventoryService', () => {
@@ -17,6 +17,11 @@ describe('InventoryService', () => {
     rollback: jest.fn(),
     release: jest.fn(),
   };
+
+  jest.mock('../../../src/products/product-image-upload.util', () => ({
+  deleteStoredProductImage: jest.fn(),
+  resolveUploadedProductImagePath: jest.fn(),
+}));
 
   beforeEach(async () => {
     jest.clearAllMocks();

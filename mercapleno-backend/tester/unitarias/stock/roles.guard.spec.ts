@@ -1,6 +1,6 @@
 import { ExecutionContext, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { RolesGuard } from './roles.guard';
+import { RolesGuard } from '../../../src/auth/guards/roles.guard';
 
 describe('RolesGuard', () => {
   let guard: RolesGuard;

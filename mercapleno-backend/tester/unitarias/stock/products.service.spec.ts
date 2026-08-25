@@ -1,10 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ProductsService } from './products.service';
-import { PrismaService } from '../prisma/prisma.service';
+import { ProductsService } from '../../../src/products/products.service';
+import { PrismaService } from '../../../src/prisma/prisma.service';
 import { BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
-import { deleteStoredProductImage } from './product-image-upload.util';
-
-jest.mock('./product-image-upload.util', () => ({
+import { deleteStoredProductImage } from '../../../src/products/product-image-upload.util';
+jest.mock('../../../src/products/product-image-upload.util', () => ({
   deleteStoredProductImage: jest.fn(),
   resolveUploadedProductImagePath: jest.fn(),
 }));
