@@ -3,107 +3,17 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import { AppModule } from '../../../src/app.module';
-import { PrismaService } from '../../../src/prisma/prisma.service';
 import { EmailService } from '../../../src/email/email.service';
 
 const cookieParser = require('cookie-parser');
 const request = require('supertest');
+const { prisma, cleanDatabase, seedReferenceData } = require('../../test-utils');
 
 describe('Módulo de Autenticación - Pruebas de Integración (e2e)', () => {
   let app: INestApplication;
   let emailServiceMock: Partial<EmailService>;
 
-  // Simulación de base de datos en memoria para pruebas de integración con NestJS
-  let usersDb: any[] = [];
-  let docTypesDb: any[] = [
-    { id: 1, nombre: 'Cédula de Ciudadanía', abreviatura: 'CC' },
-    { id: 2, nombre: 'Tarjeta de Identidad', abreviatura: 'TI' },
-  ];
-  let rolesDb: any[] = [
-    { id: 1, nombre: 'Administrador' },
-    { id: 2, nombre: 'Empleado' },
-    { id: 3, nombre: 'Cliente' },
-  ];
-
   const hashCode = (code: string) => crypto.createHash('sha256').update(code).digest('hex');
-
-  const prismaMock = {
-    tipos_identificacion: {
-      findMany: jest.fn().mockImplementation(async () => docTypesDb),
-      findFirst: jest.fn().mockImplementation(async ({ where }: any) => {
-        return docTypesDb.find((d) => d.id === where.id) || null;
-      }),
-    },
-    roles: {
-      findFirst: jest.fn().mockImplementation(async ({ where }: any) => {
-        return rolesDb.find((r) => r.id === where.id) || null;
-      }),
-    },
-    usuarios: {
-      findMany: jest.fn().mockImplementation(async () => usersDb),
-      findFirst: jest.fn().mockImplementation(async ({ where }: any) => {
-        let user = null;
-        if (where.id) {
-          user = usersDb.find((u) => u.id === where.id);
-        } else if (where.email) {
-          user = usersDb.find((u) => u.email === where.email.toLowerCase());
-        }
-        if (!user) return null;
-        return {
-          ...user,
-          roles: rolesDb.find((r) => r.id === user.id_rol) || { id: user.id_rol, nombre: 'Rol' },
-          tipos_identificacion: docTypesDb.find((d) => d.id === user.id_tipo_identificacion) || {
-            id: user.id_tipo_identificacion,
-            nombre: 'CC',
-          },
-        };
-      }),
-      create: jest.fn().mockImplementation(async ({ data }: any) => {
-        const existing = usersDb.find((u) => u.email === data.email.toLowerCase());
-        if (existing) {
-          const error: any = new Error('Unique constraint failed');
-          error.code = 'P2002';
-          error.meta = { target: ['email'] };
-          throw error;
-        }
-        const newUser = {
-          id: usersDb.length + 1,
-          ...data,
-          email: data.email.toLowerCase(),
-          creado_en: new Date(),
-        };
-        usersDb.push(newUser);
-        return newUser;
-      }),
-      update: jest.fn().mockImplementation(async ({ where, data }: any) => {
-        let index = -1;
-        if (where.id) {
-          index = usersDb.findIndex((u) => u.id === where.id);
-        } else if (where.email) {
-          index = usersDb.findIndex((u) => u.email === where.email.toLowerCase());
-        }
-        if (index === -1) {
-          throw new Error('User not found');
-        }
-        usersDb[index] = { ...usersDb[index], ...data };
-        const updated = usersDb[index];
-        return {
-          ...updated,
-          roles: rolesDb.find((r) => r.id === updated.id_rol) || { id: updated.id_rol, nombre: 'Rol' },
-          tipos_identificacion: docTypesDb.find((d) => d.id === updated.id_tipo_identificacion) || {
-            id: updated.id_tipo_identificacion,
-            nombre: 'CC',
-          },
-        };
-      }),
-    },
-    intentos_login: {
-      findUnique: jest.fn().mockResolvedValue(null),
-      create: jest.fn().mockResolvedValue({}),
-      update: jest.fn().mockResolvedValue({}),
-      delete: jest.fn().mockResolvedValue({}),
-    },
-  };
 
   beforeAll(async () => {
     emailServiceMock = {
@@ -115,8 +25,6 @@ describe('Módulo de Autenticación - Pruebas de Integración (e2e)', () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     })
-      .overrideProvider(PrismaService)
-      .useValue(prismaMock)
       .overrideProvider(EmailService)
       .useValue(emailServiceMock)
       .compile();
@@ -137,71 +45,59 @@ describe('Módulo de Autenticación - Pruebas de Integración (e2e)', () => {
 
   afterAll(async () => {
     await app.close();
+    await prisma.$disconnect();
   });
 
   beforeEach(async () => {
     jest.clearAllMocks();
-
+    await cleanDatabase();
+    await seedReferenceData();
     const hashedPassword = await bcrypt.hash('Password123!', 10);
-    usersDb = [
-      {
-        id: 1,
-        nombre: 'Admin',
-        apellido: 'Mercapleno',
-        email: 'admin@mercapleno.local',
-        password: hashedPassword,
-        direccion: 'Sede Principal',
-        fecha_nacimiento: new Date('1990-01-01'),
-        id_rol: 1,
-        id_tipo_identificacion: 1,
-        numero_identificacion: '1000000001',
-        email_verified: true,
-        email_verification_code: null,
-        email_verification_expires: null,
-        login_two_factor_code: null,
-        login_two_factor_expires: null,
-        password_reset_code: null,
-        password_reset_expires: null,
-      },
-      {
-        id: 2,
-        nombre: 'Cliente',
-        apellido: 'Registrado',
-        email: 'cliente@test.local',
-        password: hashedPassword,
-        direccion: 'Calle 100 # 20-30',
-        fecha_nacimiento: new Date('1995-05-15'),
-        id_rol: 3,
-        id_tipo_identificacion: 1,
-        numero_identificacion: '1000000002',
-        email_verified: true,
-        email_verification_code: null,
-        email_verification_expires: null,
-        login_two_factor_code: null,
-        login_two_factor_expires: null,
-        password_reset_code: null,
-        password_reset_expires: null,
-      },
-      {
-        id: 3,
-        nombre: 'No',
-        apellido: 'Verificado',
-        email: 'no.verificado@test.local',
-        password: hashedPassword,
-        direccion: 'Carrera 50 # 10-20',
-        fecha_nacimiento: new Date('1998-08-08'),
-        id_rol: 3,
-        id_tipo_identificacion: 1,
-        numero_identificacion: '1000000003',
-        email_verified: false,
-        email_verification_code: hashCode('123456'),
-        email_verification_expires: new Date(Date.now() + 60 * 60 * 1000),
-        login_two_factor_code: null,
-        login_two_factor_expires: null,
-        password_reset_code: null,
-        password_reset_expires: null,
-      },
-    ];
+    await prisma.usuarios.createMany({
+      data: [
+        {
+          id: 1,
+          nombre: 'Admin',
+          apellido: 'Mercapleno',
+          email: 'admin@mercapleno.local',
+          password: hashedPassword,
+          direccion: 'Sede Principal',
+          fecha_nacimiento: new Date('1990-01-01'),
+          id_rol: 1,
+          id_tipo_identificacion: 1,
+          numero_identificacion: '1000000001',
+          email_verified: true,
+        },
+        {
+          id: 2,
+          nombre: 'Cliente',
+          apellido: 'Registrado',
+          email: 'cliente@test.local',
+          password: hashedPassword,
+          direccion: 'Calle 100 # 20-30',
+          fecha_nacimiento: new Date('1995-05-15'),
+          id_rol: 3,
+          id_tipo_identificacion: 1,
+          numero_identificacion: '1000000002',
+          email_verified: true,
+        },
+        {
+          id: 3,
+          nombre: 'No',
+          apellido: 'Verificado',
+          email: 'no.verificado@test.local',
+          password: hashedPassword,
+          direccion: 'Carrera 50 # 10-20',
+          fecha_nacimiento: new Date('1998-08-08'),
+          id_rol: 3,
+          id_tipo_identificacion: 1,
+          numero_identificacion: '1000000003',
+          email_verified: false,
+          email_verification_code: hashCode('123456'),
+          email_verification_expires: new Date(Date.now() + 60 * 60 * 1000),
+        },
+      ],
+    });
   });
 
   // =========================================================================
@@ -216,7 +112,7 @@ describe('Módulo de Autenticación - Pruebas de Integración (e2e)', () => {
       expect(res.body.success).toBe(true);
       expect(Array.isArray(res.body.tipos_identificacion)).toBe(true);
       expect(res.body.tipos_identificacion).toHaveLength(2);
-      expect(res.body.tipos_identificacion[0]).toHaveProperty('abreviatura', 'CC');
+      expect(res.body.tipos_identificacion[0]).toHaveProperty('nombre', 'Cedula de ciudadania');
     });
   });
 
@@ -249,7 +145,9 @@ describe('Módulo de Autenticación - Pruebas de Integración (e2e)', () => {
         expect.any(Number),
       );
 
-      const created = usersDb.find((u) => u.email === 'nuevo.usuario@test.local');
+      const created = await prisma.usuarios.findUnique({
+        where: { email: 'nuevo.usuario@test.local' },
+      });
       expect(created).toBeDefined();
       expect(created.email_verified).toBe(false);
     });
@@ -306,7 +204,9 @@ describe('Módulo de Autenticación - Pruebas de Integración (e2e)', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.message).toContain('Correo verificado correctamente');
 
-      const user = usersDb.find((u) => u.email === 'no.verificado@test.local');
+      const user = await prisma.usuarios.findUnique({
+        where: { email: 'no.verificado@test.local' },
+      });
       expect(user.email_verified).toBe(true);
       expect(user.email_verification_code).toBeNull();
     });
@@ -325,8 +225,10 @@ describe('Módulo de Autenticación - Pruebas de Integración (e2e)', () => {
     });
 
     it('debe rechazar verificación cuando el código ha expirado (400 Bad Request)', async () => {
-      const user = usersDb.find((u) => u.email === 'no.verificado@test.local');
-      user.email_verification_expires = new Date(Date.now() - 1000);
+      await prisma.usuarios.update({
+        where: { email: 'no.verificado@test.local' },
+        data: { email_verification_expires: new Date(Date.now() - 1000) },
+      });
 
       const res = await request(app.getHttpServer())
         .post('/api/auth/verify-email')

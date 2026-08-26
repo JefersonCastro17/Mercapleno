@@ -1,10 +1,17 @@
+const path = require('path');
+const dotenv = require('dotenv');
 const { PrismaClient } = require('@prisma/client');
 
-const databaseUrl = process.env.DATABASE_URL || '';
+// Asegurar que las variables de .env.test estén cargadas
+dotenv.config({ path: path.resolve(__dirname, '..', '.env.test'), override: false });
+
+const databaseUrl =
+  process.env.DATABASE_URL || 'mysql://root:root123@localhost:3308/mercapleno_test';
+
 const databaseName = databaseUrl.split('/').pop()?.split('?')[0] || '';
 
 if (!databaseName.endsWith('_test')) {
-  throw new Error(`Las pruebas requieren una BD *_test; se recibio: ${databaseName || 'vacia'}`);
+  throw new Error(`Las pruebas de integracion requieren una BD *_test; se recibio: ${databaseName || 'vacia'}`);
 }
 
 const prisma = new PrismaClient({ datasources: { db: { url: databaseUrl } } });
@@ -50,6 +57,7 @@ async function seedReferenceData() {
   await prisma.tipos_identificacion.createMany({
     data: [
       { id: 1, nombre: 'Cedula de ciudadania' },
+      { id: 2, nombre: 'Tarjeta de identidad' },
     ],
   });
 }
