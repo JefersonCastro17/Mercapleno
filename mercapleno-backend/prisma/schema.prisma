@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -22,9 +22,9 @@ model devolver_productos {
   id_tipo_devolucion Int?
   id_tipo            Int?
   id_documento       String?          @db.Char(2)
-  productos          productos?       @relation(fields: [id_productos], references: [id_productos], onDelete: Restrict, onUpdate: Restrict, map: "fk_dev_prod")
-  tipo_devolucion    tipo_devolucion? @relation(fields: [id_tipo_devolucion], references: [id_tipo_devolucion], onDelete: Restrict, onUpdate: Restrict, map: "fk_dev_tipo_devolucion")
-  tipo_movimiento    tipo_movimiento? @relation(fields: [id_tipo], references: [id_tipo], onDelete: Restrict, onUpdate: Restrict, map: "fk_dev_tipo_movimiento")
+  productos          productos?       @relation(fields: [id_productos], references: [id_productos], onDelete: Restrict, onUpdate: Restrict)
+  tipo_devolucion    tipo_devolucion? @relation(fields: [id_tipo_devolucion], references: [id_tipo_devolucion], onDelete: Restrict, onUpdate: Restrict)
+  tipo_movimiento    tipo_movimiento? @relation(fields: [id_tipo], references: [id_tipo], onDelete: Restrict, onUpdate: Restrict)
 
   @@index([id_productos], map: "fk_dev_prod")
   @@index([id_tipo_devolucion], map: "fk_dev_tipo_devolucion")
@@ -41,9 +41,9 @@ model entrada_productos {
   id_movimiento  Int?
   id_documento   String?     @db.Char(2)
   id_usuario     Int?
-  productos      productos?  @relation(fields: [id_productos], references: [id_productos], onDelete: Restrict, onUpdate: Restrict, map: "entrada_productos_ibfk_1")
-  movimiento     movimiento? @relation(fields: [id_movimiento], references: [id_movimiento], onDelete: Restrict, onUpdate: Restrict, map: "entrada_productos_ibfk_2")
-  usuarios       usuarios?   @relation(fields: [id_usuario], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "entrada_productos_ibfk_3")
+  productos      productos?  @relation(fields: [id_productos], references: [id_productos], onDelete: Restrict, onUpdate: Restrict)
+  movimiento     movimiento? @relation(fields: [id_movimiento], references: [id_movimiento], onDelete: Restrict, onUpdate: Restrict)
+  usuarios       usuarios?   @relation(fields: [id_usuario], references: [id], onDelete: Restrict, onUpdate: Restrict)
 
   @@index([id_productos], map: "entrada_productos_ibfk_1")
   @@index([id_movimiento], map: "entrada_productos_ibfk_2")
@@ -62,7 +62,7 @@ model movimiento {
   descripcion       String?             @db.VarChar(100)
   fecha_generar     DateTime?           @db.Date
   entrada_productos entrada_productos[]
-  tipo_movimiento   tipo_movimiento?    @relation(fields: [id_tipo], references: [id_tipo], onDelete: Restrict, onUpdate: Restrict, map: "movimiento_ibfk_1")
+  tipo_movimiento   tipo_movimiento?    @relation(fields: [id_tipo], references: [id_tipo], onDelete: Restrict, onUpdate: Restrict)
   salida_productos  salida_productos[]
   stock_actual      stock_actual[]
 
@@ -80,8 +80,8 @@ model productos {
   imagen             String?              @db.VarChar(255)
   devolver_productos devolver_productos[]
   entrada_productos  entrada_productos[]
-  categoria          categoria?           @relation(fields: [id_categoria], references: [id_categoria], onDelete: Restrict, onUpdate: Restrict, map: "productos_ibfk_1")
-  proveedor          proveedor?           @relation(fields: [id_proveedor], references: [id_proveedor], onDelete: Restrict, onUpdate: Restrict, map: "productos_ibfk_2")
+  categoria          categoria?           @relation(fields: [id_categoria], references: [id_categoria], onDelete: Restrict, onUpdate: Restrict)
+  proveedor          proveedor?           @relation(fields: [id_proveedor], references: [id_proveedor], onDelete: Restrict, onUpdate: Restrict)
   salida_productos   salida_productos[]
   stock_actual       stock_actual[]
   venta_productos    venta_productos[]
@@ -113,9 +113,9 @@ model salida_productos {
   id_documento  String?     @db.Char(2)
   id_usuario    Int?
   id_movimiento Int?
-  productos     productos?  @relation(fields: [id_productos], references: [id_productos], onDelete: Restrict, onUpdate: Restrict, map: "salida_productos_ibfk_1")
-  usuarios      usuarios?   @relation(fields: [id_usuario], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "salida_productos_ibfk_2")
-  movimiento    movimiento? @relation(fields: [id_movimiento], references: [id_movimiento], onDelete: Restrict, onUpdate: Restrict, map: "salida_productos_ibfk_3")
+  productos     productos?  @relation(fields: [id_productos], references: [id_productos], onDelete: Restrict, onUpdate: Restrict)
+  usuarios      usuarios?   @relation(fields: [id_usuario], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  movimiento    movimiento? @relation(fields: [id_movimiento], references: [id_movimiento], onDelete: Restrict, onUpdate: Restrict)
 
   @@index([id_productos], map: "salida_productos_ibfk_1")
   @@index([id_usuario], map: "salida_productos_ibfk_2")
@@ -128,8 +128,8 @@ model stock_actual {
   id_movimiento     Int?
   stock             Int?
   fecha_vencimiento DateTime?   @db.Date
-  productos         productos?  @relation(fields: [id_productos], references: [id_productos], onDelete: Restrict, onUpdate: Restrict, map: "stock_actual_ibfk_1")
-  movimiento        movimiento? @relation(fields: [id_movimiento], references: [id_movimiento], onDelete: Restrict, onUpdate: Restrict, map: "stock_actual_ibfk_2")
+  productos         productos?  @relation(fields: [id_productos], references: [id_productos], onDelete: Restrict, onUpdate: Restrict)
+  movimiento        movimiento? @relation(fields: [id_movimiento], references: [id_movimiento], onDelete: Restrict, onUpdate: Restrict)
 
   @@index([id_productos], map: "stock_actual_ibfk_1")
   @@index([id_movimiento], map: "stock_actual_ibfk_2")
@@ -143,11 +143,11 @@ model tipo_devolucion {
 }
 
 model tipo_movimiento {
-  id_tipo            Int                  @id @default(autoincrement())
-  nombre_movimiento  String?              @db.VarChar(20)
-  fecha_generar      DateTime?            @db.Date
+  id_tipo           Int                  @id @default(autoincrement())
+  nombre_movimiento String?              @db.VarChar(20)
+  fecha_generar     DateTime?            @db.Date
   devolver_productos devolver_productos[]
-  movimiento         movimiento[]
+  movimiento        movimiento[]
 }
 
 model tipos_identificacion {
@@ -157,29 +157,29 @@ model tipos_identificacion {
 }
 
 model usuarios {
-  id                         Int                  @id @default(autoincrement())
-  nombre                     String               @db.VarChar(100)
-  apellido                   String               @db.VarChar(100)
-  email                      String               @unique @db.VarChar(150)
-  password                   String               @db.VarChar(255)
-  direccion                  String               @db.VarChar(255)
-  fecha_nacimiento           DateTime             @db.Date
-  fecha_registro             DateTime             @default(now()) @db.Timestamp(0)
-  id_rol                     Int
-  id_tipo_identificacion     Int
-  numero_identificacion      String               @unique @db.VarChar(50)
-  email_verified             Boolean              @default(false)
-  email_verification_code    String?              @db.VarChar(64)
-  email_verification_expires DateTime?            @db.DateTime(0)
-  password_reset_code        String?              @db.VarChar(64)
-  password_reset_expires     DateTime?            @db.DateTime(0)
-  login_two_factor_code      String?              @db.VarChar(64)
-  login_two_factor_expires   DateTime?            @db.DateTime(0)
-  entrada_productos          entrada_productos[]
-  salida_productos           salida_productos[]
-  roles                      roles                @relation(fields: [id_rol], references: [id])
-  tipos_identificacion       tipos_identificacion @relation(fields: [id_tipo_identificacion], references: [id])
-  venta                      venta[]
+  id                       Int                  @id @default(autoincrement())
+  nombre                   String               @db.VarChar(100)
+  apellido                 String               @db.VarChar(100)
+  email                    String               @unique @db.VarChar(150)
+  password                 String               @db.VarChar(255)
+  direccion                String               @db.VarChar(255)
+  fecha_nacimiento         DateTime             @db.Date
+  fecha_registro           DateTime             @default(now()) @db.Timestamp(0)
+  id_rol                   Int
+  id_tipo_identificacion   Int
+  numero_identificacion    String               @unique @db.VarChar(50)
+  email_verified           Boolean              @default(false)
+  email_verification_code  String?              @db.VarChar(64)
+  email_verification_expires DateTime?          @db.Timestamp(0)
+  password_reset_code      String?              @db.VarChar(64)
+  password_reset_expires   DateTime?            @db.Timestamp(0)
+  login_two_factor_code    String?              @db.VarChar(64)
+  login_two_factor_expires DateTime?            @db.Timestamp(0)
+  entrada_productos        entrada_productos[]
+  salida_productos         salida_productos[]
+  roles                    roles                @relation(fields: [id_rol], references: [id])
+  tipos_identificacion     tipos_identificacion @relation(fields: [id_tipo_identificacion], references: [id])
+  venta                    venta[]
 
   @@index([id_rol], map: "usuarios_ibfk_1")
   @@index([id_tipo_identificacion], map: "usuarios_ibfk_2")
@@ -192,8 +192,8 @@ model venta {
   id_usuario      Int?
   total           Decimal?          @db.Decimal(12, 2)
   id_metodo       String?           @db.Char(2)
-  usuarios        usuarios?         @relation(fields: [id_usuario], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "venta_ibfk_1")
-  metodo          metodo?           @relation(fields: [id_metodo], references: [id_metodo], onDelete: Restrict, onUpdate: Restrict, map: "venta_ibfk_2")
+  usuarios        usuarios?         @relation(fields: [id_usuario], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  metodo          metodo?           @relation(fields: [id_metodo], references: [id_metodo], onDelete: Restrict, onUpdate: Restrict)
   venta_productos venta_productos[]
 
   @@index([id_usuario], map: "venta_ibfk_1")
@@ -206,11 +206,11 @@ enum cart_status {
 }
 
 model cart {
-  id         Int        @id @default(autoincrement())
+  id         Int         @id @default(autoincrement())
   id_usuario Int
   status     cart_status @default(active)
-  created_at DateTime   @default(now())
-  updated_at DateTime   @updatedAt
+  created_at DateTime    @default(now())
+  updated_at DateTime    @updatedAt
 
   items cart_items[]
 
@@ -226,7 +226,7 @@ model cart_items {
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
 
-  cart cart? @relation(fields: [cart_id], references: [id], onDelete: Cascade, map: "cart_items_ibfk_cart")
+  cart cart? @relation(fields: [cart_id], references: [id], onDelete: Cascade)
 
   @@index([cart_id], map: "idx_cart_id")
   @@index([id_productos], map: "idx_product_id")
@@ -237,8 +237,8 @@ model venta_productos {
   id_productos Int
   cantidad     Int?
   precio       Decimal   @db.Decimal(10, 2)
-  venta        venta     @relation(fields: [id_venta], references: [id_venta], onUpdate: Restrict, map: "venta_productos_ibfk_1")
-  productos    productos @relation(fields: [id_productos], references: [id_productos], onUpdate: Restrict, map: "venta_productos_ibfk_2")
+  venta        venta     @relation(fields: [id_venta], references: [id_venta], onUpdate: Restrict)
+  productos    productos @relation(fields: [id_productos], references: [id_productos], onUpdate: Restrict)
 
   @@id([id_venta, id_productos])
   @@index([id_productos], map: "venta_productos_ibfk_2")

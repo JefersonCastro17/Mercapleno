@@ -1,4 +1,4 @@
-﻿import 'dotenv/config';
+import 'dotenv/config';
 import * as joi from 'joi';
 
 interface EnvVars {
@@ -35,8 +35,8 @@ const schema = joi
     NODE_ENV: joi.string().valid('development', 'production', 'test').default('development'),
     DATABASE_URL: joi.string().optional().allow(''),
     DB_HOST: joi.string().default('localhost'),
-    DB_PORT: joi.number().default(3306),
-    DB_USER: joi.string().default('root'),
+    DB_PORT: joi.number().default(5432),
+    DB_USER: joi.string().default('postgres'),
     DB_PASSWORD: joi.string().allow('').default(''),
     DB_NAME: joi.string().default('mercapleno'),
     JWT_SECRET: joi.string().default('yogui'), //token
@@ -78,7 +78,7 @@ const buildDatabaseUrl = (): string => {
   const port = envVars.DB_PORT;
   const database = envVars.DB_NAME;
 
-  return `mysql://${user}${password}@${host}:${port}/${database}`;
+  return `postgresql://${user}${password}@${host}:${port}/${database}?schema=public`;
 };
 
 export const envs = {

@@ -1,0 +1,8 @@
+LOAD DATABASE
+     FROM mysql://root:root123@host.docker.internal:3307/mercapleno
+     INTO postgresql://postgres:postgres123@host.docker.internal:5432/mercapleno
+
+ WITH include drop, create tables, no truncate,
+      create indexes, reset sequences, foreign keys
+
+  SET maintenance_work_mem to '128MB', work_mem to '12MB';
