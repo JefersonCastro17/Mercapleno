@@ -6,7 +6,7 @@ const { PrismaClient } = require('@prisma/client');
 dotenv.config({ path: path.resolve(__dirname, '..', '.env.test'), override: false });
 
 const databaseUrl =
-  process.env.DATABASE_URL || 'mysql://root:root123@localhost:3308/mercapleno_test';
+  process.env.DATABASE_URL || 'postgresql://postgres:postgres123@localhost:5433/mercapleno_test?schema=public';
 
 const databaseName = databaseUrl.split('/').pop()?.split('?')[0] || '';
 
@@ -37,12 +37,45 @@ const tablesInDeleteOrder = [
   'tipos_identificacion',
 ];
 
+const tablesWithPk = [
+  { table: 'roles', pk: 'id' },
+  { table: 'tipos_identificacion', pk: 'id' },
+  { table: 'categoria', pk: 'id_categoria' },
+  { table: 'proveedor', pk: 'id_proveedor' },
+  { table: 'tipo_movimiento', pk: 'id_tipo' },
+  { table: 'tipo_devolucion', pk: 'id_tipo_devolucion' },
+  { table: 'usuarios', pk: 'id' },
+  { table: 'productos', pk: 'id_productos' },
+  { table: 'movimiento', pk: 'id_movimiento' },
+  { table: 'stock_actual', pk: 'id_inventario' },
+  { table: 'entrada_productos', pk: 'id_entrada' },
+  { table: 'salida_productos', pk: 'id_salida' },
+  { table: 'devolver_productos', pk: 'id_devolucion' },
+  { table: 'venta', pk: 'id_venta' },
+  { table: 'cart', pk: 'id' },
+  { table: 'cart_items', pk: 'id' },
+];
+
+async function syncSequences() {
+  for (const { table, pk } of tablesWithPk) {
+    try {
+      await prisma.$executeRawUnsafe(
+        `SELECT setval(pg_get_serial_sequence('"${table}"', '${pk}'), coalesce((SELECT max("${pk}") FROM "${table}"), 1));`
+      );
+    } catch {
+      // Ignorar si no aplica para la secuencia
+    }
+  }
+}
+
 async function cleanDatabase() {
   await prisma.$transaction(async (transaction) => {
     for (const table of tablesInDeleteOrder) {
-      await transaction.$executeRawUnsafe(`DELETE FROM \`${table}\``);
+      await transaction.$executeRawUnsafe(`DELETE FROM "${table}"`);
     }
   });
+
+  await syncSequences();
 }
 
 async function seedReferenceData() {
@@ -60,6 +93,8 @@ async function seedReferenceData() {
       { id: 2, nombre: 'Tarjeta de identidad' },
     ],
   });
+
+  await syncSequences();
 }
 
-module.exports = { prisma, cleanDatabase, seedReferenceData };
+module.exports = { prisma, cleanDatabase, seedReferenceData, syncSequences };

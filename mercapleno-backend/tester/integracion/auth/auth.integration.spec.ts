@@ -7,7 +7,7 @@ import { EmailService } from '../../../src/email/email.service';
 
 const cookieParser = require('cookie-parser');
 const request = require('supertest');
-const { prisma, cleanDatabase, seedReferenceData } = require('../../test-utils');
+const { prisma, cleanDatabase, seedReferenceData, syncSequences } = require('../../test-utils');
 
 describe('Módulo de Autenticación - Pruebas de Integración (e2e)', () => {
   let app: INestApplication;
@@ -98,6 +98,7 @@ describe('Módulo de Autenticación - Pruebas de Integración (e2e)', () => {
         },
       ],
     });
+    await syncSequences();
   });
 
   // =========================================================================
