@@ -25,6 +25,12 @@ export class UsersAdminController {
     return this.usersAdminService.findRoles();
   }
 
+  @Get('document-types')
+  @ApiOperation({ summary: 'Listar tipos de identificación disponibles' })
+  findDocumentTypes() {
+    return this.usersAdminService.findDocumentTypes();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Consultar usuario administrativo por ID' })
   findOne(@Param('id') id: string) {

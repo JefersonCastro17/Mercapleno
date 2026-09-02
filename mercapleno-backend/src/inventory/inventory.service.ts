@@ -1,6 +1,5 @@
 import { BadRequestException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
-import { PoolConnection } from 'mysql2/promise';
-import { MysqlService } from '../common/database/mysql.service';
+import { MysqlService, PoolConnection } from '../common/database/mysql.service';
 import { buildLowStockAlert, getLowStockMetadata, LowStockAlert } from '../common/stock/low-stock.util';
 import { EmailService } from '../email/email.service';
 import { RegisterMovementDto } from './dto/register-movement.dto';
@@ -64,13 +63,14 @@ export class InventoryService {
     let lowStockAlert: LowStockAlert | null = null;
 
     try {
-      connection = await this.db.getConnection();
-      await connection.beginTransaction();
-      await this.ensureReferenceDocumentExists(connection, dto.tipo_movimiento, normalizedDocumentId);
+      const conn = await this.db.getConnection();
+      connection = conn;
+      await conn.beginTransaction();
+      await this.ensureReferenceDocumentExists(conn, dto.tipo_movimiento, normalizedDocumentId);
 
       // Paso 1: Registrar el movimiento maestro
       const descripcionMovimiento = dto.comentario || (dto.tipo_movimiento === 'ENTRADA' ? 'Entrada de producto por inventario' : 'Salida de producto por inventario');
-      const [movimientoResult] = await connection.execute(
+      const [movimientoResult] = await conn.execute(
         `
           INSERT INTO movimiento (id_tipo, descripcion, fecha_generar)
           VALUES (?, ?, NOW())
@@ -81,7 +81,7 @@ export class InventoryService {
 
       if (dto.tipo_movimiento === 'ENTRADA') {
         // Paso 2: Registrar en entrada_productos usando el ID dinámico
-        await connection.execute(
+        await conn.execute(
           `
             INSERT INTO entrada_productos
             (id_productos, cantidad, fecha, observaciones, id_documento, id_usuario, id_movimiento)
@@ -91,19 +91,19 @@ export class InventoryService {
         );
 
         // Paso 3: Actualizar stock_actual con la cantidad y el ID del movimiento
-        const [updateResult] = await connection.execute(
-          'UPDATE stock_actual SET stock = stock + ?, id_movimiento = ?, fecha_vencimiento = CURDATE() WHERE id_productos = ?',
+        const [updateResult] = await conn.execute(
+          'UPDATE stock_actual SET stock = stock + ?, id_movimiento = ?, fecha_vencimiento = CURRENT_DATE WHERE id_productos = ?',
           [dto.cantidad, idMovimientoGenerado, dto.id_producto],
         );
 
         if ((updateResult as { affectedRows?: number }).affectedRows === 0) {
-          await connection.execute(
-            'INSERT INTO stock_actual (id_productos, stock, id_movimiento, fecha_vencimiento) VALUES (?, ?, ?, CURDATE())',
+          await conn.execute(
+            'INSERT INTO stock_actual (id_productos, stock, id_movimiento, fecha_vencimiento) VALUES (?, ?, ?, CURRENT_DATE)',
             [dto.id_producto, dto.cantidad, idMovimientoGenerado],
           );
         }
       } else {
-        const [[stockRow]] = await connection.query<any[]>(
+        const [[stockRow]] = await conn.query<any[]>(
           'SELECT stock FROM stock_actual WHERE id_productos = ? FOR UPDATE',
           [dto.id_producto],
         );
@@ -113,7 +113,7 @@ export class InventoryService {
         }
 
         // Paso 2: Registrar en salida_productos usando el ID dinámico
-        await connection.execute(
+        await conn.execute(
           `
             INSERT INTO salida_productos
             (id_productos, cantidad, fecha, id_documento, id_usuario, id_movimiento)
@@ -123,8 +123,8 @@ export class InventoryService {
         );
 
         // Paso 3: Actualizar stock_actual con la cantidad y el ID del movimiento
-        const [updateResult] = await connection.execute(
-          'UPDATE stock_actual SET stock = stock - ?, id_movimiento = ?, fecha_vencimiento = CURDATE() WHERE id_productos = ?',
+        const [updateResult] = await conn.execute(
+          'UPDATE stock_actual SET stock = stock - ?, id_movimiento = ?, fecha_vencimiento = CURRENT_DATE WHERE id_productos = ?',
           [dto.cantidad, idMovimientoGenerado, dto.id_producto],
         );
 
@@ -135,12 +135,12 @@ export class InventoryService {
         }
       }
 
-      const stockSnapshot = await this.getStockSnapshot(connection, dto.id_producto);
+      const stockSnapshot = await this.getStockSnapshot(conn, dto.id_producto);
       if (stockSnapshot) {
         lowStockAlert = buildLowStockAlert(stockSnapshot.id, stockSnapshot.stock, stockSnapshot.nombre);
       }
 
-      await connection.commit();
+      await conn.commit();
 
       if (lowStockAlert) {
         this.logger.log(

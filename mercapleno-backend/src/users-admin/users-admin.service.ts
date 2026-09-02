@@ -99,6 +99,22 @@ export class UsersAdminService {
     };
   }
 
+  async findDocumentTypes() {
+    const tipos = await this.prisma.tipos_identificacion.findMany({
+      orderBy: {
+        id: 'asc',
+      },
+    });
+
+    return {
+      success: true,
+      tipos_identificacion: tipos.map((tipo) => ({
+        id: tipo.id,
+        nombre: tipo.nombre,
+      })),
+    };
+  }
+
   async findOne(id: string) {
     const userId = this.parseUserId(id);
 

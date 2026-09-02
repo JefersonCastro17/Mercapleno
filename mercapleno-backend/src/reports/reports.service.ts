@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import PDFDocument = require('pdfkit');
 import { MysqlService } from '../common/database/mysql.service';
 
@@ -8,19 +8,19 @@ export class ReportsService {
 
   async getVentasMes(inicio?: string, fin?: string) {
     let sql = `
-      SELECT DATE_FORMAT(fecha, '%Y-%m') AS mes, SUM(total) AS total
+      SELECT TO_CHAR(fecha, 'YYYY-MM') AS mes, SUM(total) AS total
       FROM venta
       WHERE 1 = 1
     `;
     const params: any[] = [];
 
     if (inicio) {
-      sql += ` AND DATE_FORMAT(fecha, '%Y-%m') >= ?`;
+      sql += ` AND TO_CHAR(fecha, 'YYYY-MM') >= ?`;
       params.push(inicio);
     }
 
     if (fin) {
-      sql += ` AND DATE_FORMAT(fecha, '%Y-%m') <= ?`;
+      sql += ` AND TO_CHAR(fecha, 'YYYY-MM') <= ?`;
       params.push(fin);
     }
 
@@ -59,7 +59,7 @@ export class ReportsService {
 
   async getResumenMes() {
     const [rows] = await this.db.query(`
-      SELECT DATE_FORMAT(fecha, '%Y-%m') AS mes,
+      SELECT TO_CHAR(fecha, 'YYYY-MM') AS mes,
              COUNT(*) AS cantidad_ventas,
              CAST(SUM(total) AS DECIMAL(10,2)) AS total_mes
       FROM venta
@@ -112,7 +112,7 @@ export class ReportsService {
     `);
 
     const [resumenMes] = await this.db.query<any>(`
-      SELECT DATE_FORMAT(fecha, '%Y-%m') AS mes,
+      SELECT TO_CHAR(fecha, 'YYYY-MM') AS mes,
              COUNT(*) AS cantidad_ventas,
              CAST(SUM(total) AS DECIMAL(10,2)) AS total_mes
       FROM venta

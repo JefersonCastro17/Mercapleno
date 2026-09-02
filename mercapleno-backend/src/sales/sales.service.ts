@@ -5,8 +5,7 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import { PoolConnection } from 'mysql2/promise';
-import { MysqlService } from '../common/database/mysql.service';
+import { MysqlService, PoolConnection } from '../common/database/mysql.service';
 import { buildLowStockAlert, getLowStockMetadata, LowStockAlert } from '../common/stock/low-stock.util';
 import { EmailService } from '../email/email.service';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -159,10 +158,11 @@ export class SalesService {
     const lowStockAlerts = new Map<number, LowStockAlert>();
 
     try {
-      connection = await this.db.getConnection();
-      await connection.beginTransaction();
+      const conn = await this.db.getConnection();
+      connection = conn;
+      await conn.beginTransaction();
 
-      const [[metodo]] = await connection.query<any[]>(
+      const [[metodo]] = await conn.query<any[]>(
         'SELECT id_metodo FROM metodo WHERE id_metodo = ? LIMIT 1',
         [idMetodo],
       );
@@ -174,7 +174,7 @@ export class SalesService {
         });
       }
 
-      const [ventaResult] = await connection.query<any>(
+      const [ventaResult] = await conn.query<any>(
         `
           INSERT INTO venta (id_documento, id_usuario, id_metodo, fecha, total)
           VALUES (?, ?, ?, NOW(), ?)
@@ -191,7 +191,7 @@ export class SalesService {
         const idProducto = Number(item.id);
         const cantidad = Number(item.cantidad);
 
-        const [[producto]] = await connection.query<any[]>(
+        const [[producto]] = await conn.query<any[]>(
           `
             SELECT p.nombre, p.precio, sa.stock
             FROM productos p
@@ -209,7 +209,7 @@ export class SalesService {
           });
         }
 
-        await connection.query(
+        await conn.query(
           `
             INSERT INTO venta_productos (id_venta, id_productos, cantidad, precio)
             VALUES (?, ?, ?, ?)
@@ -218,7 +218,7 @@ export class SalesService {
         );
 
         // Paso 1: Registrar el movimiento de salida por venta
-        const [movimientoResult] = await connection.query(
+        const [movimientoResult] = await conn.query(
           `
             INSERT INTO movimiento (id_tipo, descripcion, fecha_generar)
             VALUES (?, ?, NOW())
@@ -228,7 +228,7 @@ export class SalesService {
         const idMovimientoGenerado = (movimientoResult as any).insertId;
 
         // Paso 2: Registrar en salida_productos usando el ID de movimiento generado
-        await connection.query(
+        await conn.query(
           `
             INSERT INTO salida_productos (id_productos, cantidad, fecha, id_documento, id_usuario, id_movimiento)
             VALUES (?, ?, NOW(), ?, ?, ?)
@@ -237,8 +237,8 @@ export class SalesService {
         );
 
         // Paso 3: Actualizar stock y asociar el id_movimiento en stock_actual
-        await connection.query(
-          'UPDATE stock_actual SET stock = stock - ?, id_movimiento = ?, fecha_vencimiento = CURDATE() WHERE id_productos = ?',
+        await conn.query(
+          'UPDATE stock_actual SET stock = stock - ?, id_movimiento = ?, fecha_vencimiento = CURRENT_DATE WHERE id_productos = ?',
           [cantidad, idMovimientoGenerado, idProducto],
         );
 
@@ -249,7 +249,7 @@ export class SalesService {
         }
       }
 
-      await connection.commit();
+      await conn.commit();
       const warnings = Array.from(lowStockAlerts.values());
 
       if (warnings.length > 0) {
