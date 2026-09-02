@@ -4,7 +4,8 @@
 **/.npm
 **.log
 **/coverage/
-**/reports/
+/mercapleno-backend/reports/
+/reports/
 **/*.tsbuildinfo
 
 # Environment variables
