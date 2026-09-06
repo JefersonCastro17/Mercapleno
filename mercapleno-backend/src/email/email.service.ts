@@ -27,13 +27,16 @@ export class EmailService {
     }
 
     try {
-      const options = envs.smtpService
+      const options: any = envs.smtpService
         ? {
             service: envs.smtpService,
             auth: {
               user: envs.smtpUser,
               pass: envs.smtpPass,
             },
+            connectionTimeout: 5000,
+            greetingTimeout: 5000,
+            socketTimeout: 5000,
           }
         : {
             host: envs.smtpHost,
@@ -43,6 +46,9 @@ export class EmailService {
               user: envs.smtpUser,
               pass: envs.smtpPass,
             },
+            connectionTimeout: 5000,
+            greetingTimeout: 5000,
+            socketTimeout: 5000,
           };
 
       this.transporter = nodemailer.createTransport(options);
