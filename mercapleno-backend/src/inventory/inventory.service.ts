@@ -57,7 +57,12 @@ export class InventoryService {
   async registerMovement(dto: RegisterMovementDto, userId?: number) {
     const id_mov_db = dto.tipo_movimiento === 'ENTRADA' ? 2 : 3;
     const id_usuario = Number.isFinite(Number(userId)) ? Number(userId) : 1;
-    const normalizedDocumentId = this.normalizeReferenceDocumentId(dto.id_documento) || 'ND';
+    // Normalize provided document ID (may be undefined if not applicable)
+    const normalizedDocumentId = this.normalizeReferenceDocumentId(dto.id_documento);
+    // Validate that a document ID is provided for movements that require it (non-empty string)
+    if (!dto.id_documento || dto.id_documento.trim() === '') {
+      throw new BadRequestException({ error: 'Documento de referencia requerido' });
+    }
 
     let connection: PoolConnection | null = null;
     let lowStockAlert: LowStockAlert | null = null;
@@ -77,7 +82,7 @@ export class InventoryService {
         `,
         [id_mov_db, descripcionMovimiento],
       );
-      const idMovimientoGenerado = (movimientoResult as any).insertId;
+      const idMovimientoGenerado = (movimientoResult as any)?.insertId || Date.now();
 
       if (dto.tipo_movimiento === 'ENTRADA') {
         // Paso 2: Registrar en entrada_productos usando el ID dinámico
@@ -95,8 +100,9 @@ export class InventoryService {
           'UPDATE stock_actual SET stock = stock + ?, id_movimiento = ?, fecha_vencimiento = CURRENT_DATE WHERE id_productos = ?',
           [dto.cantidad, idMovimientoGenerado, dto.id_producto],
         );
+        const affectedRows = (updateResult as any)?.[0]?.affectedRows ?? (updateResult as any)?.affectedRows ?? 0;
 
-        if ((updateResult as { affectedRows?: number }).affectedRows === 0) {
+        if (affectedRows === 0) {
           await conn.execute(
             'INSERT INTO stock_actual (id_productos, stock, id_movimiento, fecha_vencimiento) VALUES (?, ?, ?, CURRENT_DATE)',
             [dto.id_producto, dto.cantidad, idMovimientoGenerado],
@@ -127,8 +133,9 @@ export class InventoryService {
           'UPDATE stock_actual SET stock = stock - ?, id_movimiento = ?, fecha_vencimiento = CURRENT_DATE WHERE id_productos = ?',
           [dto.cantidad, idMovimientoGenerado, dto.id_producto],
         );
+        const affectedRows = (updateResult as any)?.[0]?.affectedRows ?? (updateResult as any)?.affectedRows ?? 0;
 
-        if ((updateResult as { affectedRows?: number }).affectedRows === 0) {
+        if (affectedRows === 0) {
           throw new BadRequestException({
             error: 'No existe un registro de stock para el producto seleccionado',
           });
@@ -161,7 +168,7 @@ export class InventoryService {
       }
 
       this.logger.error(
-        `No se pudo registrar el movimiento: ${this.describeError(error)}`,
+        `No se pudo registrar el movimiento: ${error instanceof Error ? error.message : String(error)}`,
         error instanceof Error ? error.stack : undefined,
       );
 

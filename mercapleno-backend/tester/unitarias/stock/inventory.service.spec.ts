@@ -18,6 +18,11 @@ describe('InventoryService', () => {
     release: jest.fn(),
   };
 
+  jest.mock('../../../src/products/product-image-upload.util', () => ({
+  deleteStoredProductImage: jest.fn(),
+  resolveUploadedProductImagePath: jest.fn(),
+}));
+
   beforeEach(async () => {
     jest.clearAllMocks();
 

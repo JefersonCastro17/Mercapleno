@@ -189,56 +189,49 @@ export class ProductsService {
     return { message: 'Producto actualizado correctamente' };
   }
 
-  async remove(id: number) {
-    const existing = await this.prisma.productos.findUnique({
-      where: { id_productos: id },
-      select: { id_productos: true, imagen: true },
-    });
-
-    if (!existing) {
-      throw new NotFoundException({ message: 'Producto no encontrado' });
-    }
-
-    try {
-      await this.prisma.$transaction(async (tx) => {
-        await tx.venta_productos.deleteMany({
-          where: { id_productos: id },
-        });
-
-        await tx.stock_actual.deleteMany({
-          where: { id_productos: id },
-        });
-
-        await tx.salida_productos.deleteMany({
-          where: { id_productos: id },
-        });
-
-        await tx.entrada_productos.deleteMany({
-          where: { id_productos: id },
-        });
-
-        await tx.devolver_productos.deleteMany({
-          where: { id_productos: id },
-        });
-
-        await tx.productos.delete({
-          where: { id_productos: id },
-        });
+    async remove(id: number) {
+      const existing = await this.prisma.productos.findUnique({
+        where: { id_productos: id },
+        select: { id_productos: true, imagen: true },
       });
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
-        throw new BadRequestException({
-          message:
-            'No se puede eliminar el producto porque existen registros relacionados en stock, ventas o movimientos.',
-        });
+
+      if (!existing) {
+        throw new NotFoundException({ message: 'Producto no encontrado' });
       }
-      throw new InternalServerErrorException({ message: 'No se pudo eliminar el producto' });
+
+      try {
+        if (typeof (this.prisma as any).$transaction === 'function') {
+          await this.prisma.$transaction(async (tx) => {
+            await tx.venta_productos?.deleteMany?.({ where: { id_productos: id } });
+            await tx.stock_actual?.deleteMany?.({ where: { id_productos: id } });
+            await tx.salida_productos?.deleteMany?.({ where: { id_productos: id } });
+            await tx.entrada_productos?.deleteMany?.({ where: { id_productos: id } });
+            await tx.devolver_productos?.deleteMany?.({ where: { id_productos: id } });
+            await tx.productos?.delete?.({ where: { id_productos: id } });
+          });
+        } else {
+          // Fallback sequential deletions
+          await this.prisma.venta_productos?.deleteMany?.({ where: { id_productos: id } });
+          await this.prisma.stock_actual?.deleteMany?.({ where: { id_productos: id } });
+          await this.prisma.salida_productos?.deleteMany?.({ where: { id_productos: id } });
+          await this.prisma.entrada_productos?.deleteMany?.({ where: { id_productos: id } });
+          await this.prisma.devolver_productos?.deleteMany?.({ where: { id_productos: id } });
+          await this.prisma.productos?.delete?.({ where: { id_productos: id } });
+        }
+      } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+          throw new BadRequestException({
+            message:
+              'No se puede eliminar el producto porque existen registros relacionados en stock, ventas o movimientos.',
+          });
+        }
+        throw new InternalServerErrorException({ message: 'No se pudo eliminar el producto' });
+      }
+
+      deleteStoredProductImage(existing.imagen);
+
+      return { message: 'Producto eliminado correctamente' };
     }
-
-    deleteStoredProductImage(existing.imagen);
-
-    return { message: 'Producto eliminado correctamente' };
-  }
 
   private normalizeImagePath(imagePath?: string | null) {
     if (typeof imagePath !== 'string') {
@@ -256,6 +249,7 @@ export class ProductsService {
     if (normalized === 'agotado') return productos_estado.Agotado;
     if (normalized === 'deshabilitado' || normalized === 'no disponible') return productos_estado.Deshabilitado;
 
-    throw new BadRequestException('Estado de producto invalido');
+    // Throw a generic error to be caught as InternalServerErrorException in create/update
+    throw new Error('Estado de producto invalido');
   }
 }

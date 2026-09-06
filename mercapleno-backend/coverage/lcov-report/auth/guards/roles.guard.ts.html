@@ -23,16 +23,28 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
+<<<<<<< HEAD
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
                 <span class='fraction'>19/19</span>
+=======
+                <span class="strong">94.73% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>18/19</span>
+>>>>>>> origin/feature/pruebas-unitarias-integracion-products-reports
             </div>
         
             
             <div class='fl pad1y space-right2'>
+<<<<<<< HEAD
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
                 <span class='fraction'>10/10</span>
+=======
+                <span class="strong">90% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>9/10</span>
+>>>>>>> origin/feature/pruebas-unitarias-integracion-products-reports
             </div>
         
             
@@ -44,9 +56,15 @@
         
             
             <div class='fl pad1y space-right2'>
+<<<<<<< HEAD
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
                 <span class='fraction'>17/17</span>
+=======
+                <span class="strong">94.11% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>16/17</span>
+>>>>>>> origin/feature/pruebas-unitarias-integracion-products-reports
             </div>
         
             
@@ -107,7 +125,11 @@
 <a name='L42'></a><a href='#L42'>42</a>
 <a name='L43'></a><a href='#L43'>43</a>
 <a name='L44'></a><a href='#L44'>44</a>
+<<<<<<< HEAD
 <a name='L45'></a><a href='#L45'>45</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">6x</span>
+=======
+<a name='L45'></a><a href='#L45'>45</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">4x</span>
+>>>>>>> origin/feature/pruebas-unitarias-integracion-products-reports
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -117,6 +139,7 @@
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<<<<<<< HEAD
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6x</span>
@@ -142,13 +165,50 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">26x</span>
 <span class="cline-any cline-yes">1x</span>
+=======
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">2x</span>
+>>>>>>> origin/feature/pruebas-unitarias-integracion-products-reports
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<<<<<<< HEAD
 <span class="cline-any cline-yes">25x</span>
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">21x</span>
+=======
+<span class="cline-any cline-yes">8x</span>
+>>>>>>> origin/feature/pruebas-unitarias-integracion-products-reports
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import {
@@ -169,8 +229,22 @@ export class RolesGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const req = context.switchToHttp().getRequest() as { method?: string; user?: AuthUser };
 &nbsp;
+<<<<<<< HEAD
     if (req?.method === 'OPTIONS') {
       return true;
+=======
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (req?.method === 'OPTIONS') {
+<span class="cstat-no" title="statement not covered" >            return true;</span>
+        }
+&nbsp;
+        const requiredRoles = this.reflector.getAllAndOverride&lt;number[]&gt;(ROLES_KEY, [
+            context.getHandler(),
+            context.getClass(),
+        ]);
+    
+        if (!requiredRoles || requiredRoles.length === 0) {
+            return true; // No se requieren roles, permitir el acceso
+>>>>>>> origin/feature/pruebas-unitarias-integracion-products-reports
     }
 &nbsp;
     const requiredRoles = this.reflector.getAllAndOverride&lt;number[]&gt;(ROLES_KEY, [
@@ -178,8 +252,18 @@ export class RolesGuard implements CanActivate {
       context.getClass(),
     ]);
 &nbsp;
+<<<<<<< HEAD
     if (!requiredRoles || requiredRoles.length === 0) {
       return true;
+=======
+        if (!user) {
+            throw new UnauthorizedException ("Usuario no esta autenticado");
+        }
+        if (!requiredRoles.includes(user.id_rol)) {
+            throw new ForbiddenException ("Usuario no tiene permiso para acceder a este recurso");
+        }
+        return true; // El usuario tiene el rol requerido, permitir el acceso
+>>>>>>> origin/feature/pruebas-unitarias-integracion-products-reports
     }
 &nbsp;
     const user = req.user;
@@ -202,7 +286,11 @@ export class RolesGuard implements CanActivate {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+<<<<<<< HEAD
                 at 2026-08-25T03:12:25.039Z
+=======
+                at 2026-08-25T16:26:31.725Z
+>>>>>>> origin/feature/pruebas-unitarias-integracion-products-reports
             </div>
         <script src="../../prettify.js"></script>
         <script>
