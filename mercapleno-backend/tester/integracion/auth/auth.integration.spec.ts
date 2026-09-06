@@ -7,7 +7,11 @@ import { EmailService } from '../../../src/email/email.service';
 
 const cookieParser = require('cookie-parser');
 const request = require('supertest');
+<<<<<<< HEAD
 const { prisma, cleanDatabase, seedReferenceData, syncSequences } = require('../../test-utils');
+=======
+const { prisma, cleanDatabase, seedReferenceData } = require('../../test-utils');
+>>>>>>> origin/feature/pruebas-unitarias-auth-admin-user
 
 describe('Módulo de Autenticación - Pruebas de Integración (e2e)', () => {
   let app: INestApplication;
@@ -98,7 +102,10 @@ describe('Módulo de Autenticación - Pruebas de Integración (e2e)', () => {
         },
       ],
     });
+<<<<<<< HEAD
     await syncSequences();
+=======
+>>>>>>> origin/feature/pruebas-unitarias-auth-admin-user
   });
 
   // =========================================================================
