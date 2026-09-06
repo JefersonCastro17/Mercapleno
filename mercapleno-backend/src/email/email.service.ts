@@ -11,67 +11,81 @@ export class EmailService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  private getTransporter(): nodemailer.Transporter {
+  private getTransporter(): nodemailer.Transporter | null {
     if (this.transporter) {
       return this.transporter;
     }
 
     if (!envs.smtpUser || !envs.smtpPass) {
-      throw new Error('SMTP no configurado: faltan SMTP_USER/SMTP_PASS');
+      this.logger.warn('SMTP no configurado: faltan SMTP_USER/SMTP_PASS. Los codigos de seguridad se mostraran en los logs de la consola.');
+      return null;
     }
 
     if (!envs.smtpService && !envs.smtpHost) {
-      throw new Error('SMTP no configurado: falta SMTP_HOST o SMTP_SERVICE');
+      this.logger.warn('SMTP no configurado: falta SMTP_HOST o SMTP_SERVICE. Los codigos de seguridad se mostraran en los logs de la consola.');
+      return null;
     }
 
-    const options = envs.smtpService
-      ? {
-          service: envs.smtpService,
-          auth: {
-            user: envs.smtpUser,
-            pass: envs.smtpPass,
-          },
-        }
-      : {
-          host: envs.smtpHost,
-          port: envs.smtpPort,
-          secure: envs.smtpSecure,
-          auth: {
-            user: envs.smtpUser,
-            pass: envs.smtpPass,
-          },
-        };
+    try {
+      const options = envs.smtpService
+        ? {
+            service: envs.smtpService,
+            auth: {
+              user: envs.smtpUser,
+              pass: envs.smtpPass,
+            },
+          }
+        : {
+            host: envs.smtpHost,
+            port: envs.smtpPort,
+            secure: envs.smtpSecure,
+            auth: {
+              user: envs.smtpUser,
+              pass: envs.smtpPass,
+            },
+          };
 
-    this.transporter = nodemailer.createTransport(options);
-    return this.transporter;
+      this.transporter = nodemailer.createTransport(options);
+      return this.transporter;
+    } catch (err: any) {
+      this.logger.error(`Error al inicializar transporte SMTP: ${err.message}. Se usara consola como fallback.`);
+      return null;
+    }
   }
 
   private fromAddress(): string {
-    const from = envs.smtpFromEmail || envs.smtpUser;
-    if (!from) {
-      throw new Error('SMTP no configurado: falta SMTP_FROM_EMAIL');
-    }
-
+    const from = envs.smtpFromEmail || envs.smtpUser || 'no-reply@mercapleno.com';
     return envs.appName ? `"${envs.appName}" <${from}>` : from;
   }
 
   async sendVerificationCode(email: string, code: string, ttlMin: number): Promise<void> {
     const transporter = this.getTransporter();
-    const info = await transporter.sendMail({
-      from: this.fromAddress(),
-      to: email,
-      subject: `${envs.appName} - Codigo de verificacion`,
-      text: `Tu codigo de verificacion es ${code}. Vence en ${ttlMin} minutos.`,
-      html: `
-        <div style="font-family: Arial, sans-serif; line-height: 1.5;">
-          <p>Tu codigo de verificacion es:</p>
-          <div style="font-size: 28px; font-weight: bold; letter-spacing: 2px;">${code}</div>
-          <p>Este codigo vence en ${ttlMin} minutos.</p>
-        </div>
-      `,
-    });
+    if (!transporter) {
+      this.logger.warn(`====================================================`);
+      this.logger.warn(`[CODIGO DE VERIFICACION] Para: ${email} | Codigo: ${code} (Vence en ${ttlMin}m)`);
+      this.logger.warn(`====================================================`);
+      return;
+    }
 
-    this.logger.log(`Correo de verificacion enviado a ${email}. Message ID: ${info.messageId}`);
+    try {
+      const info = await transporter.sendMail({
+        from: this.fromAddress(),
+        to: email,
+        subject: `${envs.appName} - Codigo de verificacion`,
+        text: `Tu codigo de verificacion es ${code}. Vence en ${ttlMin} minutos.`,
+        html: `
+          <div style="font-family: Arial, sans-serif; line-height: 1.5;">
+            <p>Tu codigo de verificacion es:</p>
+            <div style="font-size: 28px; font-weight: bold; letter-spacing: 2px;">${code}</div>
+            <p>Este codigo vence en ${ttlMin} minutos.</p>
+          </div>
+        `,
+      });
+      this.logger.log(`Correo de verificacion enviado a ${email}. Message ID: ${info.messageId}`);
+    } catch (err: any) {
+      this.logger.error(`Fallo envio SMTP de verificacion a ${email}: ${err.message}`);
+      this.logger.warn(`[CODIGO DE VERIFICACION FALLBACK] Para: ${email} | Codigo: ${code}`);
+    }
   }
 
   async sendLoginTwoFactorCode(
@@ -82,41 +96,66 @@ export class EmailService {
   ): Promise<void> {
     const transporter = this.getTransporter();
     const profileLabel = roleName?.trim() || 'usuario administrativo';
-    const info = await transporter.sendMail({
-      from: this.fromAddress(),
-      to: email,
-      subject: `${envs.appName} - Codigo de acceso`,
-      text: `Tu codigo de segundo factor para ${profileLabel} es ${code}. Vence en ${ttlMin} minutos.`,
-      html: `
-        <div style="font-family: Arial, sans-serif; line-height: 1.5;">
-          <p>Recibimos un intento de inicio de sesion para tu cuenta de <strong>${profileLabel}</strong>.</p>
-          <p>Tu codigo de segundo factor es:</p>
-          <div style="font-size: 28px; font-weight: bold; letter-spacing: 2px;">${code}</div>
-          <p>Este codigo vence en ${ttlMin} minutos y solo sirve para completar este inicio de sesion.</p>
-        </div>
-      `,
-    });
 
-    this.logger.log(`Correo de segundo factor enviado a ${email}. Message ID: ${info.messageId}`);
+    if (!transporter) {
+      this.logger.warn(`====================================================`);
+      this.logger.warn(`[CODIGO 2FA LOGIN] Para: ${email} (${profileLabel}) | Codigo: ${code} (Vence en ${ttlMin}m)`);
+      this.logger.warn(`====================================================`);
+      return;
+    }
+
+    try {
+      const info = await transporter.sendMail({
+        from: this.fromAddress(),
+        to: email,
+        subject: `${envs.appName} - Codigo de acceso`,
+        text: `Tu codigo de segundo factor para ${profileLabel} es ${code}. Vence en ${ttlMin} minutos.`,
+        html: `
+          <div style="font-family: Arial, sans-serif; line-height: 1.5;">
+            <p>Recibimos un intento de inicio de sesion para tu cuenta de <strong>${profileLabel}</strong>.</p>
+            <p>Tu codigo de segundo factor es:</p>
+            <div style="font-size: 28px; font-weight: bold; letter-spacing: 2px;">${code}</div>
+            <p>Este codigo vence en ${ttlMin} minutos y solo sirve para completar este inicio de sesion.</p>
+          </div>
+        `,
+      });
+      this.logger.log(`Correo de segundo factor enviado a ${email}. Message ID: ${info.messageId}`);
+    } catch (err: any) {
+      this.logger.error(`Fallo envio SMTP de 2FA a ${email}: ${err.message}`);
+      this.logger.warn(`====================================================`);
+      this.logger.warn(`[CODIGO 2FA FALLBACK] Para: ${email} (${profileLabel}) | Codigo: ${code}`);
+      this.logger.warn(`====================================================`);
+    }
   }
 
   async sendPasswordResetCode(email: string, code: string, ttlMin: number): Promise<void> {
     const transporter = this.getTransporter();
-    const info = await transporter.sendMail({
-      from: this.fromAddress(),
-      to: email,
-      subject: `${envs.appName} - Recuperar contrasena`,
-      text: `Tu codigo para recuperar contrasena es ${code}. Vence en ${ttlMin} minutos.`,
-      html: `
-        <div style="font-family: Arial, sans-serif; line-height: 1.5;">
-          <p>Tu codigo para recuperar contrasena es:</p>
-          <div style="font-size: 28px; font-weight: bold; letter-spacing: 2px;">${code}</div>
-          <p>Este codigo vence en ${ttlMin} minutos.</p>
-        </div>
-      `,
-    });
+    if (!transporter) {
+      this.logger.warn(`====================================================`);
+      this.logger.warn(`[CODIGO RECUPERAR CLAVE] Para: ${email} | Codigo: ${code} (Vence en ${ttlMin}m)`);
+      this.logger.warn(`====================================================`);
+      return;
+    }
 
-    this.logger.log(`Correo de recuperacion enviado a ${email}. Message ID: ${info.messageId}`);
+    try {
+      const info = await transporter.sendMail({
+        from: this.fromAddress(),
+        to: email,
+        subject: `${envs.appName} - Recuperar contrasena`,
+        text: `Tu codigo para recuperar contrasena es ${code}. Vence en ${ttlMin} minutos.`,
+        html: `
+          <div style="font-family: Arial, sans-serif; line-height: 1.5;">
+            <p>Tu codigo para recuperar contrasena es:</p>
+            <div style="font-size: 28px; font-weight: bold; letter-spacing: 2px;">${code}</div>
+            <p>Este codigo vence en ${ttlMin} minutos.</p>
+          </div>
+        `,
+      });
+      this.logger.log(`Correo de recuperacion enviado a ${email}. Message ID: ${info.messageId}`);
+    } catch (err: any) {
+      this.logger.error(`Fallo envio SMTP de recuperacion a ${email}: ${err.message}`);
+      this.logger.warn(`[CODIGO RECUPERAR CLAVE FALLBACK] Para: ${email} | Codigo: ${code}`);
+    }
   }
 
   async sendLowStockAlertToAdmins(alerts: LowStockAlert[], source: string): Promise<void> {
@@ -143,6 +182,11 @@ export class EmailService {
     }
 
     const transporter = this.getTransporter();
+    if (!transporter) {
+      this.logger.warn(`[ALERTA STOCK BAJO (Consola)]: ${alerts.map(a => a.message).join(' | ')}`);
+      return;
+    }
+
     const timestamp = new Date().toLocaleString('es-CO', {
       year: 'numeric',
       month: 'long',
@@ -157,43 +201,47 @@ export class EmailService {
         ? alerts[0].message
         : `${alerts.length} productos quedaron con stock bajo.`;
 
-    const info = await transporter.sendMail({
-      from: this.fromAddress(),
-      to: recipientEmails.join(','),
-      subject: `${envs.appName} - Alerta de stock bajo`,
-      text: [
-        `Se detecto stock bajo tras ${sourceLabel}.`,
-        `Fecha: ${timestamp}.`,
-        '',
-        ...alerts.map((alert, index) => `${index + 1}. ${alert.message}`),
-      ].join('\n'),
-      html: `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-          <h2 style="margin-bottom: 8px;">Alerta de stock bajo</h2>
-          <p style="margin: 0 0 8px;">
-            Se detecto stock bajo tras <strong>${sourceLabel}</strong>.
-          </p>
-          <p style="margin: 0 0 16px; color: #64748b;">${timestamp}</p>
-          <p style="margin: 0 0 16px;">${summary}</p>
-          <ul style="padding-left: 18px; margin: 0;">
-            ${alerts
-              .map(
-                (alert) => `
-                  <li style="margin-bottom: 10px;">
-                    <strong>${alert.productName?.trim() || `Producto ID ${alert.productId}`}</strong><br />
-                    ${alert.message}<br />
-                    Umbral configurado: ${alert.threshold}
-                  </li>
-                `,
-              )
-              .join('')}
-          </ul>
-        </div>
-      `,
-    });
+    try {
+      const info = await transporter.sendMail({
+        from: this.fromAddress(),
+        to: recipientEmails.join(','),
+        subject: `${envs.appName} - Alerta de stock bajo`,
+        text: [
+          `Se detecto stock bajo tras ${sourceLabel}.`,
+          `Fecha: ${timestamp}.`,
+          '',
+          ...alerts.map((alert, index) => `${index + 1}. ${alert.message}`),
+        ].join('\n'),
+        html: `
+          <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+            <h2 style="margin-bottom: 8px;">Alerta de stock bajo</h2>
+            <p style="margin: 0 0 8px;">
+              Se detecto stock bajo tras <strong>${sourceLabel}</strong>.
+            </p>
+            <p style="margin: 0 0 16px; color: #64748b;">${timestamp}</p>
+            <p style="margin: 0 0 16px;">${summary}</p>
+            <ul style="padding-left: 18px; margin: 0;">
+              ${alerts
+                .map(
+                  (alert) => `
+                    <li style="margin-bottom: 10px;">
+                      <strong>${alert.productName?.trim() || `Producto ID ${alert.productId}`}</strong><br />
+                      ${alert.message}<br />
+                      Umbral configurado: ${alert.threshold}
+                    </li>
+                  `,
+                )
+                .join('')}
+            </ul>
+          </div>
+        `,
+      });
 
-    this.logger.log(
-      `Alerta de stock bajo enviada a ${recipientEmails.join(', ')} para ${alerts.length} producto(s). Message ID: ${info.messageId}`,
-    );
+      this.logger.log(
+        `Alerta de stock bajo enviada a ${recipientEmails.join(', ')} para ${alerts.length} producto(s). Message ID: ${info.messageId}`,
+      );
+    } catch (err: any) {
+      this.logger.error(`Fallo envio SMTP de alerta de stock bajo: ${err.message}`);
+    }
   }
 }
