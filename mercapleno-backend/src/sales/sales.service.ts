@@ -147,7 +147,7 @@ export class SalesService {
   }
 
   async createOrder(dto: CreateOrderDto, userId?: number) {
-    const idMetodo = this.resolvePaymentMethod(dto.id_metodo ?? dto.metodo_pago);
+    const idMetodo = this.resolvePaymentMethod(dto.id_metodo ?? dto.metodo_pago ?? 'M1');
     if (!idMetodo) {
       throw new BadRequestException({ error: 'Datos de orden incompletos o invalidos.' });
     }
@@ -171,6 +171,31 @@ export class SalesService {
         throw new BadRequestException({
           error: 'Metodo de pago invalido',
           message: `No existe el metodo de pago ${idMetodo}.`,
+        });
+      }
+
+      let expectedTotal = 0;
+      for (const item of dto.items) {
+        const idProducto = Number(item.id);
+        const [[producto]] = await conn.query<any[]>(
+          'SELECT precio FROM productos WHERE id_productos = ? LIMIT 1',
+          [idProducto],
+        );
+
+        if (!producto) {
+          throw new ConflictException({
+            error: 'Producto no encontrado',
+            message: `No existe el producto ID ${idProducto}.`,
+          });
+        }
+
+        expectedTotal += Number(producto.precio) * Number(item.cantidad);
+      }
+
+      if (Math.abs(Number(dto.total) - expectedTotal) > 0.05) {
+        throw new BadRequestException({
+          error: 'Totales invalidos',
+          message: 'Los totales enviados no coinciden con los calculados por el servidor.',
         });
       }
 
