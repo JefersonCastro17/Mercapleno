@@ -18,6 +18,7 @@ export const useAuthContext = () => {
 // Se mantiene fuera del componente para que React solo la ejecute una vez.
 const getInitialAuthState = () => {
     const storedEncryptedUser = localStorage.getItem('user');
+    const storedToken = localStorage.getItem('token');
     let storedUser = null;
 
     if (storedEncryptedUser) {
@@ -33,8 +34,7 @@ const getInitialAuthState = () => {
     }
 
     if (storedUser) {
-        localStorage.removeItem('token');
-        return { user: storedUser, token: null };
+        return { user: storedUser, token: storedToken || null };
     }
 
     localStorage.removeItem('user');
@@ -50,8 +50,8 @@ export const AuthProvider = ({ children }) => {
 
     // 2. Estado Derivado para claridad
     const user = authState.user;
-    const token = authState.token ?? (user ? 'cookie' : null);
-    const isAuthenticated = !!user && !!token;
+    const token = authState.token || (typeof window !== "undefined" ? localStorage.getItem('token') : null);
+    const isAuthenticated = !!user;
 
     const normalizeUser = (userData) => {
         if (!userData || typeof userData !== 'object') return userData;
@@ -62,13 +62,17 @@ export const AuthProvider = ({ children }) => {
     };
 
     // Función de LOGIN: Guarda los datos de la sesión y el usuario en localStorage
-    const login = (userData) => {
+    const login = (userData, userToken = null) => {
         const normalizedUser = normalizeUser(userData);
+        const resolvedToken = userToken || (typeof userData === 'object' && userData?.token ? userData.token : null) || (typeof window !== "undefined" ? localStorage.getItem('token') : null);
 
         // Guardar en el estado React
-        setAuthState({ user: normalizedUser, token: null });
+        setAuthState({ user: normalizedUser, token: resolvedToken });
 
         localStorage.setItem('user', JSON.stringify(normalizedUser));
+        if (resolvedToken) {
+            localStorage.setItem('token', resolvedToken);
+        }
     };
 
     // Función de LOGOUT: Limpia los datos de la sesión y en localStorage

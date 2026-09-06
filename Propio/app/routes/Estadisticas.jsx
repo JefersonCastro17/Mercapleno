@@ -60,6 +60,7 @@ export default function Estadisticas() {
 
   // Estados de control y filtros
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState(null);
   const [activePreset, setActivePreset] = useState("todo");
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
@@ -96,6 +97,7 @@ export default function Estadisticas() {
 
   const cargarDatos = useCallback(async () => {
     setLoading(true);
+    setErrorMessage(null);
     try {
       const [
         rFinancial,
@@ -142,15 +144,14 @@ export default function Estadisticas() {
     } catch (error) {
       console.error("Error al cargar reportes:", error);
       if (error.status === 401 || error.status === 403) {
-        alert("Sesion expirada o no autorizada. Redirigiendo al Login.");
-        navigate("/login", { replace: true });
+        setErrorMessage("Sesión no autorizada o expirada. Por favor inicia sesión nuevamente para acceder a los reportes.");
       } else {
-        alert("Error al cargar los datos financieros. Verifique la conexion.");
+        setErrorMessage("No se pudieron cargar las estadísticas. Si el backend está iniciando en la nube, reintenta en unos segundos.");
       }
     } finally {
       setLoading(false);
     }
-  }, [fechaInicio, fechaFin, navigate]);
+  }, [fechaInicio, fechaFin]);
 
   const handlePdfDownload = async () => {
     try {
@@ -251,6 +252,9 @@ export default function Estadisticas() {
           </p>
         </div>
         <div className="header-actions">
+          <button className="btn-secondary" onClick={() => navigate("/usuarioC")}>
+            ⬅ Volver al Panel
+          </button>
           <button className="btn-secondary" onClick={cargarDatos} disabled={loading}>
             {loading ? "Actualizando..." : "🔄 Actualizar"}
           </button>
@@ -262,6 +266,45 @@ export default function Estadisticas() {
           </button>
         </div>
       </header>
+
+      {/* BANNER DE ERROR SI OCURRE */}
+      {errorMessage && (
+        <div style={{
+          background: "#fee2e2",
+          border: "1px solid #ef4444",
+          color: "#991b1b",
+          padding: "1rem 1.5rem",
+          borderRadius: "10px",
+          marginBottom: "1.5rem",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "1rem",
+          fontWeight: 500
+        }}>
+          <div>
+            <strong>⚠️ Estado: </strong> {errorMessage}
+          </div>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <button
+              className="btn-primary"
+              style={{ padding: "0.4rem 0.9rem", fontSize: "0.85rem", cursor: "pointer" }}
+              onClick={cargarDatos}
+            >
+              Reintentar
+            </button>
+            {errorMessage.includes("inicia sesión") && (
+              <button
+                className="btn-secondary"
+                style={{ padding: "0.4rem 0.9rem", fontSize: "0.85rem", cursor: "pointer" }}
+                onClick={() => navigate("/login")}
+              >
+                Ir a Login
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* BARRA DE FILTROS Y PRESETS TEMPORALES */}
       <section className="filter-card">

@@ -24,7 +24,7 @@ export class ReportsService {
       params.push(fin);
     }
 
-    sql += ' GROUP BY mes ORDER BY mes';
+    sql += " GROUP BY TO_CHAR(fecha, 'YYYY-MM') ORDER BY TO_CHAR(fecha, 'YYYY-MM')";
 
     const [rows] = await this.db.query(sql, params);
     return rows;
@@ -65,8 +65,8 @@ export class ReportsService {
              COUNT(*) AS cantidad_ventas,
              CAST(SUM(total) AS DECIMAL(12,2)) AS total_mes
       FROM venta
-      GROUP BY mes
-      ORDER BY mes DESC
+      GROUP BY TO_CHAR(fecha, 'YYYY-MM')
+      ORDER BY TO_CHAR(fecha, 'YYYY-MM') DESC
     `);
 
     return rows;
@@ -203,7 +203,7 @@ export class ReportsService {
       JOIN productos p ON p.id_productos = vp.id_productos
       LEFT JOIN categoria c ON c.id_categoria = p.id_categoria
       LEFT JOIN costos_promedio cp ON cp.id_productos = p.id_productos
-      GROUP BY p.id_productos, p.nombre, c.nombre
+      GROUP BY p.id_productos, p.nombre, c.nombre, cp.costo_promedio
       ORDER BY ganancia_total DESC
       LIMIT 10
     `;

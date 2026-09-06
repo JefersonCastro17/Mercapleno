@@ -43,8 +43,8 @@ function Login() {
     setTwoFactorExpiresInMinutes(null);
   };
 
-  const finishLogin = (userData) => {
-    login(userData);
+  const finishLogin = (userData, userToken = null) => {
+    login(userData, userToken);
 
     if (redirectPath) {
       navigate(redirectPath, { replace: true });
@@ -86,7 +86,7 @@ function Login() {
         }
 
         resetTwoFactorState();
-        finishLogin(data.user);
+        finishLogin(data.user, data.token);
         alert(data.message || "Inicio de sesion exitoso");
         return;
       }
@@ -111,7 +111,7 @@ function Login() {
         alert(data.message || "Se envio un codigo de seguridad a tu correo.");
       } else {
         resetTwoFactorState();
-        finishLogin(data.user);
+        finishLogin(data.user, data.token);
       }
     } catch (error) {
       if (error.status === 403 && error.data?.code === "EMAIL_NOT_VERIFIED") {

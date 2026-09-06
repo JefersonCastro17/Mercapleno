@@ -26,7 +26,9 @@ function requiresInternalApiKey(path = "") {
 
   return (
     normalizedPath.startsWith("/api/admin/users") ||
-    normalizedPath.startsWith("/api/sales/reports")
+    normalizedPath.startsWith("/admin/users") ||
+    normalizedPath.startsWith("/api/sales/reports") ||
+    normalizedPath.startsWith("/sales/reports")
   );
 }
 
@@ -48,14 +50,18 @@ export async function httpRequest(path, options = {}) {
   const hasPayload = allowBody && data !== undefined && data !== null;
 
   if (auth) {
-    const authToken = token;
-    if (authToken) {
+    let authToken = token;
+    if (!authToken && typeof window !== "undefined") {
+      authToken = localStorage.getItem("token") || sessionStorage.getItem("token");
+    }
+    if (authToken && authToken !== "cookie") {
       requestHeaders.Authorization = `Bearer ${authToken}`;
     }
   }
 
-  if (requiresInternalApiKey(normalizedPath) && INTERNAL_API_KEY) {
-    requestHeaders["x-api-key"] = INTERNAL_API_KEY;
+  if (requiresInternalApiKey(normalizedPath)) {
+    const key = INTERNAL_API_KEY || "mercapleno123456789";
+    requestHeaders["x-api-key"] = key;
   }
 
   if (hasPayload && !isFormData && !requestHeaders["Content-Type"]) {
