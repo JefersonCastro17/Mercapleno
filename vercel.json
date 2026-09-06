@@ -1,0 +1,10 @@
+{
+  "buildCommand": "cd Propio && npm install && npm run build",
+  "outputDirectory": "Propio/dist",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
