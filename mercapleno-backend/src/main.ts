@@ -18,7 +18,23 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   app.useGlobalFilters(new AllExceptionsFilter());
   app.enableCors({
-    origin: envs.corsOrigins,
+    origin: (origin, callback) => {
+      // Permitir peticiones sin origen (curl, mobile, server-to-server)
+      if (!origin) return callback(null, true);
+
+      // Si corsOrigins contiene '*', o es Vercel, localhost o dominio permitido, reflejar el origen
+      if (
+        envs.corsOrigins.includes('*') ||
+        origin.endsWith('.vercel.app') ||
+        origin.includes('localhost') ||
+        origin.includes('127.0.0.1') ||
+        envs.corsOrigins.includes(origin)
+      ) {
+        return callback(null, true);
+      }
+
+      return callback(null, true);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key'],
