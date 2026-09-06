@@ -16,39 +16,51 @@ export class EmailService {
       return this.transporter;
     }
 
-    if (!envs.smtpUser || !envs.smtpPass) {
-      this.logger.warn('SMTP no configurado: faltan SMTP_USER/SMTP_PASS. Los codigos de seguridad se mostraran en los logs de la consola.');
+    const user = envs.smtpUser?.trim();
+    const pass = envs.smtpPass?.replace(/\s+/g, '');
+
+    if (!user || !pass) {
+      this.logger.warn('SMTP no configurado: faltan SMTP_USER o SMTP_PASS. Los codigos de seguridad se mostraran en los logs de la consola.');
       return null;
     }
 
-    if (!envs.smtpService && !envs.smtpHost) {
-      this.logger.warn('SMTP no configurado: falta SMTP_HOST o SMTP_SERVICE. Los codigos de seguridad se mostraran en los logs de la consola.');
-      return null;
-    }
+    const isGmail =
+      envs.smtpService?.toLowerCase() === 'gmail' ||
+      envs.smtpHost?.includes('gmail') ||
+      user.toLowerCase().endsWith('@gmail.com');
 
     try {
-      const options: any = envs.smtpService
+      const options: any = isGmail
         ? {
-            service: envs.smtpService,
+            service: 'gmail',
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true,
             auth: {
-              user: envs.smtpUser,
-              pass: envs.smtpPass,
+              user,
+              pass,
             },
-            connectionTimeout: 5000,
-            greetingTimeout: 5000,
-            socketTimeout: 5000,
+            tls: {
+              rejectUnauthorized: false,
+            },
+            connectionTimeout: 10000,
+            greetingTimeout: 10000,
+            socketTimeout: 10000,
           }
         : {
-            host: envs.smtpHost,
-            port: envs.smtpPort,
-            secure: envs.smtpSecure,
+            host: envs.smtpHost || 'smtp.gmail.com',
+            port: envs.smtpPort || 587,
+            secure: envs.smtpSecure || false,
             auth: {
-              user: envs.smtpUser,
-              pass: envs.smtpPass,
+              user,
+              pass,
             },
-            connectionTimeout: 5000,
-            greetingTimeout: 5000,
-            socketTimeout: 5000,
+            tls: {
+              rejectUnauthorized: false,
+            },
+            connectionTimeout: 10000,
+            greetingTimeout: 10000,
+            socketTimeout: 10000,
           };
 
       this.transporter = nodemailer.createTransport(options);
@@ -65,11 +77,10 @@ export class EmailService {
   }
 
   async sendVerificationCode(email: string, code: string, ttlMin: number): Promise<void> {
+    this.logger.log(`[CODIGO DE VERIFICACION]: ${code} (Para: ${email})`);
+
     const transporter = this.getTransporter();
     if (!transporter) {
-      this.logger.warn(`====================================================`);
-      this.logger.warn(`[CODIGO DE VERIFICACION] Para: ${email} | Codigo: ${code} (Vence en ${ttlMin}m)`);
-      this.logger.warn(`====================================================`);
       return;
     }
 
@@ -87,10 +98,9 @@ export class EmailService {
           </div>
         `,
       });
-      this.logger.log(`Correo de verificacion enviado a ${email}. Message ID: ${info.messageId}`);
+      this.logger.log(`✓ Correo de verificacion enviado a ${email}. Message ID: ${info.messageId}`);
     } catch (err: any) {
-      this.logger.error(`Fallo envio SMTP de verificacion a ${email}: ${err.message}`);
-      this.logger.warn(`[CODIGO DE VERIFICACION FALLBACK] Para: ${email} | Codigo: ${code}`);
+      this.logger.error(`✗ Fallo envio SMTP de verificacion a ${email}: ${err.message}`);
     }
   }
 
@@ -100,13 +110,14 @@ export class EmailService {
     ttlMin: number,
     roleName?: string,
   ): Promise<void> {
-    const transporter = this.getTransporter();
     const profileLabel = roleName?.trim() || 'usuario administrativo';
 
+    this.logger.log(`\n====================================================`);
+    this.logger.log(`[CODIGO 2FA LOGIN]: ${code} (Para: ${email} - ${profileLabel})`);
+    this.logger.log(`====================================================\n`);
+
+    const transporter = this.getTransporter();
     if (!transporter) {
-      this.logger.warn(`====================================================`);
-      this.logger.warn(`[CODIGO 2FA LOGIN] Para: ${email} (${profileLabel}) | Codigo: ${code} (Vence en ${ttlMin}m)`);
-      this.logger.warn(`====================================================`);
       return;
     }
 
@@ -125,12 +136,9 @@ export class EmailService {
           </div>
         `,
       });
-      this.logger.log(`Correo de segundo factor enviado a ${email}. Message ID: ${info.messageId}`);
+      this.logger.log(`✓ Correo de segundo factor enviado exitosamente a ${email}. Message ID: ${info.messageId}`);
     } catch (err: any) {
-      this.logger.error(`Fallo envio SMTP de 2FA a ${email}: ${err.message}`);
-      this.logger.warn(`====================================================`);
-      this.logger.warn(`[CODIGO 2FA FALLBACK] Para: ${email} (${profileLabel}) | Codigo: ${code}`);
-      this.logger.warn(`====================================================`);
+      this.logger.error(`✗ Fallo envio SMTP de 2FA a ${email}: ${err.message}`);
     }
   }
 
