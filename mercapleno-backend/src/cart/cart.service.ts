@@ -120,42 +120,62 @@ export class CartService {
   async addItem(userId: number, body: { productId: number; quantity: number }) {
     const cartId = await this.ensureActiveCart(userId);
     const { productId, quantity } = body;
-    const qty = Number(quantity) > 0 ? Number(quantity) : 1;
+    const productIdNumber = Number(productId);
+    const qty = Number(quantity);
 
-    const [[existing]] = await this.db.query<any[]>(
-      'SELECT id, cantidad FROM cart_items WHERE cart_id = ? AND id_productos = ? LIMIT 1',
-      [cartId, productId],
-    );
-
-    if (existing) {
-      const newQty = existing.cantidad + qty;
-      await this.db.query('UPDATE cart_items SET cantidad = ?, updated_at = NOW() WHERE id = ?', [newQty, existing.id]);
-      return { id: existing.id, productId, quantity: newQty };
+    if (!Number.isInteger(productIdNumber) || productIdNumber <= 0 || !Number.isInteger(qty) || qty <= 0) {
+      throw new BadRequestException('Datos de carrito invalidos');
     }
 
     const [[product]] = await this.db.query<any[]>(
-      'SELECT precio FROM productos WHERE id_productos = ? LIMIT 1',
-      [productId],
+      'SELECT precio, estado FROM productos WHERE id_productos = ? LIMIT 1',
+      [productIdNumber],
     );
 
     if (!product) {
       throw new ConflictException('Producto no encontrado');
     }
 
+    if (product.estado !== 'Disponible') {
+      throw new ConflictException('Producto no disponible para la venta');
+    }
+
+    const [[stockRow]] = await this.db.query<any[]>(
+      'SELECT COALESCE(SUM(stock), 0) AS stock FROM stock_actual WHERE id_productos = ?',
+      [productIdNumber],
+    );
+
+    if (qty > Number(stockRow?.stock || 0)) {
+      throw new ConflictException('Stock insuficiente para el producto');
+    }
+
+    const [[existing]] = await this.db.query<any[]>(
+      'SELECT id, cantidad FROM cart_items WHERE cart_id = ? AND id_productos = ? LIMIT 1',
+      [cartId, productIdNumber],
+    );
+
+    if (existing) {
+      const newQty = existing.cantidad + qty;
+      if (newQty > Number(stockRow?.stock || 0)) {
+        throw new ConflictException('Stock insuficiente para el producto');
+      }
+      await this.db.query('UPDATE cart_items SET cantidad = ?, updated_at = NOW() WHERE id = ?', [newQty, existing.id]);
+      return { id: existing.id, productId: productIdNumber, quantity: newQty };
+    }
+
     const priceSnapshot = product.precio;
     const [result] = await this.db.query<any>(
       'INSERT INTO cart_items (cart_id, id_productos, cantidad, price_snapshot, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())',
-      [cartId, productId, qty, priceSnapshot],
+      [cartId, productIdNumber, qty, priceSnapshot],
     );
 
-    return { id: result.insertId, productId, quantity: qty };
+    return { id: result.insertId, productId: productIdNumber, quantity: qty };
   }
 
   async updateItem(userId: number, itemId: number, body: { quantity: number }) {
     const qty = Number(body.quantity);
     if (qty <= 0) {
-      await this.deleteItem(userId, itemId);
-      return { success: true, removed: true };
+      throw new BadRequestException('La cantidad debe ser mayor a cero');
     }
 
     const sqlCheck = `SELECT ci.id, ci.id_productos, ci.cantidad FROM cart_items ci JOIN cart c ON c.id = ci.cart_id WHERE ci.id = ? AND c.id_usuario = ? AND c.status = 'active' LIMIT 1`;
@@ -163,6 +183,15 @@ export class CartService {
 
     if (!item) {
       throw new Error('Item no encontrado en el carrito activo');
+    }
+
+    const [[stockRow]] = await this.db.query<any[]>(
+      'SELECT COALESCE(SUM(stock), 0) AS stock FROM stock_actual WHERE id_productos = ?',
+      [item.id_productos],
+    );
+
+    if (qty > Number(stockRow?.stock || 0)) {
+      throw new ConflictException('Stock insuficiente para la cantidad solicitada');
     }
 
     await this.db.query('UPDATE cart_items SET cantidad = ?, updated_at = NOW() WHERE id = ?', [qty, itemId]);
