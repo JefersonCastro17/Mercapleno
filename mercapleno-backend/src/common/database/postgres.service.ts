@@ -117,14 +117,28 @@ export class PostgresService implements OnModuleDestroy {
   private readonly pool: Pool;
 
   constructor() {
-    this.pool = new Pool({
-      host: envs.dbHost,
-      port: envs.dbPort,
-      user: envs.dbUser,
-      password: envs.dbPassword,
-      database: envs.dbName,
-      max: 10,
-    });
+    if (envs.databaseUrl) {
+      const isSsl =
+        envs.databaseUrl.includes('sslmode=require') ||
+        envs.databaseUrl.includes('neon.tech') ||
+        envs.databaseUrl.includes('render.com') ||
+        envs.databaseUrl.includes('supabase');
+
+      this.pool = new Pool({
+        connectionString: envs.databaseUrl,
+        ssl: isSsl ? { rejectUnauthorized: false } : undefined,
+        max: 10,
+      });
+    } else {
+      this.pool = new Pool({
+        host: envs.dbHost,
+        port: envs.dbPort,
+        user: envs.dbUser,
+        password: envs.dbPassword,
+        database: envs.dbName,
+        max: 10,
+      });
+    }
   }
 
   async query<T = any>(sql: string, params: any[] = []): Promise<[T, any[]]> {
