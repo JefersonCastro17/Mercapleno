@@ -19,6 +19,8 @@ interface EnvVars {
   SMTP_USER?: string;
   SMTP_PASS?: string;
   SMTP_FROM_EMAIL?: string;
+  RESEND_API_KEY?: string;
+  BREVO_API_KEY?: string;
   APP_NAME: string;
   EMAIL_VERIFICATION_TTL_MIN: number;
   LOGIN_2FA_TTL_MIN: number;
@@ -49,6 +51,8 @@ const schema = joi
     SMTP_USER: joi.string().optional().allow(''),
     SMTP_PASS: joi.string().optional().allow(''),
     SMTP_FROM_EMAIL: joi.string().optional().allow(''),
+    RESEND_API_KEY: joi.string().optional().allow(''),
+    BREVO_API_KEY: joi.string().optional().allow(''),
     APP_NAME: joi.string().default('Mercapleno'),
     EMAIL_VERIFICATION_TTL_MIN: joi.number().default(15),
     LOGIN_2FA_TTL_MIN: joi.number().integer().min(1).default(10),
@@ -100,6 +104,8 @@ export const envs = {
   smtpUser: envVars.SMTP_USER?.trim() || undefined,
   smtpPass: envVars.SMTP_PASS?.trim() || undefined,
   smtpFromEmail: envVars.SMTP_FROM_EMAIL?.trim() || undefined,
+  resendApiKey: envVars.RESEND_API_KEY?.trim() || undefined,
+  brevoApiKey: envVars.BREVO_API_KEY?.trim() || undefined,
   appName: envVars.APP_NAME,
   emailVerificationTtlMin: envVars.EMAIL_VERIFICATION_TTL_MIN,
   loginTwoFactorTtlMin: envVars.LOGIN_2FA_TTL_MIN,
