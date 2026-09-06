@@ -20,7 +20,7 @@ export class EmailService {
     const pass = envs.smtpPass?.replace(/\s+/g, '');
 
     if (!user || !pass) {
-      this.logger.warn('SMTP no configurado: faltan SMTP_USER o SMTP_PASS. Los codigos de seguridad se mostraran en los logs de la consola.');
+      this.logger.warn('SMTP no configurado: faltan SMTP_USER o SMTP_PASS.');
       return null;
     }
 
@@ -32,10 +32,10 @@ export class EmailService {
     try {
       const options: any = isGmail
         ? {
-            service: 'gmail',
             host: 'smtp.gmail.com',
-            port: 465,
-            secure: true,
+            port: 587,
+            secure: false,
+            requireTLS: true,
             auth: {
               user,
               pass,
@@ -43,9 +43,9 @@ export class EmailService {
             tls: {
               rejectUnauthorized: false,
             },
-            connectionTimeout: 10000,
-            greetingTimeout: 10000,
-            socketTimeout: 10000,
+            connectionTimeout: 15000,
+            greetingTimeout: 15000,
+            socketTimeout: 15000,
           }
         : {
             host: envs.smtpHost || 'smtp.gmail.com',
@@ -58,15 +58,15 @@ export class EmailService {
             tls: {
               rejectUnauthorized: false,
             },
-            connectionTimeout: 10000,
-            greetingTimeout: 10000,
-            socketTimeout: 10000,
+            connectionTimeout: 15000,
+            greetingTimeout: 15000,
+            socketTimeout: 15000,
           };
 
       this.transporter = nodemailer.createTransport(options);
       return this.transporter;
     } catch (err: any) {
-      this.logger.error(`Error al inicializar transporte SMTP: ${err.message}. Se usara consola como fallback.`);
+      this.logger.error(`Error al inicializar transporte SMTP: ${err.message}.`);
       return null;
     }
   }
@@ -77,10 +77,9 @@ export class EmailService {
   }
 
   async sendVerificationCode(email: string, code: string, ttlMin: number): Promise<void> {
-    this.logger.log(`[CODIGO DE VERIFICACION]: ${code} (Para: ${email})`);
-
     const transporter = this.getTransporter();
     if (!transporter) {
+      this.logger.warn(`No se pudo enviar correo de verificacion a ${email}: SMTP no configurado.`);
       return;
     }
 
@@ -111,13 +110,10 @@ export class EmailService {
     roleName?: string,
   ): Promise<void> {
     const profileLabel = roleName?.trim() || 'usuario administrativo';
-
-    this.logger.log(`\n====================================================`);
-    this.logger.log(`[CODIGO 2FA LOGIN]: ${code} (Para: ${email} - ${profileLabel})`);
-    this.logger.log(`====================================================\n`);
-
     const transporter = this.getTransporter();
+
     if (!transporter) {
+      this.logger.warn(`No se pudo enviar 2FA a ${email}: SMTP no configurado.`);
       return;
     }
 
@@ -145,9 +141,7 @@ export class EmailService {
   async sendPasswordResetCode(email: string, code: string, ttlMin: number): Promise<void> {
     const transporter = this.getTransporter();
     if (!transporter) {
-      this.logger.warn(`====================================================`);
-      this.logger.warn(`[CODIGO RECUPERAR CLAVE] Para: ${email} | Codigo: ${code} (Vence en ${ttlMin}m)`);
-      this.logger.warn(`====================================================`);
+      this.logger.warn(`No se pudo enviar correo de recuperacion a ${email}: SMTP no configurado.`);
       return;
     }
 
@@ -165,10 +159,9 @@ export class EmailService {
           </div>
         `,
       });
-      this.logger.log(`Correo de recuperacion enviado a ${email}. Message ID: ${info.messageId}`);
+      this.logger.log(`✓ Correo de recuperacion enviado a ${email}. Message ID: ${info.messageId}`);
     } catch (err: any) {
-      this.logger.error(`Fallo envio SMTP de recuperacion a ${email}: ${err.message}`);
-      this.logger.warn(`[CODIGO RECUPERAR CLAVE FALLBACK] Para: ${email} | Codigo: ${code}`);
+      this.logger.error(`✗ Fallo envio SMTP de recuperacion a ${email}: ${err.message}`);
     }
   }
 
