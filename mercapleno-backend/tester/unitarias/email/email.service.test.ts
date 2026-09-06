@@ -46,47 +46,28 @@ describe('EmailService (Unitarias)', () => {
   // 1. CONFIGURACIÓN DEL TRANSPORTER Y DIRECCIÓN REMITENTE
   // =========================================================================
   describe('Configuración del Transporter y Remitente', () => {
-    it('debe lanzar error si faltan las credenciales SMTP_USER o SMTP_PASS', () => {
+    it('debe retornar null si faltan las credenciales SMTP_USER o SMTP_PASS', () => {
       const originalUser = envs.smtpUser;
       (envs as any).smtpUser = '';
 
-      expect(() => (service as any).getTransporter()).toThrow(
-        'SMTP no configurado: faltan SMTP_USER/SMTP_PASS',
-      );
+      const transporter = (service as any).getTransporter();
+      expect(transporter).toBeNull();
 
       (envs as any).smtpUser = originalUser;
     });
 
-    it('debe lanzar error si no hay SMTP_SERVICE ni SMTP_HOST configurados', () => {
-      const originalService = envs.smtpService;
-      const originalHost = envs.smtpHost;
+    it('debe crear el transporter usando opciones SMTP cuando hay credenciales', () => {
+      const originalUser = envs.smtpUser;
+      const originalPass = envs.smtpPass;
 
-      (envs as any).smtpService = '';
-      (envs as any).smtpHost = '';
-
-      expect(() => (service as any).getTransporter()).toThrow(
-        'SMTP no configurado: falta SMTP_HOST o SMTP_SERVICE',
-      );
-
-      (envs as any).smtpService = originalService;
-      (envs as any).smtpHost = originalHost;
-    });
-
-    it('debe crear el transporter usando smtpHost cuando no hay smtpService', () => {
-      const originalService = envs.smtpService;
-      const originalHost = envs.smtpHost;
-
-      (envs as any).smtpService = '';
-      (envs as any).smtpHost = 'smtp.testmail.com';
+      (envs as any).smtpUser = 'test@gmail.com';
+      (envs as any).smtpPass = 'secretpass';
 
       const transporter = (service as any).getTransporter();
       expect(transporter).toBeDefined();
-      expect(nodemailer.createTransport).toHaveBeenCalledWith(
-        expect.objectContaining({ host: 'smtp.testmail.com' }),
-      );
 
-      (envs as any).smtpService = originalService;
-      (envs as any).smtpHost = originalHost;
+      (envs as any).smtpUser = originalUser;
+      (envs as any).smtpPass = originalPass;
     });
 
     it('debe retornar el transporter en caché si ya fue inicializado', () => {
@@ -97,37 +78,105 @@ describe('EmailService (Unitarias)', () => {
       expect(result).toBe(mockCached);
     });
 
-    it('debe lanzar error en fromAddress si falta el correo del remitente', () => {
-      const originalFrom = envs.smtpFromEmail;
-      const originalUser = envs.smtpUser;
-
-      (envs as any).smtpFromEmail = '';
-      (envs as any).smtpUser = '';
-
-      expect(() => (service as any).fromAddress()).toThrow(
-        'SMTP no configurado: falta SMTP_FROM_EMAIL',
-      );
-
-      (envs as any).smtpFromEmail = originalFrom;
-      (envs as any).smtpUser = originalUser;
-    });
-
-    it('debe formatear fromAddress con solo el correo si appName está vacío', () => {
+    it('debe formatear fromAddress con appName y fromEmail', () => {
       const originalAppName = envs.appName;
-      (envs as any).appName = '';
+      const originalFrom = envs.smtpFromEmail;
+
+      (envs as any).appName = 'Mercapleno';
+      (envs as any).smtpFromEmail = 'soporte@mercapleno.com';
 
       const from = (service as any).fromAddress();
-      expect(from).toBe(envs.smtpFromEmail || envs.smtpUser);
+      expect(from).toBe('"Mercapleno" <soporte@mercapleno.com>');
 
       (envs as any).appName = originalAppName;
+      (envs as any).smtpFromEmail = originalFrom;
     });
   });
 
   // =========================================================================
-  // 2. ENVÍO DE CÓDIGO DE VERIFICACIÓN
+  // 2. ENVÍO VÍA RESEND Y BREVO HTTP REST API
+  // =========================================================================
+  describe('Envío vía HTTP API (Resend y Brevo)', () => {
+    it('debe enviar vía Resend API cuando RESEND_API_KEY está configurada', async () => {
+      const originalResend = envs.resendApiKey;
+      (envs as any).resendApiKey = 're_test_123456789';
+
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ id: 'resend-msg-999' }),
+      });
+      global.fetch = mockFetch as any;
+
+      const result = await service.sendEmail({
+        to: 'destinatario@test.com',
+        subject: 'Prueba Resend',
+        text: 'Texto de prueba',
+        html: '<p>HTML de prueba</p>',
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.provider).toBe('resend');
+      expect(result.id).toBe('resend-msg-999');
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://api.resend.com/emails',
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({
+            Authorization: 'Bearer re_test_123456789',
+          }),
+        }),
+      );
+
+      (envs as any).resendApiKey = originalResend;
+    });
+
+    it('debe enviar vía Brevo API cuando BREVO_API_KEY está configurada', async () => {
+      const originalResend = envs.resendApiKey;
+      const originalBrevo = envs.brevoApiKey;
+      (envs as any).resendApiKey = '';
+      (envs as any).brevoApiKey = 'xkeysib-test-123456';
+
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ messageId: 'brevo-msg-888' }),
+      });
+      global.fetch = mockFetch as any;
+
+      const result = await service.sendEmail({
+        to: 'destinatario@test.com',
+        subject: 'Prueba Brevo',
+        text: 'Texto de prueba',
+        html: '<p>HTML de prueba</p>',
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.provider).toBe('brevo');
+      expect(result.id).toBe('brevo-msg-888');
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://api.brevo.com/v3/smtp/email',
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({
+            'api-key': 'xkeysib-test-123456',
+          }),
+        }),
+      );
+
+      (envs as any).resendApiKey = originalResend;
+      (envs as any).brevoApiKey = originalBrevo;
+    });
+  });
+
+  // =========================================================================
+  // 3. ENVÍO DE CÓDIGO DE VERIFICACIÓN
   // =========================================================================
   describe('sendVerificationCode', () => {
     it('debe enviar el correo de verificación con el código y tiempo de expiración', async () => {
+      const originalUser = envs.smtpUser;
+      const originalPass = envs.smtpPass;
+      (envs as any).smtpUser = 'mercapleno@test.com';
+      (envs as any).smtpPass = 'secret';
+
       await service.sendVerificationCode('cliente@test.com', '123456', 15);
 
       expect(mockSendMail).toHaveBeenCalledTimes(1);
@@ -139,28 +188,44 @@ describe('EmailService (Unitarias)', () => {
           html: expect.stringContaining('123456'),
         }),
       );
+
+      (envs as any).smtpUser = originalUser;
+      (envs as any).smtpPass = originalPass;
     });
   });
 
   // =========================================================================
-  // 3. ENVÍO DE CÓDIGO 2FA (DOBLE FACTOR)
+  // 4. ENVÍO DE CÓDIGO 2FA (DOBLE FACTOR)
   // =========================================================================
   describe('sendLoginTwoFactorCode', () => {
     it('debe enviar el código 2FA con el nombre de rol especificado', async () => {
+      const originalUser = envs.smtpUser;
+      const originalPass = envs.smtpPass;
+      (envs as any).smtpUser = 'mercapleno@test.com';
+      (envs as any).smtpPass = 'secret';
+
       await service.sendLoginTwoFactorCode('admin@test.com', '654321', 10, 'Administrador');
 
       expect(mockSendMail).toHaveBeenCalledTimes(1);
       expect(mockSendMail).toHaveBeenCalledWith(
         expect.objectContaining({
           to: 'admin@test.com',
-          subject: expect.stringContaining('Codigo de acceso'),
+          subject: expect.stringContaining('Codigo de acceso seguro (2FA)'),
           text: expect.stringContaining('Administrador'),
           html: expect.stringContaining('654321'),
         }),
       );
+
+      (envs as any).smtpUser = originalUser;
+      (envs as any).smtpPass = originalPass;
     });
 
     it('debe usar el perfil por defecto si no se envía roleName', async () => {
+      const originalUser = envs.smtpUser;
+      const originalPass = envs.smtpPass;
+      (envs as any).smtpUser = 'mercapleno@test.com';
+      (envs as any).smtpPass = 'secret';
+
       await service.sendLoginTwoFactorCode('empleado@test.com', '654321', 10);
 
       expect(mockSendMail).toHaveBeenCalledTimes(1);
@@ -170,14 +235,22 @@ describe('EmailService (Unitarias)', () => {
           text: expect.stringContaining('usuario administrativo'),
         }),
       );
+
+      (envs as any).smtpUser = originalUser;
+      (envs as any).smtpPass = originalPass;
     });
   });
 
   // =========================================================================
-  // 4. ENVÍO DE CÓDIGO DE RECUPERACIÓN DE CONTRASEÑA
+  // 5. ENVÍO DE CÓDIGO DE RECUPERACIÓN DE CONTRASEÑA
   // =========================================================================
   describe('sendPasswordResetCode', () => {
     it('debe enviar el correo de recuperación de contraseña', async () => {
+      const originalUser = envs.smtpUser;
+      const originalPass = envs.smtpPass;
+      (envs as any).smtpUser = 'mercapleno@test.com';
+      (envs as any).smtpPass = 'secret';
+
       await service.sendPasswordResetCode('usuario@test.com', '987654', 20);
 
       expect(mockSendMail).toHaveBeenCalledTimes(1);
@@ -189,11 +262,14 @@ describe('EmailService (Unitarias)', () => {
           html: expect.stringContaining('987654'),
         }),
       );
+
+      (envs as any).smtpUser = originalUser;
+      (envs as any).smtpPass = originalPass;
     });
   });
 
   // =========================================================================
-  // 5. ENVÍO DE ALERTA DE STOCK BAJO A ADMINISTRADORES
+  // 6. ENVÍO DE ALERTA DE STOCK BAJO A ADMINISTRADORES
   // =========================================================================
   describe('sendLowStockAlertToAdmins', () => {
     const mockAlerts: LowStockAlert[] = [
@@ -236,6 +312,11 @@ describe('EmailService (Unitarias)', () => {
     });
 
     it('debe enviar alerta para un único producto con su resumen correspondiente', async () => {
+      const originalUser = envs.smtpUser;
+      const originalPass = envs.smtpPass;
+      (envs as any).smtpUser = 'mercapleno@test.com';
+      (envs as any).smtpPass = 'secret';
+
       mockPrismaService.usuarios.findMany.mockResolvedValue([
         { email: 'admin1@mercapleno.local' },
         { email: 'admin2@mercapleno.local' },
@@ -247,15 +328,23 @@ describe('EmailService (Unitarias)', () => {
       expect(mockSendMail).toHaveBeenCalledTimes(1);
       expect(mockSendMail).toHaveBeenCalledWith(
         expect.objectContaining({
-          to: 'admin1@mercapleno.local,admin2@mercapleno.local',
+          to: 'admin1@mercapleno.local, admin2@mercapleno.local',
           subject: expect.stringContaining('Alerta de stock bajo'),
           text: expect.stringContaining('Venta #105'),
           html: expect.stringContaining('Leche Deslactosada'),
         }),
       );
+
+      (envs as any).smtpUser = originalUser;
+      (envs as any).smtpPass = originalPass;
     });
 
     it('debe enviar alerta para múltiples productos usando fuente por defecto', async () => {
+      const originalUser = envs.smtpUser;
+      const originalPass = envs.smtpPass;
+      (envs as any).smtpUser = 'mercapleno@test.com';
+      (envs as any).smtpPass = 'secret';
+
       mockPrismaService.usuarios.findMany.mockResolvedValue([
         { email: 'admin@mercapleno.local' },
       ]);
@@ -270,6 +359,10 @@ describe('EmailService (Unitarias)', () => {
           html: expect.stringContaining('2 productos quedaron con stock bajo'),
         }),
       );
+
+      (envs as any).smtpUser = originalUser;
+      (envs as any).smtpPass = originalPass;
     });
   });
 });
+

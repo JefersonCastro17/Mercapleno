@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -32,6 +33,8 @@ interface AuthTokenPayload {
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
@@ -127,20 +130,17 @@ export class AuthService {
       },
     });
 
-    try {
-      await this.emailService.sendLoginTwoFactorCode(
+    // Disparar envio de correo en segundo plano para no bloquear la respuesta HTTP
+    this.emailService
+      .sendLoginTwoFactorCode(
         user.email,
         loginCode,
         envs.loginTwoFactorTtlMin,
         user.roles?.nombre,
-      );
-    } catch (_error) {
-      await this.clearLoginTwoFactorChallenge(user.id);
-      throw new InternalServerErrorException({
-        success: false,
-        message: 'No se pudo enviar el codigo de segundo factor. Intenta nuevamente.',
+      )
+      .catch((err) => {
+        this.logger.error(`Error enviando correo 2FA a ${user.email}: ${err.message}`);
       });
-    }
 
     return {
       success: true,

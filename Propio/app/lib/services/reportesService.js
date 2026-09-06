@@ -42,6 +42,33 @@ export const getResumenMes = async () => {
   return response?.data || response;
 };
 
+export const getFinancialSummary = async (inicio, fin) => {
+  let endpoint = `${BASE_REPORTS_URL}/financial-summary`;
+  const params = new URLSearchParams();
+
+  if (inicio) params.append("inicio", inicio);
+  if (fin) params.append("fin", fin);
+  if (params.toString()) endpoint += `?${params.toString()}`;
+
+  const response = await authorizedFetch(endpoint, "GET");
+  return response?.data || response;
+};
+
+export const getVentasPorCategoria = async () => {
+  const response = await authorizedFetch(`${BASE_REPORTS_URL}/ventas-categoria`, "GET");
+  return response?.data || response;
+};
+
+export const getVentasPorMetodo = async () => {
+  const response = await authorizedFetch(`${BASE_REPORTS_URL}/ventas-metodo`, "GET");
+  return response?.data || response;
+};
+
+export const getProductosRentabilidad = async () => {
+  const response = await authorizedFetch(`${BASE_REPORTS_URL}/productos-rentabilidad`, "GET");
+  return response?.data || response;
+};
+
 export const getPDFUrl = () => {
   return buildApiUrl(`${API_ENDPOINTS.sales.base}${BASE_REPORTS_URL}/pdf-resumen`);
 };
@@ -61,4 +88,4 @@ export const fetchReportPdf = async () => {
     }
     throw error;
   }
-};
+};
