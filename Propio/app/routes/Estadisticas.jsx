@@ -19,64 +19,125 @@ import "../styles/estadisticas.css";
 import {
   getVentasMes,
   getTopProductos,
-  getResumen,
+  getFinancialSummary,
+  getVentasPorCategoria,
+  getVentasPorMetodo,
+  getProductosRentabilidad,
   getResumenMes,
   fetchReportPdf,
   formatPrice
 } from "../lib/services/reportesService";
 
-const PIE_COLORS = ["#0ea5e9", "#f59e0b", "#22c55e", "#ef4444", "#14b8a6"];
-
-const formatMonthRange = (inicio, fin) => {
-  if (!inicio && !fin) return "Todo el periodo";
-  return `${inicio || "inicio"} a ${fin || "hoy"}`;
-};
+const CATEGORY_COLORS = ["#0ea5e9", "#f59e0b", "#22c55e", "#ef4444", "#8b5cf6", "#14b8a6", "#ec4899", "#f97316"];
+const PAYMENT_COLORS = ["#10b981", "#3b82f6", "#8b5cf6", "#f59e0b"];
 
 const safeNumber = (value) => Number(value) || 0;
 
 export default function Estadisticas() {
   const navigate = useNavigate();
 
+  // Estados de datos
   const [ventasMes, setVentasMes] = useState([]);
   const [topProductos, setTopProductos] = useState([]);
-  const [resumen, setResumen] = useState({ dinero_total: 0, total_ventas: 0, promedio: 0 });
+  const [financialSummary, setFinancialSummary] = useState({
+    ingresos_totales: 0,
+    costo_estimado: 0,
+    ganancia_bruta: 0,
+    margen_porcentaje: 0,
+    ticket_promedio: 0,
+    total_ventas: 0,
+    inventario: {
+      unidades_stock_total: 0,
+      valor_venta: 0,
+      valor_costo: 0,
+      productos_stock_bajo: 0
+    }
+  });
+  const [ventasCategoria, setVentasCategoria] = useState([]);
+  const [ventasMetodo, setVentasMetodo] = useState([]);
+  const [productosRentabilidad, setProductosRentabilidad] = useState([]);
   const [resumenMes, setResumenMes] = useState([]);
+
+  // Estados de control y filtros
   const [loading, setLoading] = useState(true);
-  const [mesInicio, setMesInicio] = useState("");
-  const [mesFin, setMesFin] = useState("");
+  const [activePreset, setActivePreset] = useState("todo");
+  const [fechaInicio, setFechaInicio] = useState("");
+  const [fechaFin, setFechaFin] = useState("");
   const [lastUpdated, setLastUpdated] = useState(null);
+
+  // Aplicar presets de fecha
+  const applyPreset = (preset) => {
+    setActivePreset(preset);
+    const now = new Date();
+    const formatDate = (d) => d.toISOString().split("T")[0];
+
+    if (preset === "hoy") {
+      const today = formatDate(now);
+      setFechaInicio(today);
+      setFechaFin(today);
+    } else if (preset === "7d") {
+      const d = new Date();
+      d.setDate(d.getDate() - 7);
+      setFechaInicio(formatDate(d));
+      setFechaFin(formatDate(now));
+    } else if (preset === "mes") {
+      const d = new Date(now.getFullYear(), now.getMonth(), 1);
+      setFechaInicio(formatDate(d));
+      setFechaFin(formatDate(now));
+    } else if (preset === "anio") {
+      const d = new Date(now.getFullYear(), 0, 1);
+      setFechaInicio(formatDate(d));
+      setFechaFin(formatDate(now));
+    } else {
+      setFechaInicio("");
+      setFechaFin("");
+    }
+  };
 
   const cargarDatos = useCallback(async () => {
     setLoading(true);
     try {
-      const [rVentasMes, rTopProductos, rResumen, rResumenMes] = await Promise.all([
-        getVentasMes(mesInicio, mesFin),
+      const [
+        rFinancial,
+        rVentasMes,
+        rTopProductos,
+        rVentasCat,
+        rVentasMet,
+        rProdRentables,
+        rResumenMes
+      ] = await Promise.all([
+        getFinancialSummary(fechaInicio, fechaFin),
+        getVentasMes(fechaInicio ? fechaInicio.slice(0, 7) : undefined, fechaFin ? fechaFin.slice(0, 7) : undefined),
         getTopProductos(),
-        getResumen(),
+        getVentasPorCategoria(),
+        getVentasPorMetodo(),
+        getProductosRentabilidad(),
         getResumenMes()
       ]);
 
-      const resumenLimpio = {
-        total_ventas: safeNumber(rResumen.total_ventas),
-        dinero_total: safeNumber(rResumen.dinero_total),
-        promedio: safeNumber(rResumen.promedio)
-      };
+      if (rFinancial) {
+        setFinancialSummary({
+          ingresos_totales: safeNumber(rFinancial.ingresos_totales),
+          costo_estimado: safeNumber(rFinancial.costo_estimado),
+          ganancia_bruta: safeNumber(rFinancial.ganancia_bruta),
+          margen_porcentaje: safeNumber(rFinancial.margen_porcentaje),
+          ticket_promedio: safeNumber(rFinancial.ticket_promedio),
+          total_ventas: safeNumber(rFinancial.total_ventas),
+          inventario: {
+            unidades_stock_total: safeNumber(rFinancial.inventario?.unidades_stock_total),
+            valor_venta: safeNumber(rFinancial.inventario?.valor_venta),
+            valor_costo: safeNumber(rFinancial.inventario?.valor_costo),
+            productos_stock_bajo: safeNumber(rFinancial.inventario?.productos_stock_bajo)
+          }
+        });
+      }
 
-      const resumenMesLimpio = rResumenMes.map((item) => ({
-        ...item,
-        total_mes: safeNumber(item.total_mes),
-        cantidad_ventas: safeNumber(item.cantidad_ventas)
-      }));
-
-      const ventasMesLimpio = rVentasMes.map((item) => ({
-        ...item,
-        total: safeNumber(item.total)
-      }));
-
-      setVentasMes(ventasMesLimpio);
-      setTopProductos(rTopProductos);
-      setResumen(resumenLimpio);
-      setResumenMes(resumenMesLimpio);
+      setVentasMes(Array.isArray(rVentasMes) ? rVentasMes.map(v => ({ ...v, total: safeNumber(v.total) })) : []);
+      setTopProductos(Array.isArray(rTopProductos) ? rTopProductos : []);
+      setVentasCategoria(Array.isArray(rVentasCat) ? rVentasCat.map(c => ({ ...c, total_ingresos: safeNumber(c.total_ingresos), unidades_vendidas: safeNumber(c.unidades_vendidas) })) : []);
+      setVentasMetodo(Array.isArray(rVentasMet) ? rVentasMet.map(m => ({ ...m, total_recaudado: safeNumber(m.total_recaudado), transacciones: safeNumber(m.transacciones) })) : []);
+      setProductosRentabilidad(Array.isArray(rProdRentables) ? rProdRentables : []);
+      setResumenMes(Array.isArray(rResumenMes) ? rResumenMes.map(m => ({ ...m, total_mes: safeNumber(m.total_mes), cantidad_ventas: safeNumber(m.cantidad_ventas) })) : []);
       setLastUpdated(new Date());
     } catch (error) {
       console.error("Error al cargar reportes:", error);
@@ -84,12 +145,12 @@ export default function Estadisticas() {
         alert("Sesion expirada o no autorizada. Redirigiendo al Login.");
         navigate("/login", { replace: true });
       } else {
-        alert("Error al cargar los datos de reportes. Verifique la conexion.");
+        alert("Error al cargar los datos financieros. Verifique la conexion.");
       }
     } finally {
       setLoading(false);
     }
-  }, [mesInicio, mesFin, navigate]);
+  }, [fechaInicio, fechaFin, navigate]);
 
   const handlePdfDownload = async () => {
     try {
@@ -97,7 +158,7 @@ export default function Estadisticas() {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = "reporte_ventas.pdf";
+      link.download = `reporte_financiero_mercapleno_${new Date().toISOString().slice(0, 10)}.pdf`;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -154,57 +215,19 @@ export default function Estadisticas() {
     cargarDatos();
   }, [cargarDatos]);
 
+  // Cálculos y transformaciones
   const ventasOrdenadas = useMemo(() => {
     return [...ventasMes].sort((a, b) => String(a.mes).localeCompare(String(b.mes)));
   }, [ventasMes]);
 
-  const totalPeriodo = useMemo(
-    () => ventasOrdenadas.reduce((acc, item) => acc + safeNumber(item.total), 0),
-    [ventasOrdenadas]
-  );
-
-  const promedioMensual = useMemo(() => {
-    if (!ventasOrdenadas.length) return 0;
-    return totalPeriodo / ventasOrdenadas.length;
-  }, [ventasOrdenadas, totalPeriodo]);
-
-  const bestMonth = useMemo(() => {
-    if (!ventasOrdenadas.length) return { mes: "-", total: 0 };
-    return ventasOrdenadas.reduce((max, item) => (item.total > max.total ? item : max), ventasOrdenadas[0]);
-  }, [ventasOrdenadas]);
-
-  const worstMonth = useMemo(() => {
-    if (!ventasOrdenadas.length) return { mes: "-", total: 0 };
-    return ventasOrdenadas.reduce((min, item) => (item.total < min.total ? item : min), ventasOrdenadas[0]);
-  }, [ventasOrdenadas]);
-
-  const crecimientoMensual = useMemo(() => {
-    if (ventasOrdenadas.length < 2) return null;
-    const last = ventasOrdenadas[ventasOrdenadas.length - 1];
-    const prev = ventasOrdenadas[ventasOrdenadas.length - 2];
-    if (!prev || prev.total === 0) return null;
-    return ((last.total - prev.total) / prev.total) * 100;
-  }, [ventasOrdenadas]);
-
-  const topProductosData = useMemo(() => {
-    return topProductos
-      .map((item) => ({
-        name: item.nombre,
-        value: safeNumber(item.total_vendido)
+  const pieCategoriaData = useMemo(() => {
+    return ventasCategoria
+      .map(c => ({
+        name: c.categoria,
+        value: safeNumber(c.total_ingresos)
       }))
-      .filter((item) => item.value > 0)
-      .slice(0, 6);
-  }, [topProductos]);
-
-  const topProductosTotal = useMemo(
-    () => topProductosData.reduce((acc, item) => acc + item.value, 0),
-    [topProductosData]
-  );
-
-  const topProducto = topProductosData[0];
-  const topProductoShare = topProducto && topProductosTotal
-    ? (topProducto.value / topProductosTotal) * 100
-    : null;
+      .filter(c => c.value > 0);
+  }, [ventasCategoria]);
 
   const lastUpdatedLabel = lastUpdated
     ? lastUpdated.toLocaleString("es-CO", {
@@ -218,142 +241,226 @@ export default function Estadisticas() {
 
   return (
     <div className="dashboard">
+      {/* ENCABEZADO */}
       <header className="dashboard-header">
         <div className="header-text">
-          <span className="eyebrow">Panel de analitica</span>
-          <h1>Estadisticas de ventas</h1>
+          <span className="eyebrow">Analítica & Rendimiento Financiero</span>
+          <h1>Panel de Control Mercapleno</h1>
           <p className="subtitle">
-            Rango: {formatMonthRange(mesInicio, mesFin)} · Actualizado: {lastUpdatedLabel}
+            Monitoreo en tiempo real de ingresos, márgenes, inventario y ventas · Actualizado: {lastUpdatedLabel}
           </p>
         </div>
         <div className="header-actions">
           <button className="btn-secondary" onClick={cargarDatos} disabled={loading}>
-            {loading ? "Actualizando..." : "Actualizar"}
+            {loading ? "Actualizando..." : "🔄 Actualizar"}
           </button>
           <button className="btn-secondary" onClick={handlePdfPrint} disabled={loading}>
-            Imprimir PDF
+            🖨️ Imprimir PDF
           </button>
           <button className="btn-primary" onClick={handlePdfDownload} disabled={loading}>
-            Descargar PDF
+            📥 Descargar Reporte
           </button>
         </div>
       </header>
 
+      {/* BARRA DE FILTROS Y PRESETS TEMPORALES */}
       <section className="filter-card">
-        <div className="filter-field">
-          <label htmlFor="mesInicio">Desde</label>
-          <input type="month" id="mesInicio" value={mesInicio} onChange={(e) => setMesInicio(e.target.value)} />
+        <div className="presets-bar">
+          <span className="presets-label">Periodo:</span>
+          <button
+            type="button"
+            className={`preset-btn ${activePreset === "todo" ? "active" : ""}`}
+            onClick={() => applyPreset("todo")}
+          >
+            Histórico Completo
+          </button>
+          <button
+            type="button"
+            className={`preset-btn ${activePreset === "hoy" ? "active" : ""}`}
+            onClick={() => applyPreset("hoy")}
+          >
+            Hoy
+          </button>
+          <button
+            type="button"
+            className={`preset-btn ${activePreset === "7d" ? "active" : ""}`}
+            onClick={() => applyPreset("7d")}
+          >
+            Últimos 7 Días
+          </button>
+          <button
+            type="button"
+            className={`preset-btn ${activePreset === "mes" ? "active" : ""}`}
+            onClick={() => applyPreset("mes")}
+          >
+            Este Mes
+          </button>
+          <button
+            type="button"
+            className={`preset-btn ${activePreset === "anio" ? "active" : ""}`}
+            onClick={() => applyPreset("anio")}
+          >
+            Este Año
+          </button>
         </div>
-        <div className="filter-field">
-          <label htmlFor="mesFin">Hasta</label>
-          <input type="month" id="mesFin" value={mesFin} onChange={(e) => setMesFin(e.target.value)} />
+
+        <div className="custom-dates">
+          <div className="filter-field">
+            <label htmlFor="fechaInicio">Desde</label>
+            <input
+              type="date"
+              id="fechaInicio"
+              value={fechaInicio}
+              onChange={(e) => {
+                setFechaInicio(e.target.value);
+                setActivePreset("custom");
+              }}
+            />
+          </div>
+          <div className="filter-field">
+            <label htmlFor="fechaFin">Hasta</label>
+            <input
+              type="date"
+              id="fechaFin"
+              value={fechaFin}
+              onChange={(e) => {
+                setFechaFin(e.target.value);
+                setActivePreset("custom");
+              }}
+            />
+          </div>
+          {(fechaInicio || fechaFin) && (
+            <button
+              className="btn-ghost"
+              onClick={() => applyPreset("todo")}
+            >
+              Limpiar
+            </button>
+          )}
         </div>
-        <button
-          className="btn-ghost"
-          onClick={() => {
-            setMesInicio("");
-            setMesFin("");
-          }}
-        >
-          Limpiar filtros
-        </button>
       </section>
 
       {loading ? (
-        <p className="loading">Cargando reportes...</p>
+        <div className="loading-state">
+          <div className="spinner"></div>
+          <p>Cargando métricas financieras en tiempo real...</p>
+        </div>
       ) : (
         <>
+          {/* TARJETAS DE KPIS FINANCIEROS */}
           <section className="kpi-grid">
-            <div className="kpi-card">
-              <p className="kpi-title">Ingresos totales</p>
-              <h3>{formatPrice(resumen.dinero_total)}</h3>
-              <span className="kpi-sub">Periodo completo</span>
+            <div className="kpi-card tone-revenue">
+              <div className="kpi-header">
+                <span className="kpi-icon">💰</span>
+                <span className="kpi-badge badge-blue">Ingresos Brutos</span>
+              </div>
+              <p className="kpi-title">Facturación Total</p>
+              <h3>{formatPrice(financialSummary.ingresos_totales)}</h3>
+              <span className="kpi-sub">{financialSummary.total_ventas} transacciones registradas</span>
             </div>
-            <div className="kpi-card">
-              <p className="kpi-title">Total de ventas</p>
-              <h3>{resumen.total_ventas}</h3>
-              <span className="kpi-sub">Transacciones registradas</span>
+
+            <div className="kpi-card tone-profit">
+              <div className="kpi-header">
+                <span className="kpi-icon">📈</span>
+                <span className="kpi-badge badge-green">Utilidad Neta</span>
+              </div>
+              <p className="kpi-title">Ganancia Bruta Estimada</p>
+              <h3>{formatPrice(financialSummary.ganancia_bruta)}</h3>
+              <span className="kpi-sub">Costo de venta: {formatPrice(financialSummary.costo_estimado)}</span>
             </div>
-            <div className="kpi-card">
-              <p className="kpi-title">Ticket promedio</p>
-              <h3>{formatPrice(resumen.promedio)}</h3>
-              <span className="kpi-sub">Promedio por compra</span>
+
+            <div className="kpi-card tone-margin">
+              <div className="kpi-header">
+                <span className="kpi-icon">📊</span>
+                <span className="kpi-badge badge-purple">Rentabilidad</span>
+              </div>
+              <p className="kpi-title">Margen de Ganancia</p>
+              <h3>{financialSummary.margen_porcentaje}%</h3>
+              <span className="kpi-sub">Retorno promedio sobre ventas</span>
             </div>
-            <div className="kpi-card">
-              <p className="kpi-title">Crecimiento mensual</p>
-              <h3>{crecimientoMensual == null ? "-" : `${crecimientoMensual.toFixed(1)}%`}</h3>
-              <span className="kpi-sub">Ultimo vs mes anterior</span>
+
+            <div className="kpi-card tone-ticket">
+              <div className="kpi-header">
+                <span className="kpi-icon">🧾</span>
+                <span className="kpi-badge badge-amber">Ticket Medio</span>
+              </div>
+              <p className="kpi-title">Gasto por Cliente</p>
+              <h3>{formatPrice(financialSummary.ticket_promedio)}</h3>
+              <span className="kpi-sub">Promedio por cada compra</span>
+            </div>
+
+            <div className="kpi-card tone-inventory">
+              <div className="kpi-header">
+                <span className="kpi-icon">📦</span>
+                <span className="kpi-badge badge-cyan">Inventario</span>
+              </div>
+              <p className="kpi-title">Valor en Bodega (Venta)</p>
+              <h3>{formatPrice(financialSummary.inventario.valor_venta)}</h3>
+              <span className="kpi-sub">
+                {financialSummary.inventario.unidades_stock_total} unidades · {financialSummary.inventario.productos_stock_bajo} stock crítico
+              </span>
             </div>
           </section>
 
-          <section className="insights">
-            <div className="insight">
-              <span className="insight-label">Mejor mes</span>
-              <strong>{bestMonth.mes}</strong>
-              <span>{formatPrice(bestMonth.total)}</span>
-            </div>
-            <div className="insight">
-              <span className="insight-label">Mes mas bajo</span>
-              <strong>{worstMonth.mes}</strong>
-              <span>{formatPrice(worstMonth.total)}</span>
-            </div>
-            <div className="insight">
-              <span className="insight-label">Promedio mensual</span>
-              <strong>{formatPrice(promedioMensual)}</strong>
-              <span>Total periodo: {formatPrice(totalPeriodo)}</span>
-            </div>
-            <div className="insight">
-              <span className="insight-label">Top producto</span>
-              <strong>{topProducto ? topProducto.name : "-"}</strong>
-              <span>{topProductoShare == null ? "-" : `${topProductoShare.toFixed(1)}%`} del top</span>
-            </div>
-          </section>
-
+          {/* CUADRÍCULA DE GRÁFICOS Y ANALÍTICA */}
           <section className="grid">
+            {/* GRÁFICO 1: EVOLUCIÓN DE VENTAS */}
             <div className="card span-2">
               <div className="card-header">
-                <h2>Ventas por mes</h2>
-                <span className="card-sub">Evolucion del ingreso mensual</span>
+                <div>
+                  <h2>Evolución de Ingresos</h2>
+                  <span className="card-sub">Facturación mensual del supermercado</span>
+                </div>
               </div>
               <div className="card-body">
                 {ventasOrdenadas.length === 0 ? (
-                  <div className="empty-state">Sin datos para el rango seleccionado.</div>
+                  <div className="empty-state">No hay registros de ventas en este periodo.</div>
                 ) : (
-                  <ResponsiveContainer width="100%" height={320}>
+                  <ResponsiveContainer width="100%" height={300}>
                     <AreaChart data={ventasOrdenadas}>
                       <defs>
-                        <linearGradient id="ventasFill" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#0ea5e9" stopOpacity={0.45} />
-                          <stop offset="100%" stopColor="#0ea5e9" stopOpacity={0.05} />
+                        <linearGradient id="ventasGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#0ea5e9" stopOpacity={0.4} />
+                          <stop offset="100%" stopColor="#0ea5e9" stopOpacity={0.02} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="mes" tickMargin={8} />
-                      <YAxis tickFormatter={(v) => formatPrice(v).replace("$", "")} />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                      <XAxis dataKey="mes" tickMargin={8} stroke="#64748b" />
+                      <YAxis tickFormatter={(v) => formatPrice(v).replace("$", "")} stroke="#64748b" />
                       <Tooltip formatter={(value) => formatPrice(value)} />
-                      <Area type="monotone" dataKey="total" stroke="#0ea5e9" strokeWidth={3} fill="url(#ventasFill)" />
+                      <Area type="monotone" dataKey="total" name="Ingresos" stroke="#0ea5e9" strokeWidth={3} fill="url(#ventasGrad)" />
                     </AreaChart>
                   </ResponsiveContainer>
                 )}
               </div>
             </div>
 
+            {/* GRÁFICO 2: VENTAS POR CATEGORÍA (DONUT) */}
             <div className="card">
               <div className="card-header">
-                <h2>Mix de productos</h2>
-                <span className="card-sub">Participacion del top</span>
+                <div>
+                  <h2>Mix por Categoría</h2>
+                  <span className="card-sub">Participación de ingresos</span>
+                </div>
               </div>
               <div className="card-body">
-                {topProductosData.length === 0 ? (
-                  <div className="empty-state">Sin datos para mostrar.</div>
+                {pieCategoriaData.length === 0 ? (
+                  <div className="empty-state">Sin ventas por categoría.</div>
                 ) : (
-                  <ResponsiveContainer width="100%" height={320}>
+                  <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Tooltip formatter={(value) => formatPrice(value)} />
                       <Legend verticalAlign="bottom" height={36} />
-                      <Pie data={topProductosData} dataKey="value" nameKey="name" innerRadius={70} outerRadius={120} paddingAngle={4}>
-                        {topProductosData.map((entry, index) => (
-                          <Cell key={`cell-${entry.name}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                      <Pie
+                        data={pieCategoriaData}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={60}
+                        outerRadius={105}
+                        paddingAngle={3}
+                      >
+                        {pieCategoriaData.map((entry, index) => (
+                          <Cell key={`cell-${entry.name}`} fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]} />
                         ))}
                       </Pie>
                     </PieChart>
@@ -362,59 +469,108 @@ export default function Estadisticas() {
               </div>
             </div>
 
+            {/* GRÁFICO 3: VENTAS POR MÉTODO DE PAGO */}
             <div className="card">
               <div className="card-header">
-                <h2>Productos mas vendidos</h2>
-                <span className="card-sub">Top por unidades</span>
+                <div>
+                  <h2>Métodos de Pago</h2>
+                  <span className="card-sub">Recaudación por canal</span>
+                </div>
               </div>
               <div className="card-body">
-                {topProductos.length === 0 ? (
-                  <div className="empty-state">Sin datos para mostrar.</div>
+                {ventasMetodo.length === 0 ? (
+                  <div className="empty-state">Sin datos de métodos de pago.</div>
                 ) : (
-                  <ResponsiveContainer width="100%" height={320}>
-                    <BarChart data={topProductos}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis
-                        dataKey="nombre"
-                        interval={0}
-                        angle={-20}
-                        textAnchor="end"
-                        height={70}
-                        tickFormatter={(value) => (String(value).length > 12 ? `${String(value).slice(0, 12)}...` : value)}
-                      />
-                      <YAxis />
-                      <Tooltip formatter={(value) => value} />
-                      <Bar dataKey="total_vendido" fill="#f59e0b" radius={[10, 10, 0, 0]} />
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={ventasMetodo}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                      <XAxis dataKey="metodo" stroke="#64748b" />
+                      <YAxis tickFormatter={(v) => formatPrice(v).replace("$", "")} stroke="#64748b" />
+                      <Tooltip formatter={(value) => formatPrice(value)} />
+                      <Bar dataKey="total_recaudado" name="Recaudado" radius={[8, 8, 0, 0]}>
+                        {ventasMetodo.map((entry, index) => (
+                          <Cell key={`pay-${index}`} fill={PAYMENT_COLORS[index % PAYMENT_COLORS.length]} />
+                        ))}
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 )}
               </div>
             </div>
 
+            {/* TABLA: TOP PRODUCTOS POR RENTABILIDAD */}
             <div className="card span-2">
               <div className="card-header">
-                <h2>Resumen mensual</h2>
-                <span className="card-sub">Detalle por mes</span>
+                <div>
+                  <h2>Top Productos Más Rentables</h2>
+                  <span className="card-sub">Mayor ganancia bruta aportada al supermercado</span>
+                </div>
               </div>
               <div className="card-body">
-                {resumenMes.length === 0 ? (
-                  <div className="empty-state">Sin datos para mostrar.</div>
+                {productosRentabilidad.length === 0 ? (
+                  <div className="empty-state">No hay ventas registradas para calcular rentabilidad.</div>
                 ) : (
                   <div className="table-wrap">
                     <table>
                       <thead>
                         <tr>
-                          <th>Mes</th>
-                          <th>Ventas</th>
-                          <th>Total</th>
+                          <th>Producto</th>
+                          <th>Categoría</th>
+                          <th>Unidades</th>
+                          <th>Facturado</th>
+                          <th>Ganancia Neta</th>
+                          <th>Margen</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {productosRentabilidad.map((p, idx) => (
+                          <tr key={p.id_productos || idx}>
+                            <td style={{ fontWeight: 600, textAlign: "left" }}>{p.nombre}</td>
+                            <td><span className="cat-pill">{p.categoria}</span></td>
+                            <td>{p.unidades_vendidas}</td>
+                            <td>{formatPrice(p.total_facturado)}</td>
+                            <td style={{ color: "#16a34a", fontWeight: 700 }}>{formatPrice(p.ganancia_total)}</td>
+                            <td><span className="badge-margin">{p.margen_pct}%</span></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* TABLA: RESUMEN MENSUAL */}
+            <div className="card span-3">
+              <div className="card-header">
+                <div>
+                  <h2>Histórico Mensual Detallado</h2>
+                  <span className="card-sub">Resumen de ventas y transacciones por mes</span>
+                </div>
+              </div>
+              <div className="card-body">
+                {resumenMes.length === 0 ? (
+                  <div className="empty-state">Sin datos mensuales registrados.</div>
+                ) : (
+                  <div className="table-wrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Periodo (Mes)</th>
+                          <th>Cantidad de Ventas</th>
+                          <th>Total Facturado</th>
+                          <th>Ticket Promedio Mensual</th>
                         </tr>
                       </thead>
                       <tbody>
                         {resumenMes.map((m, i) => (
                           <tr key={`${m.mes}-${i}`}>
-                            <td>{m.mes}</td>
-                            <td>{m.cantidad_ventas}</td>
-                            <td>{formatPrice(m.total_mes)}</td>
+                            <td style={{ fontWeight: 600 }}>{m.mes}</td>
+                            <td>{m.cantidad_ventas} transacciones</td>
+                            <td style={{ fontWeight: 700 }}>{formatPrice(m.total_mes)}</td>
+                            <td>
+                              {formatPrice(m.cantidad_ventas > 0 ? m.total_mes / m.cantidad_ventas : 0)}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -429,4 +585,5 @@ export default function Estadisticas() {
     </div>
   );
 }
+
 

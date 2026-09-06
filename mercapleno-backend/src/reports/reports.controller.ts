@@ -1,9 +1,8 @@
-﻿import { Controller, Get, Query, Res } from '@nestjs/common';
+import { Controller, Get, Query, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { ApiBearerAuth, ApiOperation, ApiSecurity, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { ReportsService } from './reports.service';
 import { Roles } from '../auth/decorators/roles.decorator';
-
 
 @Roles(1, 2)
 @ApiTags('Reportes')
@@ -12,6 +11,32 @@ import { Roles } from '../auth/decorators/roles.decorator';
 @Controller('sales/reports')
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
+
+  @Get('financial-summary')
+  @ApiOperation({ summary: 'Resumen financiero con utilidades, costos y valoracion de inventario' })
+  @ApiQuery({ name: 'inicio', required: false, description: 'Formato YYYY-MM-DD' })
+  @ApiQuery({ name: 'fin', required: false, description: 'Formato YYYY-MM-DD' })
+  getFinancialSummary(@Query('inicio') inicio?: string, @Query('fin') fin?: string) {
+    return this.reportsService.getFinancialSummary(inicio, fin);
+  }
+
+  @Get('ventas-categoria')
+  @ApiOperation({ summary: 'Desglose de ventas por categoria' })
+  getVentasPorCategoria() {
+    return this.reportsService.getVentasPorCategoria();
+  }
+
+  @Get('ventas-metodo')
+  @ApiOperation({ summary: 'Desglose de ventas por metodo de pago' })
+  getVentasPorMetodo() {
+    return this.reportsService.getVentasPorMetodo();
+  }
+
+  @Get('productos-rentabilidad')
+  @ApiOperation({ summary: 'Ranking de productos con mayor margen de ganancia' })
+  getProductosRentabilidad() {
+    return this.reportsService.getProductosRentabilidad();
+  }
 
   @Get('ventas-mes')
   @ApiOperation({ summary: 'Ventas agrupadas por mes' })
@@ -40,7 +65,7 @@ export class ReportsController {
   }
 
   @Get('pdf-resumen')
-  @ApiOperation({ summary: 'Descargar reporte PDF de ventas' })
+  @ApiOperation({ summary: 'Descargar reporte PDF ejecutivo de ventas' })
   async getPdfResumen(@Res() res: Response) {
     const buffer = await this.reportsService.buildResumenPdf();
     res.setHeader('Content-Type', 'application/pdf');
@@ -48,3 +73,4 @@ export class ReportsController {
     res.send(buffer);
   }
 }
+

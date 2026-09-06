@@ -86,13 +86,17 @@ describe('Reportes (e2e)', () => {
   });
 
   it('GET /api/sales/reports/pdf-resumen -> application/pdf', async () => {
-    const resumenRow = { total_ventas: 2, dinero_total: '700.00', promedio: '350.00' };
-    const topProductos = [{ nombre: 'Prod A', total_vendido: 2, total_facturado: 700 }];
+    const mockVentas = [{ total_ventas: 2, ingresos_totales: 700, ticket_promedio: 350, costo_estimado: 490 }];
+    const mockInv = [{ unidades_stock_total: 20, valor_inventario_venta: 200000, valor_inventario_costo: 140000, productos_stock_bajo: 1 }];
+    const topRentables = [{ id_productos: 1, nombre: 'Prod A', categoria: 'General', unidades_vendidas: 2, total_facturado: 700, ganancia_total: 210, margen_pct: 30 }];
+    const ventasCat = [{ categoria: 'Lácteos', unidades_vendidas: 5, total_ingresos: 50000 }];
     const resumenMes = [{ mes: '2026-01', cantidad_ventas: 2, total_mes: '700.00' }];
 
     (mockMysqlService.query as jest.Mock)
-      .mockResolvedValueOnce([[resumenRow]])
-      .mockResolvedValueOnce([topProductos])
+      .mockResolvedValueOnce([[mockVentas[0]]])
+      .mockResolvedValueOnce([[mockInv[0]]])
+      .mockResolvedValueOnce([topRentables])
+      .mockResolvedValueOnce([ventasCat])
       .mockResolvedValueOnce([resumenMes]);
 
     const res = await request(app.getHttpServer())
@@ -104,4 +108,59 @@ describe('Reportes (e2e)', () => {
     expect(res.headers['content-disposition']).toContain('reporte_ventas');
     expect(res.body).toBeDefined();
   }, 10000);
-});
+
+  it('GET /api/sales/reports/financial-summary -> 200 object with profit and inventory', async () => {
+    const mockVentas = [{ total_ventas: 10, ingresos_totales: 250000, ticket_promedio: 25000, costo_estimado: 175000 }];
+    const mockInv = [{ unidades_stock_total: 50, valor_inventario_venta: 500000, valor_inventario_costo: 350000, productos_stock_bajo: 2 }];
+
+    (mockMysqlService.query as jest.Mock)
+      .mockResolvedValueOnce([[mockVentas[0]]])
+      .mockResolvedValueOnce([[mockInv[0]]]);
+
+    const res = await request(app.getHttpServer())
+      .get('/api/sales/reports/financial-summary')
+      .set('Authorization', `Bearer ${tokenAdminValido}`)
+      .expect(200);
+
+    expect(res.body.ingresos_totales).toBe(250000);
+    expect(res.body.ganancia_bruta).toBe(75000);
+    expect(res.body.margen_porcentaje).toBe(30);
+    expect(res.body.inventario.unidades_stock_total).toBe(50);
+  });
+
+  it('GET /api/sales/reports/ventas-categoria -> 200 array', async () => {
+    const rows = [{ categoria: 'Lácteos', unidades_vendidas: 15, total_ingresos: 75000 }];
+    (mockMysqlService.query as jest.Mock).mockResolvedValueOnce([rows]);
+
+    const res = await request(app.getHttpServer())
+      .get('/api/sales/reports/ventas-categoria')
+      .set('Authorization', `Bearer ${tokenAdminValido}`)
+      .expect(200);
+
+    expect(res.body).toEqual(rows);
+  });
+
+  it('GET /api/sales/reports/ventas-metodo -> 200 array', async () => {
+    const rows = [{ metodo: 'Efectivo', transacciones: 8, total_recaudado: 120000 }];
+    (mockMysqlService.query as jest.Mock).mockResolvedValueOnce([rows]);
+
+    const res = await request(app.getHttpServer())
+      .get('/api/sales/reports/ventas-metodo')
+      .set('Authorization', `Bearer ${tokenAdminValido}`)
+      .expect(200);
+
+    expect(res.body).toEqual(rows);
+  });
+
+  it('GET /api/sales/reports/productos-rentabilidad -> 200 array', async () => {
+    const rows = [{ id_productos: 1, nombre: 'Arroz', categoria: 'Granos', unidades_vendidas: 20, total_facturado: 60000, ganancia_total: 18000, margen_pct: 30 }];
+    (mockMysqlService.query as jest.Mock).mockResolvedValueOnce([rows]);
+
+    const res = await request(app.getHttpServer())
+      .get('/api/sales/reports/productos-rentabilidad')
+      .set('Authorization', `Bearer ${tokenAdminValido}`)
+      .expect(200);
+
+    expect(res.body).toEqual(rows);
+  });
+});
