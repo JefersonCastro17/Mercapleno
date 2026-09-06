@@ -1,35 +1,51 @@
 services:
   db:
-    build:
-      context: .
-      dockerfile: Dockerfile.db
+    image: postgres:16-alpine
+    container_name: mercapleno-postgres
     environment:
-      MARIADB_ROOT_PASSWORD: root123
-      MARIADB_DATABASE: mercapleno
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+      POSTGRES_DB: mercapleno
     ports:
-      - "3307:3306"
+      - "5432:5432"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -uroot -proot123 --silent || exit 1"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mercapleno"]
       interval: 10s
       timeout: 5s
-      retries: 12
+      retries: 5
+    restart: unless-stopped
+
+  test-db:
+    image: postgres:16-alpine
+    container_name: mercapleno-postgres-test
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+      POSTGRES_DB: mercapleno_test
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mercapleno_test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   backend:
     build:
       context: ../mercapleno-backend
       dockerfile: Dockerfile.dev
-    env_file:
-      - ../mercapleno-backend/.env.docker
     environment:
       PORT: 4000
-      DATABASE_URL: mysql://root:root123@db:3306/mercapleno
+      DATABASE_URL: postgresql://postgres:postgres123@db:5432/mercapleno?schema=public
       DB_HOST: db
-      DB_PORT: 3306
-      DB_USER: root
-      DB_PASSWORD: root123
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres123
       DB_NAME: mercapleno
       JWT_SECRET: yogui
       JWT_EXPIRES_IN: 2h
@@ -65,4 +81,5 @@ services:
     restart: unless-stopped
 
 volumes:
-  mysql_data:
+  pg_data:
+  pg_test_data:

@@ -5,6 +5,9 @@ module.exports = {
   // Busca pruebas en tester/ y src/ (specs de NestJS si los hay)
   roots: ['<rootDir>/tester', '<rootDir>/src'],
 
+  // Carga automática de variables de entorno de prueba (.env.test)
+  setupFiles: ['<rootDir>/tester/setup-env.js'],
+
   // Extensiones soportadas
   moduleFileExtensions: ['js', 'json', 'ts'],
 

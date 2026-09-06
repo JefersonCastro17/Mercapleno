@@ -147,7 +147,7 @@ function Registro() {
       <header>
         <div className="header-container">
           <div className="logo-section">
-            <img src={logo} alt="Logo" className="logo-img" />
+            <img src="/images/mercapleno-logo.svg" alt="Mercapleno" className="logo-img" />
             <h1 className="portal-title">Portal 2</h1>
           </div>
 

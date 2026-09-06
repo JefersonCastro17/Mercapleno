@@ -1,4 +1,4 @@
-﻿import {
+import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
@@ -8,12 +8,13 @@
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import { envs } from '../config';
 import { EmailService } from '../email/email.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { handlePrismaPersistenceError } from '../common/utils/prisma-error.util';
+import { mapAuthUserResponse } from '../common/utils/user-mapper.util';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RequestPasswordResetDto } from './dto/request-password-reset.dto';
@@ -38,11 +39,22 @@ export class AuthService {
   ) {}
 
   private generateCode(): string {
-    return Math.floor(100000 + Math.random() * 900000).toString();
+    return crypto.randomInt(100000, 1000000).toString();
   }
 
   private hashCode(code: string): string {
     return crypto.createHash('sha256').update(code).digest('hex');
+  }
+
+  private compareHashSafe(hashA: string, hashB?: string | null): boolean {
+    if (!hashA || !hashB || hashA.length !== hashB?.length) {
+      return false;
+    }
+    return crypto.timingSafeEqual(Buffer.from(hashA), Buffer.from(hashB));
+  }
+
+  private normalizeEmail(email: string): string {
+    return email ? email.trim().toLowerCase() : '';
   }
 
   private buildExpiresAt(minutes: number): Date {
@@ -60,28 +72,6 @@ export class AuthService {
     return idRol === 1 || idRol === 2;
   }
 
-  private buildUserResponse(user: {
-    id: number;
-    nombre: string;
-    apellido: string;
-    email: string;
-    id_rol: number;
-    email_verified: boolean;
-    roles?: { nombre: string } | null;
-    tipos_identificacion?: { nombre: string } | null;
-  }) {
-    return {
-      id: user.id,
-      nombre: user.nombre,
-      apellido: user.apellido,
-      email: user.email,
-      id_rol: user.id_rol,
-      email_verified: user.email_verified,
-      rol: user.roles?.nombre,
-      tipo_documento: user.tipos_identificacion?.nombre,
-    };
-  }
-// token a
   private buildAccessToken(user: { id: number; id_rol: number; email: string }): string {
     return this.jwtService.sign({
       sub: user.id,
@@ -90,7 +80,7 @@ export class AuthService {
       token_type: 'access',
     });
   }
-//token b
+
   private buildPendingLoginToken(user: { id: number; id_rol: number; email: string }): string {
     return this.jwtService.sign(
       {
@@ -106,13 +96,17 @@ export class AuthService {
   }
 
   private async clearLoginTwoFactorChallenge(userId: number): Promise<void> {
-    await this.prisma.usuarios.update({
-      where: { id: userId },
-      data: {
-        login_two_factor_code: null,
-        login_two_factor_expires: null,
-      },
-    });
+    try {
+      await this.prisma.usuarios.update({
+        where: { id: userId },
+        data: {
+          login_two_factor_code: null,
+          login_two_factor_expires: null,
+        },
+      });
+    } catch {
+      // Ignorar de forma segura si el usuario no existe o ya fue eliminado
+    }
   }
 
   private async createLoginTwoFactorChallenge(user: {
@@ -204,8 +198,9 @@ export class AuthService {
   }
 
   async register(dto: RegisterDto) {
+    const email = this.normalizeEmail(dto.email);
     const existingEmail = await this.prisma.usuarios.findFirst({
-      where: { email: dto.email },
+      where: { email },
       select: { id: true },
     });
 
@@ -237,15 +232,15 @@ export class AuthService {
     try {
       await this.prisma.usuarios.create({
         data: {
-          nombre: dto.nombre,
-          apellido: dto.apellido,
-          email: dto.email,
+          nombre: dto.nombre.trim(),
+          apellido: dto.apellido.trim(),
+          email,
           password: hashedPassword,
-          direccion: dto.direccion,
+          direccion: dto.direccion.trim(),
           fecha_nacimiento: new Date(dto.fecha_nacimiento),
           id_rol: rolClienteID,
           id_tipo_identificacion: dto.id_tipo_identificacion,
-          numero_identificacion: dto.numero_identificacion,
+          numero_identificacion: dto.numero_identificacion.trim(),
           email_verified: false,
           email_verification_code: verificationHash,
           email_verification_expires: verificationExpiresAt,
@@ -255,7 +250,7 @@ export class AuthService {
       let emailSent = false;
       try {
         await this.emailService.sendVerificationCode(
-          dto.email,
+          email,
           verificationCode,
           envs.emailVerificationTtlMin,
         );
@@ -273,31 +268,14 @@ export class AuthService {
         emailSent,
       };
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-        const target = String(error.meta?.target || '');
-        if (target.includes('email')) {
-          throw new ConflictException({
-            success: false,
-            message: 'El correo electronico ya esta registrado.',
-          });
-        }
-        if (target.includes('numero_identificacion')) {
-          throw new ConflictException({
-            success: false,
-            message: 'El numero de identificacion ya esta registrado.',
-          });
-        }
-      }
-      throw new InternalServerErrorException({
-        success: false,
-        message: 'Error interno del servidor al registrar.',
-      });
+      handlePrismaPersistenceError(error, 'Error interno del servidor al registrar.');
     }
   }
 
   async login(dto: LoginDto) {
+    const email = this.normalizeEmail(dto.email);
     const user = await this.prisma.usuarios.findFirst({
-      where: { email: dto.email },
+      where: { email },
       include: {
         roles: true,
         tipos_identificacion: true,
@@ -308,7 +286,7 @@ export class AuthService {
       throw new NotFoundException({ success: false, message: 'Usuario no encontrado' });
     }
 
-    const passwordMatch = await bcrypt.compare(dto.password, user.password);
+    const passwordMatch = user.password ? await bcrypt.compare(dto.password, user.password) : false;
     if (!passwordMatch) {
       throw new ForbiddenException({ success: false, message: 'Contrasena incorrecta' });
     }
@@ -333,7 +311,7 @@ export class AuthService {
       success: true,
       message: 'Inicio de sesion exitoso',
       token,
-      user: this.buildUserResponse(user),
+      user: mapAuthUserResponse(user),
     };
   }
 
@@ -377,7 +355,7 @@ export class AuthService {
       });
     }
 
-    if (this.hashCode(dto.code) !== user.login_two_factor_code) {
+    if (!this.compareHashSafe(this.hashCode(dto.code), user.login_two_factor_code)) {
       throw new ForbiddenException({
         success: false,
         message: 'Codigo de segundo factor incorrecto.',
@@ -392,13 +370,14 @@ export class AuthService {
       success: true,
       message: 'Inicio de sesion exitoso',
       token,
-      user: this.buildUserResponse(user),
+      user: mapAuthUserResponse(user),
     };
   }
 
   async verifyEmail(dto: VerifyEmailDto) {
+    const email = this.normalizeEmail(dto.email);
     const user = await this.prisma.usuarios.findFirst({
-      where: { email: dto.email },
+      where: { email },
       select: {
         id: true,
         email_verified: true,
@@ -429,7 +408,7 @@ export class AuthService {
       });
     }
 
-    if (this.hashCode(dto.code) !== user.email_verification_code) {
+    if (!this.compareHashSafe(this.hashCode(dto.code), user.email_verification_code)) {
       throw new ForbiddenException({ success: false, message: 'Codigo incorrecto.' });
     }
 
@@ -446,8 +425,9 @@ export class AuthService {
   }
 
   async resendVerification(dto: ResendVerificationDto) {
+    const email = this.normalizeEmail(dto.email);
     const user = await this.prisma.usuarios.findFirst({
-      where: { email: dto.email },
+      where: { email },
       select: { id: true, email_verified: true },
     });
 
@@ -472,7 +452,7 @@ export class AuthService {
     });
 
     await this.emailService.sendVerificationCode(
-      dto.email,
+      email,
       verificationCode,
       envs.emailVerificationTtlMin,
     );
@@ -481,8 +461,9 @@ export class AuthService {
   }
 
   async requestPasswordReset(dto: RequestPasswordResetDto) {
+    const email = this.normalizeEmail(dto.email);
     const user = await this.prisma.usuarios.findFirst({
-      where: { email: dto.email },
+      where: { email },
       select: { id: true },
     });
 
@@ -502,14 +483,26 @@ export class AuthService {
       },
     });
 
-    await this.emailService.sendPasswordResetCode(dto.email, resetCode, envs.passwordResetTtlMin);
+    await this.emailService.sendPasswordResetCode(email, resetCode, envs.passwordResetTtlMin);
 
     return { success: true, message: 'Si el correo existe, se envio un codigo.' };
   }
 
+
   async resetPassword(dto: ResetPasswordDto) {
+    const newPassword = dto.newPassword || (dto as any).nuevaPassword || (dto as any).nuevaContrasena;
+    const confirmPassword = dto.confirmPassword || (dto as any).confirmarPassword || (dto as any).confirmarContrasena;
+
+    if (confirmPassword && newPassword && newPassword !== confirmPassword) {
+      throw new BadRequestException({
+        success: false,
+        message: 'Las contraseñas no coinciden.',
+      });
+    }
+
+    const email = this.normalizeEmail(dto.email);
     const user = await this.prisma.usuarios.findFirst({
-      where: { email: dto.email },
+      where: { email },
       select: {
         id: true,
         password_reset_code: true,
@@ -535,11 +528,11 @@ export class AuthService {
       });
     }
 
-    if (this.hashCode(dto.code) !== user.password_reset_code) {
+    if (!this.compareHashSafe(this.hashCode(dto.code), user.password_reset_code)) {
       throw new ForbiddenException({ success: false, message: 'Codigo incorrecto.' });
     }
 
-    const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
     await this.prisma.usuarios.update({
       where: { id: user.id },
       data: {

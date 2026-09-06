@@ -3,8 +3,14 @@ import { AuthService } from '../../../src/auth/auth.service';
 import { PrismaService } from '../../../src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { EmailService } from '../../../src/email/email.service';
-import { BadRequestException, NotFoundException, ForbiddenException, InternalServerErrorException, ConflictException } from '@nestjs/common';
-
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  InternalServerErrorException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import { validate } from 'class-validator';
@@ -14,7 +20,8 @@ import { RegisterDto } from '../../../src/auth/dto/register.dto';
 import { RequestPasswordResetDto } from '../../../src/auth/dto/request-password-reset.dto';
 import { ResetPasswordDto } from '../../../src/auth/dto/reset-password.dto';
 import { VerifyLoginCodeDto } from '../../../src/auth/dto/verify-login-code.dto';
-import { any } from 'joi';
+
+
 
 describe('AuthService (Unitarias)', () => {
 
@@ -1242,7 +1249,239 @@ describe('Doble Factor (2FA)', () => {
     });
   });
 
+  describe('Cobertura Adicional de Casos Borde en AuthService', () => {
+    it('debe obtener tipos de identificación disponibles', async () => {
+      (prismaService as any).tipos_identificacion = {
+        findMany: jest.fn().mockResolvedValue([
+          { id: 1, nombre: 'Cédula de Ciudadanía' },
+          { id: 2, nombre: 'Tarjeta de Identidad' },
+        ]),
+      };
 
+      const result = await authService.getDocumentTypes();
 
+      expect(result.success).toBe(true);
+      expect(result.tipos_identificacion).toHaveLength(2);
+    });
 
-})
+    it('debe rechazar reseteo de contraseña si confirmPassword no coincide con newPassword', async () => {
+      await expect(
+        authService.resetPassword({
+          email: 'test@example.com',
+          code: '123456',
+          newPassword: 'Password123!',
+          confirmPassword: 'MismatchPassword123!',
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('debe rechazar reseteo de contraseña si el usuario no existe', async () => {
+      jest.spyOn(prismaService.usuarios, 'findFirst').mockResolvedValue(null);
+
+      await expect(
+        authService.resetPassword({
+          email: 'noexiste@example.com',
+          code: '123456',
+          newPassword: 'Password123!',
+          confirmPassword: 'Password123!',
+        }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('debe rechazar reseteo de contraseña si no hay código activo', async () => {
+      jest.spyOn(prismaService.usuarios, 'findFirst').mockResolvedValue({
+        id: 1,
+        password_reset_code: null,
+        password_reset_expires: null,
+      } as any);
+
+      await expect(
+        authService.resetPassword({
+          email: 'test@example.com',
+          code: '123456',
+          newPassword: 'Password123!',
+          confirmPassword: 'Password123!',
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('debe indicar que el correo ya está verificado en verifyEmail', async () => {
+      jest.spyOn(prismaService.usuarios, 'findFirst').mockResolvedValue({
+        id: 1,
+        email_verified: true,
+      } as any);
+
+      const result = await authService.verifyEmail({
+        email: 'test@example.com',
+        code: '123456',
+      });
+
+      expect(result).toEqual({ success: true, message: 'El correo ya esta verificado.' });
+    });
+
+    it('debe rechazar verifyEmail si no hay código activo', async () => {
+      jest.spyOn(prismaService.usuarios, 'findFirst').mockResolvedValue({
+        id: 1,
+        email_verified: false,
+        email_verification_code: null,
+        email_verification_expires: null,
+      } as any);
+
+      await expect(
+        authService.verifyEmail({
+          email: 'test@example.com',
+          code: '123456',
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('debe rechazar verifyEmail si el código expiró', async () => {
+      jest.spyOn(prismaService.usuarios, 'findFirst').mockResolvedValue({
+        id: 1,
+        email_verified: false,
+        email_verification_code: 'hash',
+        email_verification_expires: new Date(Date.now() - 100000),
+      } as any);
+
+      await expect(
+        authService.verifyEmail({
+          email: 'test@example.com',
+          code: '123456',
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('debe rechazar verifyEmail si el usuario no existe', async () => {
+      jest.spyOn(prismaService.usuarios, 'findFirst').mockResolvedValue(null);
+
+      await expect(
+        authService.verifyEmail({
+          email: 'noexiste@example.com',
+          code: '123456',
+        }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('debe rechazar resendVerification si el usuario no existe', async () => {
+      jest.spyOn(prismaService.usuarios, 'findFirst').mockResolvedValue(null);
+
+      await expect(
+        authService.resendVerification({ email: 'noexiste@example.com' }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('debe indicar que el correo ya está verificado en resendVerification', async () => {
+      jest.spyOn(prismaService.usuarios, 'findFirst').mockResolvedValue({
+        id: 1,
+        email_verified: true,
+      } as any);
+
+      const result = await authService.resendVerification({ email: 'test@example.com' });
+
+      expect(result).toEqual({ success: true, message: 'El correo ya esta verificado.' });
+    });
+
+    it('debe lanzar UnauthorizedException si verifyPendingLoginToken recibe un payload inválido', () => {
+      jest.spyOn(jwtService, 'verify').mockReturnValue({
+        sub: null,
+        email: '',
+        id_rol: undefined,
+        token_type: 'access',
+      } as any);
+
+      expect(() => (authService as any).verifyPendingLoginToken('bad_token')).toThrow(
+        UnauthorizedException,
+      );
+    });
+
+    it('debe retornar false en compareHashSafe si los hashes tienen diferente longitud o hashB es nulo', () => {
+      expect((authService as any).compareHashSafe('abc', 'abcd')).toBe(false);
+      expect((authService as any).compareHashSafe('abc', null)).toBe(false);
+      expect((authService as any).compareHashSafe('', 'abc')).toBe(false);
+    });
+
+    it('debe retornar true en isExpired si expiresAt es nulo o indefinido', () => {
+      expect((authService as any).isExpired(null)).toBe(true);
+      expect((authService as any).isExpired(undefined)).toBe(true);
+    });
+
+    it('debe manejar error al registrar usuario cuando prisma falla', async () => {
+      jest.spyOn(prismaService.usuarios, 'create').mockRejectedValue(new Error('DB Error'));
+
+      const dto = {
+        nombre: 'Test',
+        apellido: 'User',
+        email: 'test@example.com',
+        password: 'Password123!',
+        direccion: 'Calle 123',
+        fecha_nacimiento: '1995-01-01',
+        id_tipo_identificacion: 1,
+        numero_identificacion: '123456789',
+      };
+
+      await expect(authService.register(dto as any)).rejects.toThrow(InternalServerErrorException);
+    });
+
+    it('debe lanzar NotFoundException en verifyLoginCode si el usuario no existe tras validar pendingToken', async () => {
+      jest.spyOn(authService as any, 'verifyPendingLoginToken').mockReturnValue({
+        sub: 999,
+        email: 'admin@test.com',
+        id_rol: 1,
+      });
+      jest.spyOn(prismaService.usuarios, 'findFirst').mockResolvedValue(null);
+
+      await expect(
+        authService.verifyLoginCode({
+          pendingToken: 'valid_pending_token',
+          code: '123456',
+        }),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('UserMapperUtil y PrismaErrorUtil', () => {
+    it('debe mapear un usuario para auth correctamente con relaciones', () => {
+      const { mapAuthUserResponse } = require('../../../src/common/utils/user-mapper.util');
+      const rawUser = {
+        id: 1,
+        nombre: 'Juan',
+        apellido: 'Perez',
+        email: 'juan@test.com',
+        id_rol: 1,
+        email_verified: true,
+        roles: { id: 1, nombre: 'Admin' },
+        tipos_identificacion: { id: 1, nombre: 'CC' },
+      };
+
+      const result = mapAuthUserResponse(rawUser);
+      expect(result).toEqual({
+        id: 1,
+        nombre: 'Juan',
+        apellido: 'Perez',
+        email: 'juan@test.com',
+        id_rol: 1,
+        email_verified: true,
+        rol: 'Admin',
+        tipo_documento: 'CC',
+      });
+    });
+
+    it.each([
+      ['email', ['email']],
+      ['numero_identificacion', ['numero_identificacion']],
+      ['otro_campo', ['otro_campo']],
+      ['string_target', 'string_target'],
+    ])('debe manejar errores de Prisma P2002 con target %s', (_name, target) => {
+      const { handlePrismaPersistenceError } = require('../../../src/common/utils/prisma-error.util');
+      const { Prisma } = require('@prisma/client');
+      const error = new Prisma.PrismaClientKnownRequestError('Unique error', {
+        code: 'P2002',
+        clientVersion: '6.0.0',
+        meta: { target },
+      });
+
+      expect(() => handlePrismaPersistenceError(error, 'Fallback')).toThrow();
+    });
+  });
+});
+

@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ProductsService } from './products.service';
-import { PrismaService } from '../prisma/prisma.service';
+import { ProductsService } from '../../../src/products/products.service';
+import { PrismaService } from '../../../src/prisma/prisma.service';
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
-import { CreateProductDto } from './dto/create-product.dto';
+import { CreateProductDto } from '../../../src/products/dto/create-product.dto';
 
 describe('ProductsService', () => {
   let service: ProductsService;
@@ -65,9 +65,9 @@ describe('ProductsService', () => {
     await expect(service.create(dto)).rejects.toThrow('No se pudo crear el producto');
   });
 
-  it('CP-047: debe rechazar un nombre de producto que contenga números', async () => {
+  it('CP-047: debe rechazar un nombre de producto con caracteres especiales inválidos', async () => {
     const dtoInstance = plainToInstance(CreateProductDto, {
-      nombre: 'Pan123',
+      nombre: 'Pan#@$123!',
       id_categoria: 1,
       id_proveedor: 1,
       precio: 3500,
@@ -80,9 +80,9 @@ describe('ProductsService', () => {
     expect(errores.some((e) => e.property === 'nombre')).toBe(true);
   });
 
-  it('debe aceptar un nombre de producto válido (sin números)', async () => {
+  it('debe aceptar un nombre de producto válido (letras, números y espacios)', async () => {
     const dtoInstance = plainToInstance(CreateProductDto, {
-      nombre: 'Pan Frances',
+      nombre: 'Pan Frances 123',
       id_categoria: 1,
       id_proveedor: 1,
       precio: 3500,
@@ -90,6 +90,6 @@ describe('ProductsService', () => {
     });
 
     const errores = await validate(dtoInstance);
-    expect(errores.length).toBe(0);
+    expect(errores).toHaveLength(0);
   });
 });

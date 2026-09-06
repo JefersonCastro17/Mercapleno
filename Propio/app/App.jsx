@@ -13,7 +13,7 @@ import Registro from './routes/Registro';
 import Verificar from './routes/Verificar';
 import Recuperar from './routes/Recuperar';
 import AdminDashboard from './routes/AdminDashboard'; 
-// 🔑 IMPORTACIONES CLAVE para la nueva funcionalidad
+
 import Estadisticas from './routes/Estadisticas'; 
 import UsuarioC from './routes/usuarioC'; 
 import ListaProductosAdmin from './routes/Lista_productos'; // CRUD Completo (Admin)
@@ -90,7 +90,7 @@ function App() {
                 />
 				<Route path="/unauthorized" element={<h1 style={{textAlign: 'center', marginTop: '100px'}}>Acceso Denegado (403)</h1>} />
 
-				{/* 🛒 RUTAS DE VENTA (Acceso: Todos los Roles Autenticados - 1, 2, 3) */}
+				{/* RUTAS DE VENTA (Acceso: Todos los Roles Autenticados - 1, 2, 3) */}
 				<Route path="/catalogo" element={
                     <RoleRoute requiredRoles={[1, 2, 3]} element={<InventoryPage />} />
                 } />
@@ -101,7 +101,7 @@ function App() {
                     <RoleRoute requiredRoles={[1, 2, 3]} element={<TicketPage />} />
                 } />
 				
-				{/* 💻 DASHBOARD Y MÓDULOS OPERACIONALES (Roles 1 y 2) */}
+				{/* DASHBOARD Y MÓDULOS OPERACIONALES (Roles 1 y 2) */}
                 <Route path="/usuarioC" element={
                     <RoleRoute requiredRoles={[1, 2]} element={<AdminDashboard />} /> 
                 } />
@@ -113,12 +113,12 @@ function App() {
 					<RoleRoute requiredRoles={[1]} element={<ListaProductosAdmin />} />	
 				} />
 
-				{/* 🔑 CAMBIO 2: RUTA: Employee Products (Ahora es Registro de Movimientos) */}
+				{/* CAMBIO 2: RUTA: Employee Products (Ahora es Registro de Movimientos) */}
 				<Route path="/products/employee" element={
 					<RoleRoute requiredRoles={[1, 2]} element={<RegistroMovimientos />} /> // <-- ¡Cambiado!
 				} />
 				
-				{/* 🔑 GESTIÓN DE USUARIOS (Rol 1 - Administrador) */}
+				{/* GESTIÓN DE USUARIOS (Rol 1 - Administrador) */}
 				<Route path="/admin/users" element={
                     <RoleRoute requiredRoles={[1]} element={<UsuarioC />} /> 
                 } />
@@ -126,7 +126,7 @@ function App() {
                     <RoleRoute requiredRoles={[1]} element={<Proveedores />} /> 
                 } />
 
-				{/* 🔑 MÓDULO DE REPORTES (Roles 1 y 2) */}
+				{/*  MÓDULO DE REPORTES (Roles 1 y 2) */}
 				<Route path="/estadisticas" element={
                     <RoleRoute requiredRoles={[1, 2]} element={<Estadisticas />} /> 
                 } />

@@ -111,7 +111,13 @@ export class AuthController {
   @ApiOperation({ summary: 'Cerrar sesion (lado cliente)' })
   logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
-    res.clearCookie('access_token', { path: '/', secure: isHttps, sameSite: isHttps ? 'none' : 'lax' });
+    res.clearCookie('access_token', {
+      path: '/',
+      httpOnly: true,
+      secure: isHttps,
+      sameSite: isHttps ? 'none' : 'lax',
+    });
     return this.authService.logout();
   }
 }
+

@@ -83,7 +83,7 @@ export default function Proveedores() {
     setOperando(true);
     try {
       const method = editId ? "PATCH" : "POST";
-      const url = editId ? base(editId) : `${API_ENDPOINTS.products.crud}/proveedores`;
+      const url = editId ? base(editId) : "/api/proveedores";
       await httpRequest(url, { method, data: payload, auth: true, token });
       mostrarToast(editId ? "Proveedor actualizado correctamente" : "Proveedor creado correctamente");
       cerrarModal();
@@ -310,9 +310,11 @@ export default function Proveedores() {
                 onChange={(e) => setForm({ ...form, apellido: e.target.value })}
                 placeholder="Ej: González"
               />
-              <label>Teléfono (opcional)</label>
+              <label>Teléfono <span style={{ color: "red" }}>*</span></label>
               <input
                 className="proveedores-input"
+                type="tel"
+                maxLength={10}
                 value={form.telefono}
                 onChange={(e) => setForm({ ...form, telefono: e.target.value })}
                 placeholder="Ej: 3001234567"

@@ -47,7 +47,7 @@ export class CartService {
       [cartId],
     );
 
-    return items.map((item) => ({
+    return (items || []).map((item: any) => ({
       id: item.id,
       productId: item.id_productos,
       name: item.nombre,
@@ -83,17 +83,19 @@ export class CartService {
 
     const items = (rows || []).map((row: any) => {
       const quantity = Number(row.cantidad || 0);
-      const priceSnapshot = Number(row.price_snapshot || 0);
-      const currentPrice = Number(row.currentPrice || 0);
+      const priceSnapshot = Number(row.price_snapshot ?? row.pricesnapshot ?? 0);
+      const currentPrice = Number(row.currentPrice ?? row.currentprice ?? row.precio ?? 0);
+      const productId = Number(row.productId ?? row.productid ?? row.id_productos ?? 0);
+      const availableStock = Number(row.availableStock ?? row.availablestock ?? row.stock ?? 0);
 
       return {
         id: Number(row.id),
-        productId: Number(row.productId),
+        productId,
         name: String(row.nombre ?? 'Producto'),
         quantity,
         priceSnapshot,
         currentPrice,
-        availableStock: Number(row.availableStock || 0),
+        availableStock,
         priceChanged: priceSnapshot !== currentPrice,
         subtotal: Number((priceSnapshot * quantity).toFixed(2)),
       };
@@ -169,7 +171,7 @@ export class CartService {
 
   async deleteItem(userId: number, itemId: number) {
     await this.db.query(
-      'DELETE ci FROM cart_items ci JOIN cart c ON c.id = ci.cart_id WHERE ci.id = ? AND c.id_usuario = ? AND c.status = ?',
+      'DELETE FROM cart_items WHERE id = ? AND cart_id IN (SELECT id FROM cart WHERE id_usuario = ? AND status = ?)',
       [itemId, userId, 'active'],
     );
     return { success: true };

@@ -4,9 +4,12 @@ dist
 .env
 .env.docker
 .env.example
+.env.test
 npm-debug.log
 tsconfig*.tsbuildinfo
 .tmp-local-backend*.log
 postman/
+reports/
+coverage/
 *.md
 *.txt

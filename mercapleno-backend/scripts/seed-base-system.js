@@ -1,17 +1,5 @@
 require("dotenv/config");
 
-if (!process.env.DATABASE_URL) {
-  const user = encodeURIComponent(process.env.DB_USER || "root");
-  const password = process.env.DB_PASSWORD
-    ? `:${encodeURIComponent(process.env.DB_PASSWORD)}`
-    : "";
-  const host = process.env.DB_HOST || "localhost";
-  const port = process.env.DB_PORT || "3306";
-  const database = process.env.DB_NAME || "mercapleno";
-
-  process.env.DATABASE_URL = `mysql://${user}${password}@${host}:${port}/${database}`;
-}
-
 const bcrypt = require("bcryptjs");
 const { PrismaClient } = require("@prisma/client");
 
@@ -65,74 +53,63 @@ const defaultAdmin = {
 
 async function seedRoles() {
   for (const role of roleSeeds) {
-    await prisma.$executeRawUnsafe(
-      `
-        INSERT INTO roles (id, nombre)
-        VALUES (?, ?)
-        ON DUPLICATE KEY UPDATE nombre = VALUES(nombre)
-      `,
-      role.id,
-      role.nombre
-    );
+    await prisma.roles.upsert({
+      where: { id: role.id },
+      update: { nombre: role.nombre },
+      create: role,
+    });
   }
 }
 
 async function seedDocumentTypes() {
   for (const documentType of documentTypeSeeds) {
-    await prisma.$executeRawUnsafe(
-      `
-        INSERT INTO tipos_identificacion (id, nombre)
-        VALUES (?, ?)
-        ON DUPLICATE KEY UPDATE nombre = VALUES(nombre)
-      `,
-      documentType.id,
-      documentType.nombre
-    );
+    await prisma.tipos_identificacion.upsert({
+      where: { id: documentType.id },
+      update: { nombre: documentType.nombre },
+      create: documentType,
+    });
   }
 }
 
 async function seedPaymentMethods() {
   for (const paymentMethod of paymentMethodSeeds) {
-    await prisma.$executeRawUnsafe(
-      `
-        INSERT INTO metodo (id_metodo, metodo_pago)
-        VALUES (?, ?)
-        ON DUPLICATE KEY UPDATE metodo_pago = VALUES(metodo_pago)
-      `,
-      paymentMethod.id_metodo,
-      paymentMethod.metodo_pago
-    );
+    await prisma.metodo.upsert({
+      where: { id_metodo: paymentMethod.id_metodo },
+      update: { metodo_pago: paymentMethod.metodo_pago },
+      create: paymentMethod,
+    });
   }
 }
 
 async function seedMovementTypes() {
   for (const movementType of movementTypeSeeds) {
-    await prisma.$executeRawUnsafe(
-      `
-        INSERT INTO tipo_movimiento (id_tipo, nombre_movimiento, fecha_generar)
-        VALUES (?, ?, CURDATE())
-        ON DUPLICATE KEY UPDATE nombre_movimiento = VALUES(nombre_movimiento)
-      `,
-      movementType.id_tipo,
-      movementType.nombre_movimiento
-    );
+    await prisma.tipo_movimiento.upsert({
+      where: { id_tipo: movementType.id_tipo },
+      update: { nombre_movimiento: movementType.nombre_movimiento },
+      create: {
+        id_tipo: movementType.id_tipo,
+        nombre_movimiento: movementType.nombre_movimiento,
+        fecha_generar: new Date(),
+      },
+    });
   }
 }
 
 async function seedMovements() {
   for (const movement of movementSeeds) {
-    await prisma.$executeRawUnsafe(
-      `
-        INSERT INTO movimiento (id_movimiento, id_tipo, descripcion, fecha_generar)
-        VALUES (?, ?, ?, CURDATE())
-        ON DUPLICATE KEY UPDATE
-          id_tipo = VALUES(id_tipo),
-          descripcion = VALUES(descripcion)
-      `,
-      movement.id_movimiento,
-      movement.id_tipo,
-      movement.descripcion
-    );
+    await prisma.movimiento.upsert({
+      where: { id_movimiento: movement.id_movimiento },
+      update: {
+        id_tipo: movement.id_tipo,
+        descripcion: movement.descripcion,
+      },
+      create: {
+        id_movimiento: movement.id_movimiento,
+        id_tipo: movement.id_tipo,
+        descripcion: movement.descripcion,
+        fecha_generar: new Date(),
+      },
+    });
   }
 }
 
@@ -166,6 +143,37 @@ async function seedDefaultAdmin() {
   return true;
 }
 
+async function syncSequences() {
+  const tables = [
+    { table: 'roles', pk: 'id' },
+    { table: 'tipos_identificacion', pk: 'id' },
+    { table: 'categoria', pk: 'id_categoria' },
+    { table: 'proveedor', pk: 'id_proveedor' },
+    { table: 'tipo_movimiento', pk: 'id_tipo' },
+    { table: 'tipo_devolucion', pk: 'id_tipo_devolucion' },
+    { table: 'usuarios', pk: 'id' },
+    { table: 'productos', pk: 'id_productos' },
+    { table: 'movimiento', pk: 'id_movimiento' },
+    { table: 'stock_actual', pk: 'id_inventario' },
+    { table: 'entrada_productos', pk: 'id_entrada' },
+    { table: 'salida_productos', pk: 'id_salida' },
+    { table: 'devolver_productos', pk: 'id_devolucion' },
+    { table: 'venta', pk: 'id_venta' },
+    { table: 'cart', pk: 'id' },
+    { table: 'cart_items', pk: 'id' },
+  ];
+
+  for (const { table, pk } of tables) {
+    try {
+      await prisma.$executeRawUnsafe(
+        `SELECT setval(pg_get_serial_sequence('"${table}"', '${pk}'), coalesce((SELECT max("${pk}") FROM "${table}"), 1));`
+      );
+    } catch {
+      // Ignorar si no aplica para el motor o secuencia
+    }
+  }
+}
+
 async function main() {
   await seedRoles();
   await seedDocumentTypes();
@@ -173,6 +181,7 @@ async function main() {
   await seedMovementTypes();
   await seedMovements();
   const adminCreated = await seedDefaultAdmin();
+  await syncSequences();
 
   console.log("Seed base del sistema completado");
   console.log(`Roles asegurados: ${roleSeeds.length}`);

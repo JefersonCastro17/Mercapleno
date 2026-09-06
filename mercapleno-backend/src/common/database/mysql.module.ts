@@ -1,9 +1,17 @@
-﻿import { Global, Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { MysqlService } from './mysql.service';
+import { PostgresService } from './postgres.service';
 
 @Global()
 @Module({
-  providers: [MysqlService],
-  exports: [MysqlService],
+  providers: [
+    MysqlService,
+    {
+      provide: PostgresService,
+      useExisting: MysqlService,
+    },
+  ],
+  exports: [MysqlService, PostgresService],
 })
 export class MysqlModule {}
+

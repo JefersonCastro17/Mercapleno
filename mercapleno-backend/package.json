@@ -11,17 +11,20 @@
     "start:prod": "node dist/main.js",
     "seed:base": "node scripts/seed-base-system.js",
     "seed:catalog": "node scripts/seed-catalog-products.js",
+    "seed:full": "node scripts/import-full-database.js",
     "prisma:migrate": "prisma migrate deploy --schema prisma/schema.prisma",
     "prisma:pull": "prisma db pull --schema prisma/schema.prisma",
     "prisma:generate": "prisma generate --schema prisma/schema.prisma",
     "prisma:studio": "prisma studio --schema prisma/schema.prisma",
     "postinstall": "prisma generate --schema prisma/schema.prisma",
-    "test": "jest --config jest.config.js",
-    "test:report": "jest --config jest.config.js",
+    "test": "jest --config jest.config.js --runInBand",
+    "test:report": "jest --config jest.config.js --runInBand",
     "test:watch": "jest --watch",
-    "test:cov": "jest --config jest.config.js --coverage",
-    "test:sonar": "jest --config jest.config.js --coverage --forceExit",
-    "test:unit-only": "jest --config jest.config.js --coverage --forceExit --testPathPattern=unitarias"
+    "test:cov": "jest --config jest.config.js --coverage --runInBand",
+    "test:sonar": "jest --config jest.config.js --coverage --forceExit --runInBand",
+    "test:integration": "node scripts/run-with-test-env.js prisma db push --schema prisma/schema.prisma --accept-data-loss && node scripts/run-with-test-env.js jest --config jest.config.js --runInBand --testPathPatterns=tester/integracion",
+    "test:integration:auth": "node scripts/run-with-test-env.js jest --config jest.config.js --runInBand tester/integracion/auth/auth.integration.spec.ts",
+    "test:integration:user-admin": "node scripts/run-with-test-env.js jest --config jest.config.js --runInBand tester/integracion/user-admin/users.integration.test.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.9",
@@ -41,6 +44,7 @@
     "nodemailer": "^8.0.1",
     "passport-jwt": "^4.0.1",
     "pdfkit": "^0.17.2",
+    "pg": "^8.23.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "swagger-ui-express": "^5.0.1"
@@ -57,6 +61,7 @@
     "@types/nodemailer": "^7.0.2",
     "@types/passport-jwt": "^4.0.1",
     "@types/pdfkit": "^0.17.3",
+    "@types/pg": "^8.23.1",
     "jest": "^30.4.2",
     "jest-html-reporters": "^3.1.7",
     "prisma": "^6.19.0",
@@ -66,21 +71,5 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": ".",
-    "testMatch": [
-      "**/tester/**/*.test.js",
-      "**/?(*.)+(spec|test).[tj]s?(x)"
-    ],
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "testEnvironment": "node"
   }
 }

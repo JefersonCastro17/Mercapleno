@@ -11,7 +11,8 @@ RUN npm install --no-audit --no-fund
 COPY . .
 
 RUN npm run prisma:generate
+RUN npm run build
 
 EXPOSE 4000
 
-CMD ["npm", "run", "start:dev", "--", "--host", "0.0.0.0", "--port", "4000"]
+CMD ["node", "dist/main.js"]

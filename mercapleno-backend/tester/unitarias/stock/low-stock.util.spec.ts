@@ -1,5 +1,5 @@
-import { getLowStockMetadata, buildLowStockAlert } from './low-stock.util';
-import { envs } from '../../config';
+import { getLowStockMetadata, buildLowStockAlert } from '../../../src/common/stock/low-stock.util';
+import { envs } from '../../../src/config';
 
 describe('low-stock.util', () => {
   describe('getLowStockMetadata', () => {

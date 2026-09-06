@@ -2,18 +2,40 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
+import { handlePrismaPersistenceError } from '../common/utils/prisma-error.util';
+import { mapAdminUserResponse, RawUserWithRelations } from '../common/utils/user-mapper.util';
 import { CreateUserAdminDto } from './dto/create-user-admin.dto';
 import { UpdateUserAdminDto } from './dto/update-user-admin.dto';
 
-type UserWithRelations = Prisma.usuariosGetPayload<{
-  include: { roles: true; tipos_identificacion: true };
-}>;
+const USER_SELECT_PROJECTION = {
+  id: true,
+  nombre: true,
+  apellido: true,
+  email: true,
+  direccion: true,
+  fecha_nacimiento: true,
+  id_rol: true,
+  id_tipo_identificacion: true,
+  numero_identificacion: true,
+  email_verified: true,
+  roles: {
+    select: {
+      id: true,
+      nombre: true,
+    },
+  },
+  tipos_identificacion: {
+    select: {
+      id: true,
+      nombre: true,
+    },
+  },
+} as const;
 
 @Injectable()
 export class UsersAdminService {
@@ -29,29 +51,8 @@ export class UsersAdminService {
     return userId;
   }
 
-  private handlePersistenceError(
-    error: unknown,
-    fallbackMessage: string,
-    relationMessage: string,
-  ): never {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === 'P2002') {
-        const target = String(error.meta?.target || '');
-        if (target.includes('email')) {
-          throw new ConflictException({ success: false, message: 'El correo electronico ya esta registrado.' });
-        }
-        if (target.includes('numero_identificacion')) {
-          throw new ConflictException({ success: false, message: 'El numero de identificacion ya esta registrado.' });
-        }
-        throw new ConflictException({ success: false, message: 'Ya existe un usuario con esos datos' });
-      }
-
-      if (error.code === 'P2003') {
-        throw new ConflictException({ success: false, message: relationMessage });
-      }
-    }
-
-    throw new InternalServerErrorException({ success: false, message: fallbackMessage });
+  private normalizeEmail(email?: string): string {
+    return email ? email.trim().toLowerCase() : '';
   }
 
   async findAll(search?: string) {
@@ -70,10 +71,7 @@ export class UsersAdminService {
 
     const usuarios = await this.prisma.usuarios.findMany({
       where,
-      include: {
-        roles: true,
-        tipos_identificacion: true,
-      },
+      select: USER_SELECT_PROJECTION,
       orderBy: {
         id: 'asc',
       },
@@ -81,19 +79,7 @@ export class UsersAdminService {
 
     return {
       success: true,
-      usuarios: usuarios.map((user: UserWithRelations) => ({
-        id: user.id,
-        nombre: user.nombre,
-        apellido: user.apellido,
-        email: user.email,
-        direccion: user.direccion,
-        fecha_nacimiento: user.fecha_nacimiento,
-        rol: user.roles?.nombre ?? null,
-        tipo_identificacion: user.tipos_identificacion?.nombre ?? null,
-        numero_identificacion: user.numero_identificacion,
-        id_rol: user.id_rol,
-        id_tipo_identificacion: user.id_tipo_identificacion,
-      })),
+      usuarios: usuarios.map((user: RawUserWithRelations) => mapAdminUserResponse(user)),
     };
   }
 
@@ -113,15 +99,28 @@ export class UsersAdminService {
     };
   }
 
+  async findDocumentTypes() {
+    const tipos = await this.prisma.tipos_identificacion.findMany({
+      orderBy: {
+        id: 'asc',
+      },
+    });
+
+    return {
+      success: true,
+      tipos_identificacion: tipos.map((tipo) => ({
+        id: tipo.id,
+        nombre: tipo.nombre,
+      })),
+    };
+  }
+
   async findOne(id: string) {
     const userId = this.parseUserId(id);
 
     const usuario = await this.prisma.usuarios.findUnique({
       where: { id: userId },
-      include: {
-        roles: true,
-        tipos_identificacion: true,
-      },
+      select: USER_SELECT_PROJECTION,
     });
 
     if (!usuario) {
@@ -130,26 +129,15 @@ export class UsersAdminService {
 
     return {
       success: true,
-      usuario: {
-        id: usuario.id,
-        nombre: usuario.nombre,
-        apellido: usuario.apellido,
-        email: usuario.email,
-        direccion: usuario.direccion,
-        fecha_nacimiento: usuario.fecha_nacimiento,
-        rol: usuario.roles?.nombre ?? null,
-        tipo_identificacion: usuario.tipos_identificacion?.nombre ?? null,
-        numero_identificacion: usuario.numero_identificacion,
-        id_rol: usuario.id_rol,
-        id_tipo_identificacion: usuario.id_tipo_identificacion,
-        email_verified: usuario.email_verified,
-      },
+      usuario: mapAdminUserResponse(usuario as RawUserWithRelations),
     };
   }
 
+
   async create(dto: CreateUserAdminDto) {
+    const email = this.normalizeEmail(dto.email);
     const existingEmail = await this.prisma.usuarios.findFirst({
-      where: { email: dto.email },
+      where: { email },
       select: { id: true },
     });
 
@@ -177,22 +165,22 @@ export class UsersAdminService {
     try {
       await this.prisma.usuarios.create({
         data: {
-          nombre: dto.nombre,
-          apellido: dto.apellido,
-          email: dto.email,
+          nombre: dto.nombre.trim(),
+          apellido: dto.apellido.trim(),
+          email,
           password: hashedPassword,
-          direccion: dto.direccion,
+          direccion: dto.direccion.trim(),
           fecha_nacimiento: new Date(dto.fecha_nacimiento),
           id_rol: dto.id_rol,
           id_tipo_identificacion: dto.id_tipo_identificacion,
-          numero_identificacion: dto.numero_identificacion,
-          email_verified: dto.email_verified === false ? false : true,
+          numero_identificacion: dto.numero_identificacion.trim(),
+          email_verified: dto.email_verified !== false,
         },
       });
 
       return { success: true, message: 'Usuario agregado correctamente' };
     } catch (error) {
-      this.handlePersistenceError(
+      handlePrismaPersistenceError(
         error,
         'Error al insertar usuario',
         'No se pudo crear el usuario porque el rol o el tipo de identificacion no existen',
@@ -211,10 +199,11 @@ export class UsersAdminService {
       throw new NotFoundException({ success: false, message: 'Usuario no encontrado' });
     }
 
-    if (dto.email !== undefined) {
+    if (dto.email !== undefined && dto.email.trim() !== '') {
+      const email = this.normalizeEmail(dto.email);
       const emailConflict = await this.prisma.usuarios.findFirst({
         where: {
-          email: dto.email,
+          email,
           id: { not: userId },
         },
         select: { id: true },
@@ -228,10 +217,10 @@ export class UsersAdminService {
       }
     }
 
-    if (dto.numero_identificacion !== undefined) {
+    if (dto.numero_identificacion !== undefined && dto.numero_identificacion.trim() !== '') {
       const docConflict = await this.prisma.usuarios.findFirst({
         where: {
-          numero_identificacion: dto.numero_identificacion,
+          numero_identificacion: dto.numero_identificacion.trim(),
           id: { not: userId },
         },
         select: { id: true },
@@ -246,10 +235,10 @@ export class UsersAdminService {
     }
 
     const data: Prisma.usuariosUpdateInput = {
-      ...(dto.nombre !== undefined && String(dto.nombre).trim() !== '' ? { nombre: dto.nombre } : {}),
-      ...(dto.apellido !== undefined && String(dto.apellido).trim() !== '' ? { apellido: dto.apellido } : {}),
-      ...(dto.email !== undefined && String(dto.email).trim() !== '' ? { email: dto.email } : {}),
-      ...(dto.direccion !== undefined && String(dto.direccion).trim() !== '' ? { direccion: dto.direccion } : {}),
+      ...(dto.nombre !== undefined && String(dto.nombre).trim() !== '' ? { nombre: dto.nombre.trim() } : {}),
+      ...(dto.apellido !== undefined && String(dto.apellido).trim() !== '' ? { apellido: dto.apellido.trim() } : {}),
+      ...(dto.email !== undefined && String(dto.email).trim() !== '' ? { email: this.normalizeEmail(dto.email) } : {}),
+      ...(dto.direccion !== undefined && String(dto.direccion).trim() !== '' ? { direccion: dto.direccion.trim() } : {}),
       ...(dto.fecha_nacimiento !== undefined && String(dto.fecha_nacimiento).trim() !== ''
         ? { fecha_nacimiento: new Date(dto.fecha_nacimiento) }
         : {}),
@@ -258,7 +247,7 @@ export class UsersAdminService {
         ? { id_tipo_identificacion: dto.id_tipo_identificacion }
         : {}),
       ...(dto.numero_identificacion !== undefined && String(dto.numero_identificacion).trim() !== ''
-        ? { numero_identificacion: dto.numero_identificacion }
+        ? { numero_identificacion: dto.numero_identificacion.trim() }
         : {}),
     };
 
@@ -276,7 +265,7 @@ export class UsersAdminService {
         data,
       });
     } catch (error) {
-      this.handlePersistenceError(
+      handlePrismaPersistenceError(
         error,
         'Error al actualizar usuario',
         'No se pudo actualizar el usuario porque el rol o el tipo de identificacion no existen',
@@ -302,7 +291,7 @@ export class UsersAdminService {
         where: { id: userId },
       });
     } catch (error) {
-      this.handlePersistenceError(
+      handlePrismaPersistenceError(
         error,
         'Error al eliminar usuario',
         'No se puede eliminar el usuario porque tiene registros asociados',

@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ProductsService } from './products.service';
-import { PrismaService } from '../prisma/prisma.service';
+import { ProductsService } from '../../../src/products/products.service';
+import { PrismaService } from '../../../src/prisma/prisma.service';
 import { BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
-import { deleteStoredProductImage } from './product-image-upload.util';
+import { deleteStoredProductImage } from '../../../src/products/product-image-upload.util';
 
-jest.mock('./product-image-upload.util', () => ({
+jest.mock('../../../src/products/product-image-upload.util', () => ({
   deleteStoredProductImage: jest.fn(),
   resolveUploadedProductImagePath: jest.fn(),
 }));
@@ -27,9 +27,34 @@ describe('ProductsService', () => {
     proveedor: {
       findMany: jest.fn(),
     },
+    $transaction: jest.fn().mockImplementation((cb) =>
+      cb({
+        stock_actual: { deleteMany: jest.fn() },
+        salida_productos: { deleteMany: jest.fn() },
+        entrada_productos: { deleteMany: jest.fn() },
+        devolver_productos: { deleteMany: jest.fn() },
+        productos: { delete: jest.fn() },
+      }),
+    ),
   };
 
   beforeEach(async () => {
+    jest.clearAllMocks();
+
+    mockPrismaService.$transaction.mockImplementation(async (arg: any) => {
+      if (typeof arg === 'function') {
+        return await arg({
+          venta_productos: { deleteMany: jest.fn().mockResolvedValue({}) },
+          stock_actual: { deleteMany: jest.fn().mockResolvedValue({}) },
+          salida_productos: { deleteMany: jest.fn().mockResolvedValue({}) },
+          entrada_productos: { deleteMany: jest.fn().mockResolvedValue({}) },
+          devolver_productos: { deleteMany: jest.fn().mockResolvedValue({}) },
+          productos: { delete: jest.fn().mockResolvedValue({}) },
+        });
+      }
+      return Promise.all(arg);
+    });
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProductsService,
@@ -39,7 +64,6 @@ describe('ProductsService', () => {
 
     service = module.get<ProductsService>(ProductsService);
     prisma = module.get<PrismaService>(PrismaService);
-    jest.clearAllMocks();
   });
 
   describe('findAll', () => {
@@ -187,10 +211,10 @@ describe('ProductsService', () => {
       expect(result).toEqual({ message: 'Producto agregado correctamente', id: 11 });
     });
 
-    it('debería lanzar InternalServerErrorException si el estado es inválido (mapEstado falla dentro del try/catch)', async () => {
+    it('debería lanzar BadRequestException si el estado es inválido (mapEstado falla)', async () => {
       const dto = { ...dtoBase, estado: 'Invalido' };
 
-      await expect(service.create(dto)).rejects.toThrow(InternalServerErrorException);
+      await expect(service.create(dto)).rejects.toThrow(BadRequestException);
     });
 
     it('debería manejar error P2003 de Prisma y borrar imagen si fue subida', async () => {
@@ -273,7 +297,6 @@ describe('ProductsService', () => {
     it('debería eliminar el producto y borrar su imagen si existe', async () => {
       const existingProduct = { id_productos: 1, imagen: 'to_delete.png' };
       (prisma.productos.findUnique as jest.Mock).mockResolvedValue(existingProduct);
-      (prisma.productos.delete as jest.Mock).mockResolvedValue({});
 
       const result = await service.remove(1);
 
@@ -281,9 +304,7 @@ describe('ProductsService', () => {
         where: { id_productos: 1 },
         select: { id_productos: true, imagen: true },
       });
-      expect(prisma.productos.delete).toHaveBeenCalledWith({
-        where: { id_productos: 1 },
-      });
+      expect(prisma.$transaction).toHaveBeenCalled();
       expect(deleteStoredProductImage).toHaveBeenCalledWith('to_delete.png');
       expect(result).toEqual({ message: 'Producto eliminado correctamente' });
     });
