@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">10.59% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/151</span>
+                <span class='fraction'>16/151</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">4.34% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/23</span>
+                <span class='fraction'>1/23</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">9.39% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/149</span>
+                <span class='fraction'>14/149</span>
             </div>
         
             
@@ -617,7 +617,7 @@
 <a name='L552'></a><a href='#L552'>552</a>
 <a name='L553'></a><a href='#L553'>553</a>
 <a name='L554'></a><a href='#L554'>554</a>
-<a name='L555'></a><a href='#L555'>555</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L555'></a><a href='#L555'>555</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -627,14 +627,14 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -651,13 +651,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1171,7 +1171,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >import {</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
@@ -1181,14 +1181,14 @@
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-<span class="cstat-no" title="statement not covered" >import { JwtService } from '@nestjs/jwt';</span>
-<span class="cstat-no" title="statement not covered" >import * as bcrypt from 'bcryptjs';</span>
-<span class="cstat-no" title="statement not covered" >import * as crypto from 'crypto';</span>
-<span class="cstat-no" title="statement not covered" >import { envs } from '../config';</span>
-<span class="cstat-no" title="statement not covered" >import { EmailService } from '../email/email.service';</span>
-<span class="cstat-no" title="statement not covered" >import { PrismaService } from '../prisma/prisma.service';</span>
-<span class="cstat-no" title="statement not covered" >import { handlePrismaPersistenceError } from '../common/utils/prisma-error.util';</span>
-<span class="cstat-no" title="statement not covered" >import { mapAuthUserResponse } from '../common/utils/user-mapper.util';</span>
+import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcryptjs';
+import * as crypto from 'crypto';
+import { envs } from '../config';
+import { EmailService } from '../email/email.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { handlePrismaPersistenceError } from '../common/utils/prisma-error.util';
+import { mapAuthUserResponse } from '../common/utils/user-mapper.util';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RequestPasswordResetDto } from './dto/request-password-reset.dto';
@@ -1205,13 +1205,13 @@ interface AuthTokenPayload {
 }
 &nbsp;
 @Injectable()
-export class <span class="cstat-no" title="statement not covered" ><span class="cstat-no" title="statement not covered" >AuthService<span class="cstat-no" title="statement not covered" > </span>{</span></span>
-  private readonly <span class="cstat-no" title="statement not covered" >logger = new Logger(AuthService.name);</span>
+export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
 &nbsp;
-<span class="fstat-no" title="function not covered" >  constructor(</span>
-    private readonly <span class="cstat-no" title="statement not covered" >prisma: P</span>rismaService,
-    private readonly <span class="cstat-no" title="statement not covered" >jwtService: J</span>wtService,
-    private readonly <span class="cstat-no" title="statement not covered" >emailService: E</span>mailService,
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
+    private readonly emailService: EmailService,
   ) {}
 &nbsp;
   private <span class="fstat-no" title="function not covered" >generateCode(</span>): string {
@@ -1732,7 +1732,7 @@ export class <span class="cstat-no" title="statement not covered" ><span class="
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-09-06T21:08:51.138Z
+                at 2026-09-06T21:10:40.581Z
             </div>
         <script src="../prettify.js"></script>
         <script>

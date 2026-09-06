@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">9.91% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/121</span>
+                <span class='fraction'>12/121</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">8.33% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/12</span>
+                <span class='fraction'>1/12</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">8.54% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/117</span>
+                <span class='fraction'>10/117</span>
             </div>
         
             
@@ -418,28 +418,28 @@
 <a name='L353'></a><a href='#L353'>353</a>
 <a name='L354'></a><a href='#L354'>354</a>
 <a name='L355'></a><a href='#L355'>355</a>
-<a name='L356'></a><a href='#L356'>356</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L356'></a><a href='#L356'>356</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -773,28 +773,28 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >import {</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import {
   BadRequestException,
   ConflictException,
   Injectable,
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-<span class="cstat-no" title="statement not covered" >import { MysqlService, PoolConnection } from '../common/database/mysql.service';</span>
-<span class="cstat-no" title="statement not covered" >import { buildLowStockAlert, getLowStockMetadata, LowStockAlert } from '../common/stock/low-stock.util';</span>
-<span class="cstat-no" title="statement not covered" >import { EmailService } from '../email/email.service';</span>
+import { MysqlService, PoolConnection } from '../common/database/mysql.service';
+import { buildLowStockAlert, getLowStockMetadata, LowStockAlert } from '../common/stock/low-stock.util';
+import { EmailService } from '../email/email.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 &nbsp;
-const DOCUMENTO_VENTA_ID = <span class="cstat-no" title="statement not covered" >'CC';</span>
-const MOVIMIENTO_VENTA_ID = <span class="cstat-no" title="statement not covered" >3;</span>
+const DOCUMENTO_VENTA_ID = 'CC';
+const MOVIMIENTO_VENTA_ID = 3;
 &nbsp;
 @Injectable()
-export class <span class="cstat-no" title="statement not covered" ><span class="cstat-no" title="statement not covered" >SalesService<span class="cstat-no" title="statement not covered" > </span>{</span></span>
-  private readonly <span class="cstat-no" title="statement not covered" >logger = new Logger(SalesService.name);</span>
+export class SalesService {
+  private readonly logger = new Logger(SalesService.name);
 &nbsp;
-<span class="fstat-no" title="function not covered" >  constructor(</span>
-    private readonly <span class="cstat-no" title="statement not covered" >db: M</span>ysqlService,
-    private readonly <span class="cstat-no" title="statement not covered" >emailService: E</span>mailService,
+  constructor(
+    private readonly db: MysqlService,
+    private readonly emailService: EmailService,
   ) {}
 &nbsp;
   private <span class="fstat-no" title="function not covered" >resolvePaymentMethod(</span>value: unknown): string | null {
@@ -1135,7 +1135,7 @@ export class <span class="cstat-no" title="statement not covered" ><span class="
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-09-06T21:08:50.821Z
+                at 2026-09-06T21:10:40.127Z
             </div>
         <script src="../prettify.js"></script>
         <script>
