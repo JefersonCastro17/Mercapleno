@@ -111,10 +111,6 @@ describe('SalesService (Unitarias)', () => {
             return Promise.resolve([[{ id_metodo: 'M1' }]]);
           }
 
-          if (sql.includes('SELECT precio FROM productos')) {
-            return Promise.resolve([[{ precio: 3500 }]]);
-          }
-
           if (sql.includes('INSERT INTO venta')) {
             return Promise.resolve([{ insertId: 99 }]);
           }
@@ -172,10 +168,6 @@ describe('SalesService (Unitarias)', () => {
         query: jest.fn((sql: string) => {
           if (sql.includes('SELECT id_metodo')) {
             return Promise.resolve([[{ id_metodo: 'M1' }]]);
-          }
-
-          if (sql.includes('SELECT precio FROM productos')) {
-            return Promise.resolve([[{ precio: 3500 }]]);
           }
 
           if (sql.includes('INSERT INTO venta')) {

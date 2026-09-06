@@ -172,6 +172,8 @@ export class SalesService {
           error: 'Metodo de pago invalido',
           message: `No existe el metodo de pago ${idMetodo}.`,
         });
+      }
+
       let expectedTotal = 0;
       for (const item of dto.items) {
         const idProducto = Number(item.id);

@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>4/4</span>
+                <span class='fraction'>0/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">56.25% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>9/16</span>
+                <span class='fraction'>0/16</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>2/2</span>
+                <span class='fraction'>0/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>4/4</span>
+                <span class='fraction'>0/4</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line high'></div>
+    <div class='status-line low'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -122,8 +122,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -135,8 +135,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -166,32 +166,32 @@
   tipos_identificacion?: { id?: number; nombre: string } | null;
 }
 &nbsp;
-export function mapAuthUserResponse(user: RawUserWithRelations) {
-  return {
+<span class="cstat-no" title="statement not covered" >export function <span class="fstat-no" title="function not covered" >m</span>apAuthUserResponse(</span>user: RawUserWithRelations) {
+<span class="cstat-no" title="statement not covered" >  return {</span>
     id: user.id,
     nombre: user.nombre,
     apellido: user.apellido,
     email: user.email,
     id_rol: user.id_rol,
     email_verified: user.email_verified,
-    rol: user.roles?.nombre ?? <span class="branch-1 cbranch-no" title="branch not covered" >null,</span>
+    rol: user.roles?.nombre ?? null,
     tipo_documento: user.tipos_identificacion?.nombre ?? null,
   };
 }
 &nbsp;
-export function mapAdminUserResponse(user: RawUserWithRelations) {
-  return {
+<span class="cstat-no" title="statement not covered" >export function <span class="fstat-no" title="function not covered" >m</span>apAdminUserResponse(</span>user: RawUserWithRelations) {
+<span class="cstat-no" title="statement not covered" >  return {</span>
     id: user.id,
     nombre: user.nombre,
     apellido: user.apellido,
     email: user.email,
-    direccion: user.direccion ?? <span class="branch-1 cbranch-no" title="branch not covered" >null,</span>
-    fecha_nacimiento: user.fecha_nacimiento ?? <span class="branch-1 cbranch-no" title="branch not covered" >null,</span>
-    rol: user.roles?.nombre ?? <span class="branch-1 cbranch-no" title="branch not covered" >null,</span>
-    tipo_identificacion: user.tipos_identificacion?.nombre ?? <span class="branch-1 cbranch-no" title="branch not covered" >null,</span>
-    numero_identificacion: user.numero_identificacion ?? <span class="branch-1 cbranch-no" title="branch not covered" >'',</span>
+    direccion: user.direccion ?? null,
+    fecha_nacimiento: user.fecha_nacimiento ?? null,
+    rol: user.roles?.nombre ?? null,
+    tipo_identificacion: user.tipos_identificacion?.nombre ?? null,
+    numero_identificacion: user.numero_identificacion ?? '',
     id_rol: user.id_rol,
-    id_tipo_identificacion: user.id_tipo_identificacion ?? <span class="branch-1 cbranch-no" title="branch not covered" >1,</span>
+    id_tipo_identificacion: user.id_tipo_identificacion ?? 1,
     email_verified: user.email_verified,
   };
 }
@@ -202,7 +202,7 @@ export function mapAdminUserResponse(user: RawUserWithRelations) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-08-25T03:12:25.039Z
+                at 2026-09-06T21:08:50.821Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

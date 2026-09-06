@@ -20,13 +20,8 @@
     "test": "jest --config jest.config.js --runInBand",
     "test:report": "jest --config jest.config.js --runInBand",
     "test:watch": "jest --watch",
-<<<<<<< HEAD
     "test:cov": "jest --config jest.config.js --coverage --runInBand",
     "test:sonar": "jest --config jest.config.js --coverage --forceExit --runInBand",
-=======
-    "test:cov": "jest --config jest.config.js --coverage",
-    "test:sonar": "jest --config jest.config.js --coverage --forceExit",
->>>>>>> origin/feature/pruebas-unitarias-auth-admin-user
     "test:integration": "node scripts/run-with-test-env.js prisma db push --schema prisma/schema.prisma --accept-data-loss && node scripts/run-with-test-env.js jest --config jest.config.js --runInBand --testPathPatterns=tester/integracion",
     "test:integration:auth": "node scripts/run-with-test-env.js jest --config jest.config.js --runInBand tester/integracion/auth/auth.integration.spec.ts",
     "test:integration:user-admin": "node scripts/run-with-test-env.js jest --config jest.config.js --runInBand tester/integracion/user-admin/users.integration.test.ts"

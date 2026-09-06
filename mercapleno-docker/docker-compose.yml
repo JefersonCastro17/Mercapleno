@@ -11,35 +11,7 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
-<<<<<<< HEAD
       test: ["CMD-SHELL", "pg_isready -U postgres -d mercapleno"]
-=======
-      test:
-        [
-          "CMD-SHELL",
-          "mariadb-admin ping -h 127.0.0.1 -uroot -proot123 --silent || exit 1",
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-    restart: unless-stopped
-
-  test-db:
-    image: mariadb:10.11
-    environment:
-      MARIADB_ROOT_PASSWORD: root123
-      MARIADB_DATABASE: mercapleno_test
-    ports:
-      - "3308:3306"
-    volumes:
-      - mysql_test_data:/var/lib/mysql
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "mariadb-admin ping -h 127.0.0.1 -uroot -proot123 --silent || exit 1",
-        ]
->>>>>>> origin/feature/pruebas-unitarias-auth-admin-user
       interval: 10s
       timeout: 5s
       retries: 5
@@ -109,10 +81,5 @@ services:
     restart: unless-stopped
 
 volumes:
-<<<<<<< HEAD
   pg_data:
   pg_test_data:
-=======
-  mysql_data:
-  mysql_test_data:
->>>>>>> origin/feature/pruebas-unitarias-auth-admin-user

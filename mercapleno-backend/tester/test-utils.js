@@ -6,11 +6,7 @@ const { PrismaClient } = require('@prisma/client');
 dotenv.config({ path: path.resolve(__dirname, '..', '.env.test'), override: false });
 
 const databaseUrl =
-<<<<<<< HEAD
   process.env.DATABASE_URL || 'postgresql://postgres:postgres123@localhost:5433/mercapleno_test?schema=public';
-=======
-  process.env.DATABASE_URL || 'mysql://root:root123@localhost:3308/mercapleno_test';
->>>>>>> origin/feature/pruebas-unitarias-auth-admin-user
 
 const databaseName = databaseUrl.split('/').pop()?.split('?')[0] || '';
 
@@ -41,7 +37,6 @@ const tablesInDeleteOrder = [
   'tipos_identificacion',
 ];
 
-<<<<<<< HEAD
 const tablesWithPk = [
   { table: 'roles', pk: 'id' },
   { table: 'tipos_identificacion', pk: 'id' },
@@ -81,14 +76,6 @@ async function cleanDatabase() {
   });
 
   await syncSequences();
-=======
-async function cleanDatabase() {
-  await prisma.$transaction(async (transaction) => {
-    for (const table of tablesInDeleteOrder) {
-      await transaction.$executeRawUnsafe(`DELETE FROM \`${table}\``);
-    }
-  });
->>>>>>> origin/feature/pruebas-unitarias-auth-admin-user
 }
 
 async function seedReferenceData() {
@@ -106,14 +93,8 @@ async function seedReferenceData() {
       { id: 2, nombre: 'Tarjeta de identidad' },
     ],
   });
-<<<<<<< HEAD
 
   await syncSequences();
 }
 
 module.exports = { prisma, cleanDatabase, seedReferenceData, syncSequences };
-=======
-}
-
-module.exports = { prisma, cleanDatabase, seedReferenceData };
->>>>>>> origin/feature/pruebas-unitarias-auth-admin-user

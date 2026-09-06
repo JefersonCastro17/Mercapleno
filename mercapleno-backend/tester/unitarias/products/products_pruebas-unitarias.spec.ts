@@ -74,7 +74,7 @@ describe('ProductsService', () => {
       estado: 'Disponible',
     });
 
-    const errores = await validate(dtoInstance as object);
+    const errores = await validate(dtoInstance);
 
     expect(errores.length).toBeGreaterThan(0);
     expect(errores.some((e) => e.property === 'nombre')).toBe(true);
@@ -89,12 +89,7 @@ describe('ProductsService', () => {
       estado: 'Disponible',
     });
 
-<<<<<<< HEAD
     const errores = await validate(dtoInstance);
     expect(errores).toHaveLength(0);
-=======
-    const errores = await validate(dtoInstance as object);
-    expect(errores.length).toBe(0);
->>>>>>> origin/feature/pruebas-unitarias-integracion-products-reports
   });
 });
