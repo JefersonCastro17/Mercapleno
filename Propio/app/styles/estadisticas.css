@@ -47,25 +47,30 @@
   align-items: flex-end;
   justify-content: space-between;
   margin-bottom: 26px;
+  background: linear-gradient(135deg, #0B4A8B 0%, #123C63 100%);
+  padding: 24px 28px;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(11, 74, 139, 0.25);
 }
 
 .header-text h1 {
   font-family: "Fraunces", Georgia, serif;
   font-size: clamp(28px, 3vw, 38px);
   margin: 6px 0;
+  color: #ffffff;
 }
 
 .eyebrow {
   text-transform: uppercase;
   font-size: 12px;
   letter-spacing: 0.24em;
-  color: var(--brand-deep);
-  font-weight: 600;
+  color: #F59E0B;
+  font-weight: 700;
 }
 
 .subtitle {
   margin: 0;
-  color: var(--slate);
+  color: rgba(255, 255, 255, 0.80);
 }
 
 .header-actions {
@@ -86,9 +91,9 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--brand), var(--brand-deep));
-  color: white;
-  box-shadow: 0 10px 25px rgba(14, 165, 233, 0.25);
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  color: #0f172a;
+  box-shadow: 0 10px 25px rgba(245, 158, 11, 0.35);
   text-decoration: none;
   display: inline-flex;
   align-items: center;
@@ -96,15 +101,16 @@
 }
 
 .btn-secondary {
-  background: white;
-  border-color: var(--border);
-  color: var(--ink);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  backdrop-filter: blur(4px);
 }
 
 .btn-ghost {
   background: transparent;
-  border-color: transparent;
-  color: var(--slate);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .btn-primary:hover,
@@ -278,19 +284,19 @@
   margin: 6px 0 4px;
   font-size: 24px;
   font-weight: 800;
-  color: var(--ink);
+  color: #0f172a;
   letter-spacing: -0.02em;
 }
 
 .kpi-title {
-  color: var(--slate);
+  color: #1e293b;
   font-size: 13px;
   margin: 0;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .kpi-sub {
-  color: var(--muted);
+  color: #475569;
   font-size: 12px;
   margin-top: 4px;
 }
@@ -308,7 +314,7 @@
 }
 
 .card {
-  background: var(--card);
+  background: #fdfbf7 !important; /* Blanco hueso */
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 20px;
@@ -317,6 +323,7 @@
   flex-direction: column;
   gap: 14px;
   min-height: 340px;
+  color: var(--ink);
 }
 
 .card-header {
