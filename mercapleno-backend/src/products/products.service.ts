@@ -249,7 +249,7 @@ export class ProductsService {
     if (normalized === 'agotado') return productos_estado.Agotado;
     if (normalized === 'deshabilitado' || normalized === 'no disponible') return productos_estado.Deshabilitado;
 
-    // Throw a generic error to be caught as InternalServerErrorException in create/update
-    throw new Error('Estado de producto invalido');
+    // Throw a BadRequestException when status is invalid
+    throw new BadRequestException('Estado de producto invalido');
   }
 }

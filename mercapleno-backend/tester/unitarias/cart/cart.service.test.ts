@@ -122,6 +122,8 @@ describe('CartService y CartController (Unitarias)', () => {
     it('debe incrementar cantidad si el producto ya existe en el carrito', async () => {
       mockDb.query
         .mockResolvedValueOnce([[{ id: 10 }]]) // ensureActiveCart
+        .mockResolvedValueOnce([[{ precio: 2500, estado: 'Disponible' }]]) // product found
+        .mockResolvedValueOnce([[{ stock: 10 }]]) // stock
         .mockResolvedValueOnce([[{ id: 5, cantidad: 2 }]]) // existing
         .mockResolvedValueOnce([{}]); // update
 
@@ -133,7 +135,6 @@ describe('CartService y CartController (Unitarias)', () => {
     it('debe lanzar ConflictException si el producto a agregar no existe', async () => {
       mockDb.query
         .mockResolvedValueOnce([[{ id: 10 }]]) // ensureActiveCart
-        .mockResolvedValueOnce([[]]) // no existing in cart
         .mockResolvedValueOnce([[]]); // no product in catalog
 
       await expect(service.addItem(1, { productId: 999, quantity: 1 })).rejects.toThrow(
@@ -144,11 +145,12 @@ describe('CartService y CartController (Unitarias)', () => {
     it('debe insertar nuevo item si no existía en el carrito', async () => {
       mockDb.query
         .mockResolvedValueOnce([[{ id: 10 }]]) // ensureActiveCart
+        .mockResolvedValueOnce([[{ precio: 2500, estado: 'Disponible' }]]) // product found
+        .mockResolvedValueOnce([[{ stock: 10 }]]) // stock
         .mockResolvedValueOnce([[]]) // no existing
-        .mockResolvedValueOnce([[{ precio: 2500 }]]) // product found
         .mockResolvedValueOnce([{ insertId: 77 }]); // insert
 
-      const result = await service.addItem(1, { productId: 100, quantity: 0 }); // quantity 0 -> defaults to 1
+      const result = await service.addItem(1, { productId: 100, quantity: 1 });
 
       expect(result).toEqual({ id: 77, productId: 100, quantity: 1 });
     });
@@ -158,11 +160,10 @@ describe('CartService y CartController (Unitarias)', () => {
   // updateItem
   // =========================================================================
   describe('updateItem', () => {
-    it('debe eliminar el item si la cantidad enviada es menor o igual a 0', async () => {
-      mockDb.query.mockResolvedValueOnce([{}]); // deleteItem query
-
-      const result = await service.updateItem(1, 5, { quantity: 0 });
-      expect(result).toEqual({ success: true, removed: true });
+    it('debe lanzar BadRequestException si la cantidad enviada es menor o igual a 0', async () => {
+      await expect(service.updateItem(1, 5, { quantity: 0 })).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('debe lanzar Error si el item no existe en el carrito activo', async () => {
@@ -176,6 +177,7 @@ describe('CartService y CartController (Unitarias)', () => {
     it('debe actualizar la cantidad si el item existe', async () => {
       mockDb.query
         .mockResolvedValueOnce([[{ id: 5, id_productos: 100, cantidad: 1 }]])
+        .mockResolvedValueOnce([[{ stock: 10 }]])
         .mockResolvedValueOnce([{}]); // update query
 
       const result = await service.updateItem(1, 5, { quantity: 4 });

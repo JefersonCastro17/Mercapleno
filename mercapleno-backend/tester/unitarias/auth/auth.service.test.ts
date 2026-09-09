@@ -798,14 +798,17 @@ describe('Doble Factor (2FA)', () => {
    * RF-001.5
    * CP-029 - Manejo cuando falla el envío del correo 2FA
    */
-  it('CP-029 - debe limpiar el código y arrojar error 500 si falla el correo de 2FA', async () => {
+  it('CP-029 - debe manejar el fallo al enviar el correo de 2FA en segundo plano sin interrumpir el inicio de sesion', async () => {
     const user = { id: 1, email: 'test@test.com' } as any;
     jest.spyOn(prismaService.usuarios, 'update').mockResolvedValue({} as any);
     jest.spyOn(emailService, 'sendLoginTwoFactorCode').mockRejectedValue(new Error('Mail Error'));
-    const clearSpy = jest.spyOn(authService as any, 'clearLoginTwoFactorChallenge').mockResolvedValue({});
+    const loggerSpy = jest.spyOn((authService as any).logger, 'error').mockImplementation(() => {});
 
-    await expect((authService as any).createLoginTwoFactorChallenge(user)).rejects.toThrow(InternalServerErrorException);
-    expect(clearSpy).toHaveBeenCalledWith(1);
+    const result = await (authService as any).createLoginTwoFactorChallenge(user);
+    expect(result.success).toBe(true);
+    expect(result.requiresTwoFactor).toBe(true);
+    await new Promise((r) => setImmediate(r));
+    expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining('Error enviando correo 2FA a test@test.com: Mail Error'));
   });
 
 
