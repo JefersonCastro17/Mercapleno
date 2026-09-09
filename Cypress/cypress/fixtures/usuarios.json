@@ -1,0 +1,26 @@
+{
+  "cliente": {
+    "id": 10,
+    "nombre": "Carlos",
+    "apellido": "Cliente",
+    "email": "cliente@ejemplo.com",
+    "password": "Password123!",
+    "id_rol": 3
+  },
+  "empleado": {
+    "id": 2,
+    "nombre": "Elena",
+    "apellido": "Empleado",
+    "email": "empleado@ejemplo.com",
+    "password": "Password123!",
+    "id_rol": 2
+  },
+  "admin": {
+    "id": 1,
+    "nombre": "Admin",
+    "apellido": "Mercapleno",
+    "email": "admin@ejemplo.com",
+    "password": "Password123!",
+    "id_rol": 1
+  }
+}
