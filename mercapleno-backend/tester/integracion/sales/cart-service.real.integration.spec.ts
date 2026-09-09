@@ -1,6 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Pool } from 'mysql2/promise';
+import { Pool } from 'pg';
 const request = require('supertest');
 import { createRealApp } from '../support/real-app';
 import { cleanupFixture, createFixture, createTestPool, query, seedBase, TestFixture } from '../support/test-database';

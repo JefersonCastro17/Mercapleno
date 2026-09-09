@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">21.42% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>3/14</span>
+                <span class='fraction'>14/14</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">92.85% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/14</span>
+                <span class='fraction'>13/14</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">21.42% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>3/14</span>
+                <span class='fraction'>14/14</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -105,44 +105,44 @@
 <a name='L40'></a><a href='#L40'>40</a>
 <a name='L41'></a><a href='#L41'>41</a>
 <a name='L42'></a><a href='#L42'>42</a>
-<a name='L43'></a><a href='#L43'>43</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L43'></a><a href='#L43'>43</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -150,41 +150,41 @@
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { ConflictException, InternalServerErrorException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 &nbsp;
-export function <span class="fstat-no" title="function not covered" >handlePrismaPersistenceError(</span>
+export function handlePrismaPersistenceError(
   error: unknown,
   fallbackMessage: string,
   relationMessage?: string,
 ): never {
-<span class="cstat-no" title="statement not covered" >  if (error instanceof Prisma.PrismaClientKnownRequestError) {</span>
-<span class="cstat-no" title="statement not covered" >    if (error.code === 'P2002') {</span>
-      const targetArray = <span class="cstat-no" title="statement not covered" >Array.isArray(error.meta?.target) ? error.meta?.target : [];</span>
-<span class="cstat-no" title="statement not covered" >      if (targetArray.includes('email')) {</span>
-<span class="cstat-no" title="statement not covered" >        throw new ConflictException({</span>
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error.code === 'P2002') {
+      const targetArray = Array.isArray(error.meta?.target) ? error.meta?.target : [];
+      if (targetArray.includes('email')) {
+        throw new ConflictException({
           success: false,
           message: 'El correo electronico ya esta registrado.',
         });
       }
-<span class="cstat-no" title="statement not covered" >      if (targetArray.includes('numero_identificacion')) {</span>
-<span class="cstat-no" title="statement not covered" >        throw new ConflictException({</span>
+      if (targetArray.includes('numero_identificacion')) {
+        throw new ConflictException({
           success: false,
           message: 'El numero de identificacion ya esta registrado.',
         });
       }
-<span class="cstat-no" title="statement not covered" >      throw new ConflictException({</span>
+      throw new ConflictException({
         success: false,
         message: 'Ya existe un registro con esos datos.',
       });
     }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    if (error.code === 'P2003' &amp;&amp; relationMessage) {</span>
-<span class="cstat-no" title="statement not covered" >      throw new ConflictException({</span>
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (error.code === 'P2003' &amp;&amp; relationMessage) {
+      throw new ConflictException({
         success: false,
         message: relationMessage,
       });
     }
   }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  throw new InternalServerErrorException({</span>
+  throw new InternalServerErrorException({
     success: false,
     message: fallbackMessage,
   });
@@ -196,7 +196,7 @@ export function <span class="fstat-no" title="function not covered" >handlePrism
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-09-06T21:10:40.127Z
+                at 2026-09-09T03:40:37.850Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

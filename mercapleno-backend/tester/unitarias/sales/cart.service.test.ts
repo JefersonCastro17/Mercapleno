@@ -138,7 +138,7 @@ describe('CartService (Unitarias)', () => {
 
       await expect(service.deleteItem(5, 44)).resolves.toEqual({ success: true });
       expect(db.query).toHaveBeenCalledWith(
-        expect.stringContaining('DELETE ci FROM cart_items'),
+        expect.stringContaining('DELETE FROM cart_items'),
         [44, 5, 'active'],
       );
     });

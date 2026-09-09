@@ -1,5 +1,9 @@
-import { createPool, Pool } from 'mysql2/promise';
+import { Pool } from 'pg';
 import { envs } from '../../../src/config';
+import {
+  translateSqlToPostgres,
+  formatPostgresResult,
+} from '../../../src/common/database/postgres.service';
 
 export interface TestFixture {
   runId: string;
@@ -11,31 +15,44 @@ export interface TestFixture {
 }
 
 export function createTestPool(): Pool {
-  if (envs.dbName !== 'mercapleno_testv1') {
+  if (envs.dbName !== 'mercapleno_testv1' && envs.dbName !== 'mercapleno_test') {
     throw new Error(`Base invalida para pruebas: ${envs.dbName}`);
   }
 
-  return createPool({
+  return new Pool({
     host: envs.dbHost,
     port: envs.dbPort,
     user: envs.dbUser,
     password: envs.dbPassword,
     database: envs.dbName,
-    waitForConnections: true,
-    connectionLimit: 3,
+    max: 3,
   });
 }
 
 export async function query<T = any>(pool: Pool, sql: string, params: any[] = []): Promise<T> {
-  const [rows] = await pool.execute(sql, params);
-  return rows as T;
+  const pgSql = translateSqlToPostgres(sql);
+  const res = await pool.query(pgSql, params);
+  const [formatted] = formatPostgresResult<T>(res, sql);
+  return formatted;
 }
 
 export async function seedBase(pool: Pool): Promise<void> {
-  await query(pool, "INSERT INTO roles (id, nombre) VALUES (3, 'Cliente') ON DUPLICATE KEY UPDATE nombre = VALUES(nombre)");
-  await query(pool, "INSERT INTO tipos_identificacion (id, nombre) VALUES (1, 'Cedula de ciudadania') ON DUPLICATE KEY UPDATE nombre = VALUES(nombre)");
-  await query(pool, "INSERT INTO metodo (id_metodo, metodo_pago) VALUES ('M1', 'Efectivo'), ('M2', 'Tarjeta de Credito'), ('M3', 'Tarjeta de Debito') ON DUPLICATE KEY UPDATE metodo_pago = VALUES(metodo_pago)");
-  await query(pool, "INSERT INTO tipo_movimiento (id_tipo, nombre_movimiento, fecha_generar) VALUES (3, 'SALIDA POR VENTA', CURDATE()) ON DUPLICATE KEY UPDATE nombre_movimiento = VALUES(nombre_movimiento)");
+  await query(
+    pool,
+    "INSERT INTO roles (id, nombre) VALUES (3, 'Cliente') ON CONFLICT (id) DO UPDATE SET nombre = EXCLUDED.nombre",
+  );
+  await query(
+    pool,
+    "INSERT INTO tipos_identificacion (id, nombre) VALUES (1, 'Cedula de ciudadania') ON CONFLICT (id) DO UPDATE SET nombre = EXCLUDED.nombre",
+  );
+  await query(
+    pool,
+    "INSERT INTO metodo (id_metodo, metodo_pago) VALUES ('M1', 'Efectivo'), ('M2', 'Tarjeta de Credito'), ('M3', 'Tarjeta de Debito') ON CONFLICT (id_metodo) DO UPDATE SET metodo_pago = EXCLUDED.metodo_pago",
+  );
+  await query(
+    pool,
+    "INSERT INTO tipo_movimiento (id_tipo, nombre_movimiento, fecha_generar) VALUES (3, 'SALIDA POR VENTA', CURRENT_DATE) ON CONFLICT (id_tipo) DO UPDATE SET nombre_movimiento = EXCLUDED.nombre_movimiento",
+  );
 }
 
 export async function createFixture(pool: Pool, token: string): Promise<TestFixture> {
@@ -64,7 +81,7 @@ export async function createFixture(pool: Pool, token: string): Promise<TestFixt
     productIds.push(productId);
     await query(
       pool,
-      'INSERT INTO stock_actual (id_productos, stock, fecha_vencimiento) VALUES (?, ?, CURDATE())',
+      'INSERT INTO stock_actual (id_productos, stock, fecha_vencimiento) VALUES (?, ?, CURRENT_DATE)',
       [productId, stock],
     );
   }
@@ -79,6 +96,7 @@ export async function createFixture(pool: Pool, token: string): Promise<TestFixt
 }
 
 export async function cleanupFixture(pool: Pool, fixture: TestFixture): Promise<void> {
+  if (!fixture || !fixture.productIds) return;
   const productPlaceholders = fixture.productIds.map(() => '?').join(',');
   const movementRows: any[] = await query(
     pool,
