@@ -215,6 +215,20 @@
   color: white;
 }
 
+.proveedores-btn--blocked {
+  background: #f8fafc;
+  color: #94a3b8;
+  border: 1px dashed #cbd5e1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.proveedores-btn--blocked:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fca5a5;
+}
+
 .proveedores-cell-actions {
   display: flex;
   gap: 6px;
