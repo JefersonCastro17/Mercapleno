@@ -7,21 +7,21 @@ import {
 } from 'class-validator';
 
 export class CreateProveedorDto {
-  @ApiProperty({ example: 'Luis', description: 'Nombre del proveedor' })
+  @ApiProperty({ example: 'Distribuciones Andina S.A.S.', description: 'Nombre del proveedor' })
   @IsNotEmpty({ message: 'El nombre es obligatorio' })
   @IsString({ message: 'El nombre debe ser un texto' })
   @MaxLength(50, { message: 'El nombre no puede superar los 50 caracteres' })
-  @Matches(/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/, {
-    message: 'El nombre solo puede contener letras y espacios',
+  @Matches(/^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñüÜ\s.,\-&]+$/, {
+    message: 'El nombre contiene caracteres no permitidos',
   })
   nombre: string;
 
-  @ApiProperty({ example: 'González', description: 'Apellido del proveedor' })
+  @ApiProperty({ example: 'Central', description: 'Apellido o razón social secundaria del proveedor' })
   @IsNotEmpty({ message: 'El apellido es obligatorio' })
   @IsString({ message: 'El apellido debe ser un texto' })
   @MaxLength(50, { message: 'El apellido no puede superar los 50 caracteres' })
-  @Matches(/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/, {
-    message: 'El apellido solo puede contener letras y espacios',
+  @Matches(/^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñüÜ\s.,\-&]+$/, {
+    message: 'El apellido contiene caracteres no permitidos',
   })
   apellido: string;
 
