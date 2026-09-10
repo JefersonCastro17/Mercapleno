@@ -5,7 +5,7 @@ import { useAuthContext } from '../../contexts/AuthContext';
 
 function Header() {
   const navigate = useNavigate();
-  const location = useLocation(); // Para saber en qué página estamos
+  const location = useLocation();
   const { totalItems } = useCartContext();
   const { getUserName, logout } = useAuthContext(); 
 
@@ -19,43 +19,41 @@ function Header() {
   return (
     <header>
       <nav className="barra-navegacion">
-        <div className="texto-logo" onClick={() => navigate('/')} style={{cursor: 'pointer'}}>
-          Mercapleno
+        <div className="texto-logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
+          <span className="logo-icon">M</span>
+          <span>Mercapleno</span>
         </div>
         
         <div className="contenedor-usuario">
-          <span style={{ marginRight: '20px', fontWeight: 'bold' }}>
+          <span style={{ fontWeight: '600' }}>
             Usuario: {userName}
           </span>
           <button 
-            className="boton-nav" 
+            className="boton-nav boton-nav--danger" 
             onClick={handleLogout}
-            style={{ backgroundColor: '#D9534F', color: 'white' }} 
           >
             Cerrar Sesión
           </button>
         </div>
         
         <div className="contenedor-botones">
-          {/* 🟢 BOTÓN CATÁLOGO: Navega a /catalogo */}
           <button 
             className="boton-nav" 
             onClick={() => navigate('/catalogo')} 
             style={{ 
-              backgroundColor: location.pathname === '/catalogo' ? '#073B74' : '#F9B300',
-              color: location.pathname === '/catalogo' ? 'white' : 'black'
+              backgroundColor: location.pathname === '/catalogo' ? '#073B74' : '#F59E0B',
+              color: location.pathname === '/catalogo' ? '#ffffff' : '#0f172a'
             }}
           >
             Catálogo
           </button>
 
-          {/* 🟢 BOTÓN CARRITO: Navega a /cart */}
           <button 
             className="boton-nav" 
             onClick={() => navigate('/cart')}
             style={{ 
-              backgroundColor: location.pathname === '/cart' ? '#073B74' : '#F9B300',
-              color: location.pathname === '/cart' ? 'white' : 'black'
+              backgroundColor: location.pathname === '/cart' ? '#073B74' : '#F59E0B',
+              color: location.pathname === '/cart' ? '#ffffff' : '#0f172a'
             }}
           >
             Carrito ({totalItems})

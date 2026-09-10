@@ -106,8 +106,8 @@ describe('Rol Administrador - Proceso Completo de Usuario', () => {
       statusCode: 200,
       body: {
         usuarios: [
-          { id: 1, nombre: 'Juan', apellido: 'Perez', email: 'juan@ejemplo.com', id_rol: 1, id_tipo_identificacion: 1, numero_identificacion: '10987654' },
-          { id: 2, nombre: 'Maria', apellido: 'Gomez', email: 'maria@ejemplo.com', id_rol: 2, id_tipo_identificacion: 1, numero_identificacion: '98765432' }
+          { id: 1, nombre: 'Juan', apellido: 'Perez', email: 'juan@ejemplo.com', direccion: 'Calle 10 # 20-30', fecha_nacimiento: '1990-01-01', id_rol: 1, id_tipo_identificacion: 1, numero_identificacion: '10987654' },
+          { id: 2, nombre: 'Maria', apellido: 'Gomez', email: 'maria@ejemplo.com', direccion: 'Carrera 15 # 45-60', fecha_nacimiento: '1995-05-15', id_rol: 2, id_tipo_identificacion: 1, numero_identificacion: '98765432' }
         ]
       }
     }).as('getUsers');

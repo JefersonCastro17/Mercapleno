@@ -81,6 +81,8 @@ Cypress.Commands.add('visitAsRole', (url, roleKey = 'admin') => {
 
   cy.visit(url, {
     onBeforeLoad(win) {
+      const mockToken = `mock-token-${roleKey}-${usuario.id}`;
+      win.localStorage.setItem('token', mockToken);
       win.localStorage.setItem('user', JSON.stringify({
         id: usuario.id,
         nombre: usuario.nombre,
@@ -88,6 +90,19 @@ Cypress.Commands.add('visitAsRole', (url, roleKey = 'admin') => {
         email: usuario.email,
         id_rol: usuario.id_rol
       }));
+
+      if (url.includes('/ticket')) {
+        win.localStorage.setItem('lastPurchasedCart', JSON.stringify([
+          { id: 1, nombre: 'Producto Prueba', price: 5000, cantidad: 1 }
+        ]));
+        win.localStorage.setItem('lastPurchasedTotals', JSON.stringify({
+          ticketId: 'TK-001',
+          subTotal: 5000,
+          tax: 950,
+          finalTotal: 5950,
+          paymentMethod: 'Efectivo'
+        }));
+      }
     }
   });
 });

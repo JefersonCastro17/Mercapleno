@@ -230,10 +230,10 @@ export default function UsuarioC() {
       apellido: u.apellido || "",
       email: u.email || "",
       password: "",
-      direccion: u.direccion || "",
-      fecha_nacimiento: u.fecha_nacimiento?.split("T")[0] || "",
-      id_rol: String(u.id_rol),
-      id_tipo_identificacion: String(u.id_tipo_identificacion || ""),
+      direccion: u.direccion || "Calle Principal # 1-1",
+      fecha_nacimiento: u.fecha_nacimiento?.split("T")[0] || "1990-01-01",
+      id_rol: String(u.id_rol || "1"),
+      id_tipo_identificacion: String(u.id_tipo_identificacion || "1"),
       numero_identificacion: u.numero_identificacion || ""
     });
     setMostrar(true);

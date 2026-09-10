@@ -262,7 +262,7 @@ export default function Estadisticas() {
             🖨️ Imprimir PDF
           </button>
           <button className="btn-primary" onClick={handlePdfDownload} disabled={loading}>
-            📥 Descargar Reporte
+            📥 Descargar PDF
           </button>
         </div>
       </header>
@@ -369,6 +369,32 @@ export default function Estadisticas() {
               onChange={(e) => {
                 setFechaFin(e.target.value);
                 setActivePreset("custom");
+              }}
+            />
+          </div>
+          <div className="filter-field">
+            <label htmlFor="mesInicio">Mes Desde</label>
+            <input
+              type="month"
+              id="mesInicio"
+              onChange={(e) => {
+                if (e.target.value) {
+                  setFechaInicio(`${e.target.value}-01`);
+                  setActivePreset("custom");
+                }
+              }}
+            />
+          </div>
+          <div className="filter-field">
+            <label htmlFor="mesFin">Mes Hasta</label>
+            <input
+              type="month"
+              id="mesFin"
+              onChange={(e) => {
+                if (e.target.value) {
+                  setFechaFin(`${e.target.value}-28`);
+                  setActivePreset("custom");
+                }
               }}
             />
           </div>
