@@ -400,10 +400,11 @@ export default function Estadisticas() {
           </div>
           {(fechaInicio || fechaFin) && (
             <button
-              className="btn-ghost"
+              type="button"
+              className="preset-btn preset-btn--clear"
               onClick={() => applyPreset("todo")}
             >
-              Limpiar
+              ✕ Limpiar filtros
             </button>
           )}
         </div>
@@ -474,7 +475,7 @@ export default function Estadisticas() {
           {/* CUADRÍCULA DE GRÁFICOS Y ANALÍTICA */}
           <section className="grid">
             {/* GRÁFICO 1: EVOLUCIÓN DE VENTAS */}
-            <div className="card span-2">
+            <div className="card card--area">
               <div className="card-header">
                 <div>
                   <h2>Evolución de Ingresos</h2>
@@ -505,7 +506,7 @@ export default function Estadisticas() {
             </div>
 
             {/* GRÁFICO 2: VENTAS POR CATEGORÍA (DONUT) */}
-            <div className="card">
+            <div className="card card--donut">
               <div className="card-header">
                 <div>
                   <h2>Mix por Categoría</h2>
@@ -539,7 +540,7 @@ export default function Estadisticas() {
             </div>
 
             {/* GRÁFICO 3: VENTAS POR MÉTODO DE PAGO */}
-            <div className="card">
+            <div className="card card--bar">
               <div className="card-header">
                 <div>
                   <h2>Métodos de Pago</h2>
@@ -568,7 +569,7 @@ export default function Estadisticas() {
             </div>
 
             {/* TABLA: TOP PRODUCTOS POR RENTABILIDAD */}
-            <div className="card span-2">
+            <div className="card card--table-top">
               <div className="card-header">
                 <div>
                   <h2>Top Productos Más Rentables</h2>
@@ -610,7 +611,7 @@ export default function Estadisticas() {
             </div>
 
             {/* TABLA: RESUMEN MENSUAL */}
-            <div className="card span-3">
+            <div className="card card--table-history">
               <div className="card-header">
                 <div>
                   <h2>Histórico Mensual Detallado</h2>
