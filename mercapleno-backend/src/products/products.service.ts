@@ -189,49 +189,45 @@ export class ProductsService {
     return { message: 'Producto actualizado correctamente' };
   }
 
-    async remove(id: number) {
-      const existing = await this.prisma.productos.findUnique({
-        where: { id_productos: id },
-        select: { id_productos: true, imagen: true },
-      });
+  async remove(id: number): Promise<{ message: string }> {
+    const existing = await this.prisma.productos.findUnique({
+      where: { id_productos: id },
+      select: { id_productos: true, imagen: true },
+    });
 
-      if (!existing) {
-        throw new NotFoundException({ message: 'Producto no encontrado' });
-      }
-
-      try {
-        if (typeof (this.prisma as any).$transaction === 'function') {
-          await this.prisma.$transaction(async (tx) => {
-            await tx.venta_productos?.deleteMany?.({ where: { id_productos: id } });
-            await tx.stock_actual?.deleteMany?.({ where: { id_productos: id } });
-            await tx.salida_productos?.deleteMany?.({ where: { id_productos: id } });
-            await tx.entrada_productos?.deleteMany?.({ where: { id_productos: id } });
-            await tx.devolver_productos?.deleteMany?.({ where: { id_productos: id } });
-            await tx.productos?.delete?.({ where: { id_productos: id } });
-          });
-        } else {
-          // Fallback sequential deletions
-          await this.prisma.venta_productos?.deleteMany?.({ where: { id_productos: id } });
-          await this.prisma.stock_actual?.deleteMany?.({ where: { id_productos: id } });
-          await this.prisma.salida_productos?.deleteMany?.({ where: { id_productos: id } });
-          await this.prisma.entrada_productos?.deleteMany?.({ where: { id_productos: id } });
-          await this.prisma.devolver_productos?.deleteMany?.({ where: { id_productos: id } });
-          await this.prisma.productos?.delete?.({ where: { id_productos: id } });
-        }
-      } catch (error) {
-        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
-          throw new BadRequestException({
-            message:
-              'No se puede eliminar el producto porque existen registros relacionados en stock, ventas o movimientos.',
-          });
-        }
-        throw new InternalServerErrorException({ message: 'No se pudo eliminar el producto' });
-      }
-
-      deleteStoredProductImage(existing.imagen);
-
-      return { message: 'Producto eliminado correctamente' };
+    if (!existing) {
+      throw new NotFoundException({ message: 'Producto no encontrado' });
     }
+
+    // Check for related sales or movements before deletion
+    const [ventas, salidas, entradas, devoluciones, stock] = await Promise.all([
+      this.prisma.venta_productos.findFirst({ where: { id_productos: id } }),
+      this.prisma.salida_productos.findFirst({ where: { id_productos: id } }),
+      this.prisma.entrada_productos.findFirst({ where: { id_productos: id } }),
+      this.prisma.devolver_productos.findFirst({ where: { id_productos: id } }),
+      this.prisma.stock_actual.findFirst({ where: { id_productos: id } }),
+    ]);
+
+    if (ventas || salidas || entradas || devoluciones || stock) {
+      throw new BadRequestException({
+        message: 'No se puede eliminar el producto porque tiene ventas o movimientos asociados',
+      });
+    }
+
+    try {
+      await this.prisma.productos.delete({
+        where: { id_productos: id },
+      });
+    } catch (error) {
+      this.handlePersistenceError(error, 'No se pudo eliminar el producto');
+    }
+
+    if (existing.imagen) {
+      deleteStoredProductImage(existing.imagen);
+    }
+
+    return { message: 'Producto eliminado correctamente' };
+  }
 
   private normalizeImagePath(imagePath?: string | null) {
     if (typeof imagePath !== 'string') {

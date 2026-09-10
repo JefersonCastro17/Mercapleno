@@ -1,4 +1,4 @@
-/* 🟢 src/styles/estadisticas.css 
+﻿/* 🟢 src/styles/estadisticas.css 
    Mercapleno - Reportes y Estadísticas de Negocio Responsive
 */
 
@@ -39,13 +39,18 @@
   gap: 16px;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 26px;
+  background: linear-gradient(135deg, #0B4A8B 0%, #123C63 100%);
+  padding: clamp(18px, 3vw, 28px);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(11, 74, 139, 0.25);
 }
 
 .header-text h1 {
   font-family: "Fraunces", Georgia, serif;
-  font-size: clamp(24px, 3.5vw, 36px);
-  margin: 4px 0;
+  font-size: clamp(24px, 3.2vw, 38px);
+  margin: 6px 0;
+  color: #ffffff;
   font-weight: 800;
   line-height: 1.15;
 }
@@ -53,15 +58,15 @@
 .eyebrow {
   text-transform: uppercase;
   font-size: 11px;
-  letter-spacing: 0.16em;
-  color: var(--brand);
-  font-weight: 800;
+  letter-spacing: 0.2em;
+  color: #F59E0B;
+  font-weight: 700;
 }
 
 .subtitle {
   margin: 0;
-  color: var(--slate);
-  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: clamp(12.5px, 1.8vw, 14px);
 }
 
 .header-actions {
@@ -81,15 +86,16 @@
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-deep) 100%);
-  color: white;
-  box-shadow: 0 4px 14px rgba(11, 74, 139, 0.25);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  color: #0f172a;
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.35);
+  text-decoration: none;
 }
 
 .btn-primary:hover {
@@ -98,17 +104,24 @@
 }
 
 .btn-secondary {
-  background: white;
-  border-color: var(--border);
-  color: var(--ink);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  backdrop-filter: blur(4px);
 }
 
 .btn-secondary:hover {
-  background: #f8fafc;
+  background: rgba(255, 255, 255, 0.28);
+  transform: translateY(-1px);
 }
 
-/* === FILTROS DE REPORTE === */
+.btn-ghost {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* === FILTROS DE REPORTE Y PRESETS === */
 .filter-card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -120,6 +133,77 @@
   gap: 14px;
   margin-bottom: 24px;
   box-shadow: var(--shadow);
+}
+
+.presets-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.presets-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--slate);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.preset-btn {
+  background: white;
+  border: 1px solid var(--border);
+  color: var(--slate);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preset-btn:hover {
+  background: #f1f5f9;
+  color: var(--ink);
+  border-color: #cbd5e1;
+}
+
+.preset-btn.active {
+  background: #0f172a;
+  color: white;
+  border-color: #0f172a;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+}
+
+.custom-dates {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filter-field label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--slate);
+}
+
+.filter-field input {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-family: inherit;
+  font-size: 13px;
+  background: white;
 }
 
 .filter-group {
@@ -153,6 +237,13 @@
 }
 
 /* === GRID DE KPIs Y GRÁFICOS === */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(clamp(200px, 100%, 230px), 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
@@ -171,20 +262,56 @@
   flex-direction: column;
   justify-content: space-between;
   gap: 8px;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
 }
 
 .kpi-card:hover {
   transform: translateY(-2px);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
 }
 
-.kpi-card h3 {
+.kpi-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.kpi-icon {
+  font-size: 22px;
+}
+
+.kpi-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge-blue { background: #eff6ff; color: #2563eb; }
+.badge-green { background: #f0fdf4; color: #16a34a; }
+.badge-purple { background: #faf5ff; color: #9333ea; }
+.badge-amber { background: #fffbeb; color: #d97706; }
+.badge-cyan { background: #ecfeff; color: #0891b2; }
+
+.kpi-title {
+  color: var(--slate);
   font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--slate);
   margin: 0;
+}
+
+.kpi-card h3 {
+  font-size: clamp(20px, 2.4vw, 28px);
+  font-weight: 800;
+  color: var(--ink);
+  margin: 4px 0 0;
 }
 
 .kpi-card .kpi-value {
@@ -200,14 +327,25 @@
   margin: 0;
 }
 
+.tone-revenue { border-left: 4px solid #0ea5e9; }
+.tone-profit { border-left: 4px solid #22c55e; }
+.tone-margin { border-left: 4px solid #8b5cf6; }
+.tone-ticket { border-left: 4px solid #f59e0b; }
+.tone-inventory { border-left: 4px solid #06b6d4; }
+
 /* === TARJETAS GENERALES DE GRÁFICOS Y TABLAS === */
 .card {
-  background: var(--card);
+  background: #fdfbf7 !important; /* Blanco hueso */
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: clamp(16px, 2.5vw, 24px);
   box-shadow: var(--shadow);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 340px;
+  color: var(--ink);
 }
 
 .span-2 {
@@ -222,7 +360,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
   gap: 12px;
   flex-wrap: wrap;
 }
@@ -241,9 +379,24 @@
   margin-top: 2px;
 }
 
+.card-body {
+  flex: 1;
+}
+
 .chart-wrap {
   width: 100%;
   height: clamp(240px, 32vw, 340px);
+}
+
+.empty-state {
+  height: 100%;
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 14px;
+  border: 1px dashed rgba(148, 163, 184, 0.4);
+  border-radius: 12px;
 }
 
 /* === TABLAS DE REPORTES === */
@@ -259,6 +412,7 @@ table {
   width: 100%;
   border-collapse: collapse;
   min-width: 640px;
+  background: white;
   font-size: 13px;
 }
 
