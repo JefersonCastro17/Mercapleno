@@ -53,6 +53,8 @@ function buildProductFormData(formData) {
 
   if (formData.imageFile instanceof File) {
     payload.append("imagen", formData.imageFile);
+  } else if (typeof formData.imagen === "string" && formData.imagen.trim()) {
+    payload.append("imagen", formData.imagen.trim());
   }
 
   return payload;
@@ -122,6 +124,15 @@ function ProductModal({
       ...prev,
       [name]: value
     }));
+
+    if (name === "imagen") {
+      const trimmed = value.trim();
+      if (trimmed) {
+        updatePreview(resolveImageUrl(trimmed));
+      } else if (!formData.imageFile) {
+        updatePreview("");
+      }
+    }
   };
 
   const handleImageChange = (event) => {
@@ -308,27 +319,38 @@ function ProductModal({
             </div>
 
             <div className="products-modal__field products-modal__field--full">
-              <label>Imagen del producto</label>
+              <label>URL de imagen en internet (Recomendado)</label>
+
+              <input
+                type="url"
+                name="imagen"
+                placeholder="https://images.unsplash.com/... o https://... (enlace web)"
+                value={formData.imagen}
+                onChange={handleChange}
+              />
+
+              <p className="products-modal__help">
+                Pega el enlace directo de la imagen desde internet (Unsplash, Google, distribuidor). Las URLs web no se borran al reiniciar el servidor.
+              </p>
+            </div>
+
+            <div className="products-modal__field products-modal__field--full">
+              <label>O sube un archivo desde tu equipo</label>
 
               <input
                 type="file"
-                name="imagen"
+                name="imageFile"
                 accept={ACCEPTED_IMAGE_TYPES}
                 onChange={handleImageChange}
               />
 
               <p className="products-modal__help">
-                Formatos: JPG, PNG, WEBP o GIF. Tamano maximo: 5 MB.
+                Formatos: JPG, PNG, WEBP o GIF (máximo 5 MB).
               </p>
 
               {formData.imageFile ? (
-                <p className="products-modal__help">
-                  Archivo seleccionado: {formData.imageFile.name}
-                </p>
-              ) : initialData?.imagen ? (
-                <p className="products-modal__help">
-                  Si no eliges un archivo nuevo, se mantiene la imagen
-                  actual.
+                <p className="products-modal__help" style={{ color: "var(--color-principal, #0B4A8B)", fontWeight: 700 }}>
+                  ✓ Archivo seleccionado: {formData.imageFile.name}
                 </p>
               ) : null}
             </div>
