@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import "../styles/Lista_productos.css";
-import "../styles/adminProducts.css"
+import "../styles/adminProducts.css";
 import { resolveImageUrl, FALLBACK_IMAGE } from "../lib/services/imageUtils";
 import { httpRequest } from "../lib/api/httpClient";
 import { API_ENDPOINTS } from "../lib/config/api.config";
