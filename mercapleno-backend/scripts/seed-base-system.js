@@ -30,10 +30,12 @@ const paymentMethodSeeds = [
 
 const movementTypeSeeds = [
   { id_tipo: 1, nombre_movimiento: "ENTRADA" },
-  { id_tipo: 2, nombre_movimiento: "SALIDA" }
+  { id_tipo: 2, nombre_movimiento: "SALIDA" },
+  { id_tipo: 3, nombre_movimiento: "SALIDA" }
 ];
 
 const movementSeeds = [
+  { id_movimiento: 1, id_tipo: 1, descripcion: "ENTRADA INVENTARIO" },
   { id_movimiento: 2, id_tipo: 1, descripcion: "ENTRADA INVENTARIO" },
   { id_movimiento: 3, id_tipo: 2, descripcion: "SALIDA INVENTARIO" }
 ];
