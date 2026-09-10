@@ -67,6 +67,15 @@ function AdminDashboard() {
             action: "Ir a Usuarios",
             tone: "tone-users",
             onClick: () => navigate("/admin/users")
+          },
+          {
+            id: "proveedores",
+            code: "PRV",
+            title: "Gestion de Proveedores",
+            detail: "Administra catálogo de proveedores y contactos.",
+            action: "Ir a Proveedores",
+            tone: "tone-proveedores",
+            onClick: () => navigate("/admin/proveedores")
           }
         ]
       : []),
@@ -120,7 +129,6 @@ function AdminDashboard() {
             ))}
           </div>
         </section>
-
       </div>
     </main>
   );

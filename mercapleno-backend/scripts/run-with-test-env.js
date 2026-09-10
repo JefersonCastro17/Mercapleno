@@ -26,9 +26,11 @@ if (!command) {
   process.exit(1);
 }
 
-const executable = process.platform === 'win32'
-  ? path.resolve(__dirname, '..', 'node_modules', '.bin', `${command}.cmd`)
-  : path.resolve(__dirname, '..', 'node_modules', '.bin', command);
+const executable = command === 'node'
+  ? 'node'
+  : (process.platform === 'win32'
+    ? path.resolve(__dirname, '..', 'node_modules', '.bin', `${command}.cmd`)
+    : path.resolve(__dirname, '..', 'node_modules', '.bin', command));
 
 const child = spawnSync(executable, args, {
   cwd: path.resolve(__dirname, '..'),

@@ -269,7 +269,7 @@ export class ReportsService {
     const invY = summaryY + boxHeight + 12;
     doc.roundedRect(40, invY, doc.page.width - 80, 32, 6).fillAndStroke('#f1f5f9', '#cbd5e1');
     doc.fillColor('#334155').fontSize(9).font('Helvetica').text(
-      `Valor de Inventario en Bodega: ${formatCurrency(financial.inventario.valor_venta)}  |  Total Unidades en Stock: ${financial.inventario.unidades_stock_total}  |  Productos con Stock Critico: ${financial.inventario.productos_stock_bajo}`,
+      `Valor de Inventario en Bodega: ${formatCurrency(financial?.inventario?.valor_venta)}  |  Total Unidades en Stock: ${financial?.inventario?.unidades_stock_total ?? 0}  |  Productos con Stock Critico: ${financial?.inventario?.productos_stock_bajo ?? 0}`,
       52,
       invY + 10,
     );

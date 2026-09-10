@@ -1,175 +1,190 @@
 /* 🟢 src/styles/ticket.css 
-    Propósito: Estilos específicos para la vista del Ticket de Compra.
+   Mercapleno - Ticket de Compra Responsive y Estilo Recibo Real
 */
 
 .ticket-page-container {
-    padding: 0 15px; 
-    max-width: 1000px;
-    margin: 0 auto;
+  padding: clamp(16px, 4vw, 36px) 12px 60px;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
-/* 🟥 CLASE CONTENEDORA PRINCIPAL DEL TICKET (ticket-content) */
-.ticket-content { 
-    /* MODIFICADO: Estilo visual de ticket impreso */
-    background-color: #ffffff; /* Fondo blanco limpio */
-    width: 90%;
-    max-width: 400px; /* Estrecho como un recibo real */
-    margin: 40px auto;
-    padding: 30px 20px; /* Padding ajustado */
-    border-radius: 2px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    border: 1px solid #eee;
-    font-family: monospace; /* Fuente estilo matriz/código para autenticidad */
-    color: #333;
-    line-height: 1.5;
+/* === CONTENIDO DEL TICKET === */
+.ticket-content {
+  background-color: #ffffff;
+  width: min(440px, 100%);
+  margin: 10px auto 24px;
+  padding: clamp(20px, 5vw, 32px) clamp(16px, 4vw, 24px);
+  border-radius: 6px;
+  box-shadow: 0 6px 24px rgba(15, 23, 42, 0.08);
+  border: 1px solid #e2e8f0;
+  font-family: "Courier New", Courier, monospace, monospace;
+  color: #1e293b;
+  line-height: 1.5;
+  position: relative;
 }
-
-/* --- SECCIÓN ENCABEZADO Y TÍTULOS --- */
 
 .ticket-header {
-    text-align: center;
-    font-size: 1.5em;
-    margin-bottom: 5px;
-    font-weight: bold;
+  text-align: center;
+  font-size: clamp(1.2em, 4vw, 1.5em);
+  margin-bottom: 4px;
+  font-weight: 800;
+  color: #0f172a;
 }
 
 .ticket-logo {
-    text-align: center;
-    font-size: 1.1em;
-    font-weight: bold;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 1px dashed #333; /* Separador de guiones */
+  text-align: center;
+  font-size: 1.1em;
+  font-weight: bold;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed #94a3b8;
+  color: var(--color-principal, #0B4A8B);
 }
 
-/* --- SECCIÓN DETALLES DE USUARIO Y TRANSACCIÓN --- */
+.ticket-details-user {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed #94a3b8;
+  font-size: 0.9em;
+}
 
 .ticket-details-user p {
-    margin: 3px 0;
-    font-size: 0.9em;
+  margin: 3px 0;
 }
-.ticket-details-user {
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px dashed #333;
-}
-
-
-/* --- SECCIÓN DETALLE DE PRODUCTOS --- */
 
 .productos-titulo {
-    text-align: center;
-    margin: 20px 0 10px;
-    font-size: 0.95em;
+  text-align: center;
+  margin: 16px 0 8px;
+  font-size: 0.95em;
+  font-weight: 700;
 }
 
 .detalle-productos {
-    border-top: 1px dashed #333;
-    padding-top: 10px;
-    margin-bottom: 10px;
+  border-top: 1px dashed #94a3b8;
+  padding-top: 10px;
+  margin-bottom: 12px;
 }
 
-/* Estilo para las filas de detalle (Productos) */
 .producto-linea {
-    margin: 8px 0;
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    font-size: 0.9em;
+  margin: 8px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 0.88em;
 }
 
 .producto-nombre {
-    font-weight: 600;
+  font-weight: 600;
+  word-break: break-word;
+  flex: 1;
 }
 
-/* --- SECCIÓN TOTALES Y FINAL --- */
+.alinear-derecha {
+  text-align: right;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.ticket-totals {
+  border-top: 1px dashed #94a3b8;
+  padding-top: 10px;
+}
 
 .ticket-totals p {
-    margin: 8px 0;
-    display: flex;
-    justify-content: space-between;
-    font-size: 1em;
+  margin: 6px 0;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95em;
 }
 
 .total-final {
-    display: flex;
-    justify-content: space-between;
-    font-size: 1.2em; /* Más grande y destacado */
-    font-weight: bold;
-    padding-top: 10px;
-    margin-top: 10px;
-    border-top: 2px solid #333; /* Línea de separación sólida para el total */
-    color: #000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.2em;
+  font-weight: 900;
+  padding-top: 10px;
+  margin-top: 10px;
+  border-top: 2px solid #0f172a;
+  color: #0f172a;
 }
 
 .agradecimiento {
-    text-align: center;
-    margin-top: 30px;
-    font-size: 0.9em;
+  text-align: center;
+  margin-top: 24px;
+  font-size: 0.88em;
+  color: #475569;
 }
 
-
-.alinear-derecha {
-    text-align: right;
-    /* Esto es importante para que el precio no envuelva el texto */
-    white-space: nowrap; 
+/* === BOTONES DE ACCIÓN DEL TICKET === */
+.ticket-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 440px;
+  margin: 0 auto;
 }
 
-/* BOTÓN DE NAVEGACIÓN */
+.volver-catalogo-btn,
+.print-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
 .volver-catalogo-btn {
-    display: block;
-    width: 100%;
-    margin: 30px auto 0;
-    padding: 10px 0;
-    text-align: center;
-    background-color: var(--color-acento);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 16px;
-    cursor: pointer;
-    text-decoration: none;
-    transition: background-color 0.3s;
+  background-color: var(--color-acento, #F59E0B);
+  color: #0f172a;
 }
 
 .volver-catalogo-btn:hover {
-    background-color: var(--color-acento-dark);
-}
-
-.ticket-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 20px;
+  background-color: var(--color-acento-dark, #D97706);
+  transform: translateY(-1px);
 }
 
 .print-btn {
-    background-color: #1e40af;
+  background-color: var(--color-principal, #0B4A8B);
+  color: white;
 }
 
 .print-btn:hover {
-    background-color: #1e3a8a;
+  background-color: var(--color-principal-dark, #073463);
+  transform: translateY(-1px);
 }
 
+/* === IMPRESIÓN === */
 @media print {
-    body {
-        background: white;
-    }
+  body {
+    background: white;
+  }
 
-    .ticket-page-container {
-        max-width: none;
-        padding: 0;
-    }
+  .ticket-page-container {
+    max-width: none;
+    padding: 0;
+  }
 
-    .ticket-content {
-        width: 100%;
-        max-width: none;
-        margin: 0;
-        box-shadow: none;
-        border: none;
-    }
+  .ticket-content {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    box-shadow: none;
+    border: none;
+  }
 
-    .ticket-actions {
-        display: none;
-    }
+  .ticket-actions,
+  header {
+    display: none !important;
+  }
 }

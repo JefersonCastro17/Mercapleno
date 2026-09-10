@@ -997,10 +997,20 @@ export default function Lista_productos() {
     } catch (err) {
       if (handleAuthError(err)) return;
 
-      alert(
-        err.message ||
-          "No se pudo eliminar el producto."
-      );
+      const errorMessage = err.message ? err.message.toLowerCase() : "";
+      const isConstraintError = errorMessage.includes("foreign") || 
+                                errorMessage.includes("constraint") || 
+                                errorMessage.includes("reference") || 
+                                errorMessage.includes("ventas");
+
+      if (isConstraintError) {
+        alert("No se puede eliminar el producto porque tiene ventas asociadas. Por favor, deshabilítalo en su lugar para mantener el historial.");
+      } else {
+        alert(
+          err.message ||
+            "No se pudo eliminar el producto. Verifica que no tenga ventas asociadas."
+        );
+      }
     }
   };
 

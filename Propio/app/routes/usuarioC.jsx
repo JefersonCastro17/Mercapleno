@@ -230,10 +230,10 @@ export default function UsuarioC() {
       apellido: u.apellido || "",
       email: u.email || "",
       password: "",
-      direccion: u.direccion || "",
-      fecha_nacimiento: u.fecha_nacimiento?.split("T")[0] || "",
-      id_rol: String(u.id_rol),
-      id_tipo_identificacion: String(u.id_tipo_identificacion || ""),
+      direccion: u.direccion || "Calle Principal # 1-1",
+      fecha_nacimiento: u.fecha_nacimiento?.split("T")[0] || "1990-01-01",
+      id_rol: String(u.id_rol || "1"),
+      id_tipo_identificacion: String(u.id_tipo_identificacion || "1"),
       numero_identificacion: u.numero_identificacion || ""
     });
     setMostrar(true);
@@ -394,6 +394,44 @@ export default function UsuarioC() {
               )}
             </tbody>
           </table>
+        </div>
+
+        <div className="usuarios-cards">
+          {usuariosFiltrados.length === 0 ? (
+            <div className="td-empty" style={{ background: "white", borderRadius: "14px", padding: "24px" }}>
+              Sin usuarios registrados con ese filtro.
+            </div>
+          ) : (
+            usuariosFiltrados.map((u) => (
+              <article className="usuario-card" key={u.id}>
+                <div className="usuario-card__header">
+                  <div>
+                    <span className="usuario-card__id">ID #{u.id}</span>
+                    <h3 className="usuario-card__name">{u.nombre} {u.apellido}</h3>
+                  </div>
+                  {rolBadge(u.id_rol)}
+                </div>
+
+                <div className="usuario-card__info">
+                  <p className="usuario-card__email">
+                    <strong>Email:</strong> {u.email}
+                  </p>
+                  <p className="usuario-card__doc">
+                    <strong>Doc ({u.tipo_identificacion || u.id_tipo_identificacion}):</strong> {u.numero_identificacion || "—"}
+                  </p>
+                </div>
+
+                <div className="usuario-card__actions">
+                  <button className="btn-modificar" onClick={() => editar(u)}>
+                    Editar
+                  </button>
+                  <button className="btn-eliminar" onClick={() => eliminar(u.id)}>
+                    Eliminar
+                  </button>
+                </div>
+              </article>
+            ))
+          )}
         </div>
       </div>
 

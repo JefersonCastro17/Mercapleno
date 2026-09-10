@@ -1,132 +1,164 @@
+/* 🟢 src/styles/adminDashboard.css 
+   Mercapleno - Panel de Operaciones (Admin & Empleado) Responsive
+*/
+
 @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap");
 
 .ops-shell {
   min-height: calc(100vh - 76px);
-  padding: 24px 16px 40px;
+  padding: clamp(16px, 3vw, 32px) clamp(12px, 2.5vw, 24px) 60px;
   background: linear-gradient(180deg, #eef4ff 0%, #f7f9fc 60%);
   overflow-x: hidden;
 }
 
 .ops-wrap {
-  width: min(1080px, 100%);
+  width: min(1200px, 100%);
   margin: 0 auto;
   display: grid;
-  gap: 16px;
+  gap: 20px;
   font-family: "Manrope", "Segoe UI", sans-serif;
   color: #0f172a;
 }
 
+/* === HEADER CARD === */
 .ops-header-card {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
-  align-items: flex-start;
+  gap: 20px;
+  align-items: center;
   background: #ffffff;
   border: 1px solid #dbe3ef;
-  border-radius: 14px;
-  padding: 20px;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  border-radius: 18px;
+  padding: clamp(18px, 3vw, 28px);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+  flex-wrap: wrap;
 }
 
 .ops-overline {
   display: inline-block;
-  font-size: 12px;
+  font-size: 11.5px;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #38679f;
-  margin-bottom: 8px;
+  letter-spacing: 0.12em;
+  color: var(--color-principal, #0B4A8B);
+  font-weight: 800;
+  margin-bottom: 6px;
 }
 
 .ops-header-card h1 {
   margin: 0;
-  font-size: clamp(26px, 4vw, 34px);
-  line-height: 1.1;
+  font-size: clamp(24px, 4vw, 34px);
+  line-height: 1.15;
+  font-weight: 800;
 }
 
 .ops-header-card p {
-  margin: 8px 0 0;
-  color: #4f5f7e;
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 14.5px;
 }
 
 .ops-header-meta {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: flex-end;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .ops-role-pill {
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 800;
-  padding: 8px 12px;
+  padding: 8px 16px;
   border-radius: 999px;
-  border: 1px solid #cad6e8;
+  border: 1.5px solid #cad6e8;
   background: #f3f7ff;
   color: #16447f;
   white-space: nowrap;
 }
 
 .ops-role-pill.is-admin {
-  background: #fff4d7;
-  color: #7d4d00;
-  border-color: #ffd993;
+  background: #fffbeb;
+  color: #92400e;
+  border-color: #fde68a;
 }
 
 .ops-role-pill.is-employee {
-  background: #e8f6ff;
-  color: #155074;
-  border-color: #b6ddf4;
+  background: #f0f9ff;
+  color: #0369a1;
+  border-color: #bae6fd;
 }
 
 .ops-logout-btn {
-  background: #dc3545;
-  color: #fff;
+  background: #ef4444;
+  color: #ffffff;
   border: none;
   border-radius: 10px;
-  padding: 10px 14px;
+  padding: 10px 18px;
   font-weight: 700;
+  font-size: 13.5px;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .ops-logout-btn:hover {
-  filter: brightness(0.95);
+  background: #dc2626;
+  transform: translateY(-1px);
 }
 
+/* === SECTION Y GRID DE MÓDULOS === */
 .ops-section {
   background: #ffffff;
   border: 1px solid #dbe3ef;
-  border-radius: 14px;
-  padding: 18px;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+  border-radius: 18px;
+  padding: clamp(16px, 3vw, 24px);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
 }
 
 .ops-section h2 {
-  margin: 0 0 12px;
-  font-size: 19px;
+  margin: 0 0 16px;
+  font-size: clamp(18px, 2.5vw, 22px);
+  font-weight: 800;
+  color: #0f172a;
 }
 
 .ops-grid {
   display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
+/* === TARJETA DE MÓDULO (BENTO STYLE) === */
 .module-card {
-  border: 1px solid #d9e2ef;
-  border-radius: 12px;
-  padding: 14px;
-  display: grid;
-  gap: 10px;
-  background: #fdfefe;
-  min-width: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  background: #ffffff;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.module-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  border-color: #cbd5e1;
 }
 
 .module-card.tone-inventory {
-  border-left: 5px solid var(--color-principal);
+  border-left: 5px solid var(--color-principal, #0B4A8B);
 }
 
 .module-card.tone-users {
   border-left: 5px solid #7c3aed;
+}
+
+.module-card.tone-proveedores {
+  border-left: 5px solid #ea580c;
 }
 
 .module-card.tone-reports {
@@ -134,72 +166,95 @@
 }
 
 .module-top {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
 .module-code {
   width: fit-content;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.06em;
-  color: var(--color-principal);
+  letter-spacing: 0.08em;
+  color: var(--color-principal, #0B4A8B);
   background: #e8f1ff;
-  border-radius: 8px;
-  padding: 6px 8px;
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+
+.module-card.tone-users .module-code {
+  color: #7c3aed;
+  background: #f3e8ff;
+}
+
+.module-card.tone-proveedores .module-code {
+  color: #ea580c;
+  background: #ffedd5;
+}
+
+.module-card.tone-reports .module-code {
+  color: #0f766e;
+  background: #ccfbf1;
 }
 
 .module-top h3 {
   margin: 0;
-  font-size: 23px;
-  line-height: 1.15;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.25;
 }
 
 .module-card p {
   margin: 0;
-  color: #4f5f7e;
-  line-height: 1.35;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.45;
 }
 
 .module-btn {
   margin-top: 4px;
   border: none;
   border-radius: 10px;
-  padding: 10px 12px;
-  background: var(--color-principal);
-  color: #fff;
+  padding: 11px 16px;
+  background: var(--color-principal, #0B4A8B);
+  color: #ffffff;
   font-weight: 700;
+  font-size: 14px;
   cursor: pointer;
+  box-shadow: 0 4px 12px rgba(11, 74, 139, 0.2);
+  transition: all 0.2s ease;
+  width: 100%;
 }
 
 .module-btn:hover {
-  background: var(--color-principal-dark);
+  background: var(--color-principal-dark, #073463);
+  transform: translateY(-1px);
 }
 
-@media (max-width: 760px) {
+/* === RESPONSIVE BREAKPOINTS === */
+@media (max-width: 640px) {
   .ops-shell {
-    padding: 14px 10px 24px;
+    padding: 12px 10px 32px;
   }
 
   .ops-header-card {
     flex-direction: column;
     align-items: stretch;
+    gap: 14px;
+    padding: 18px 14px;
   }
 
   .ops-header-meta {
-    align-items: flex-start;
+    justify-content: space-between;
+    width: 100%;
   }
 
   .ops-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
 
-  .module-top h3 {
-    font-size: 21px;
-  }
-
-  .ops-logout-btn,
-  .module-btn {
-    width: 100%;
+  .ops-logout-btn {
+    flex: 1;
   }
 }

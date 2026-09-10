@@ -1,24 +1,35 @@
+/* 🟢 src/styles/proveedores.css 
+   Mercapleno - Gestión de Proveedores Responsive
+*/
+
 :root {
-  --proveedores-primary: #0B4A8B;
+  --proveedores-primary: var(--color-principal, #0B4A8B);
+  --proveedores-primary-dark: var(--color-principal-dark, #073463);
   --proveedores-danger: #dc2626;
-  --proveedores-success: #22c55e;
-  --proveedores-bg: #f1f5f9;
+  --proveedores-success: #16a34a;
+  --proveedores-bg: #f8fafc;
+  --border: #e2e8f0;
 }
 
 .proveedores-page {
-  min-height: 100vh;
-  background: var(--proveedores-bg);
-  padding: 24px;
-  font-family: 'Segoe UI', sans-serif;
+  min-height: calc(100vh - 76px);
+  background: linear-gradient(180deg, #eef4ff 0%, #f7f9fc 60%);
+  padding: clamp(16px, 3vw, 32px) clamp(12px, 2.5vw, 24px) 60px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #0f172a;
 }
 
 .proveedores-shell {
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1px solid #dbe3ef;
+  padding: clamp(16px, 2.5vw, 24px);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+  max-width: 1280px;
+  margin: 0 auto;
 }
 
+/* === HEADER === */
 .proveedores-header {
   display: flex;
   justify-content: space-between;
@@ -32,9 +43,15 @@
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: var(--proveedores-primary);
-  font-size: 12px;
-  font-weight: 700;
-  margin-bottom: 6px;
+  font-size: 11.5px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.proveedores-header h1 {
+  margin: 0;
+  font-size: clamp(22px, 3.5vw, 30px);
+  font-weight: 800;
 }
 
 .proveedores-actions {
@@ -43,41 +60,109 @@
   flex-wrap: wrap;
 }
 
-.proveedores-toolbar {
+/* === STATS CHIPS === */
+.proveedores-stats {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
   margin-bottom: 16px;
+}
+
+.stat-chip {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+}
+
+.stat-chip--green {
+  background: #dcfce7;
+  color: #15803d;
+  border-color: #bbf7d0;
+}
+
+.stat-chip--red {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fca5a5;
+}
+
+/* === TOOLBAR === */
+.proveedores-toolbar {
+  margin-bottom: 18px;
 }
 
 .proveedores-input {
   width: 100%;
   max-width: 360px;
-  padding: 10px 12px;
-  border: 1px solid #d1d5db;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1.5px solid #d1d5db;
   border-radius: 10px;
+  font-size: 14px;
+  color: #0f172a;
 }
 
+.proveedores-input:focus {
+  outline: none;
+  border-color: var(--proveedores-primary);
+  box-shadow: 0 0 0 3px rgba(11, 74, 139, 0.12);
+}
+
+/* === TABLA DE PROVEEDORES === */
 .proveedores-table-wrap {
+  width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
 }
 
 .proveedores-table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 680px;
+  font-size: 13.5px;
 }
 
 .proveedores-table th,
 .proveedores-table td {
-  padding: 12px;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 12px 14px;
+  border-bottom: 1px solid #f1f5f9;
   text-align: left;
+  vertical-align: middle;
 }
 
+.proveedores-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 800;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.proveedores-table tbody tr:hover {
+  background: #f8fbff;
+}
+
+/* === BOTONES === */
 .proveedores-btn {
   border: none;
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 8px 14px;
   cursor: pointer;
-  font-weight: 600;
-  margin-right: 6px;
+  font-weight: 700;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .proveedores-btn--primary {
@@ -85,44 +170,80 @@
   color: white;
 }
 
+.proveedores-btn--primary:hover {
+  background: var(--proveedores-primary-dark);
+}
+
 .proveedores-btn--secondary {
-  background: #e2e8f0;
+  background: #f1f5f9;
   color: #0f172a;
+  border: 1px solid #cbd5e1;
+}
+
+.proveedores-btn--secondary:hover {
+  background: #e2e8f0;
+}
+
+.proveedores-btn--warning {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.proveedores-btn--warning:hover {
+  background: #fde68a;
+}
+
+.proveedores-btn--success {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.proveedores-btn--success:hover {
+  background: #bbf7d0;
 }
 
 .proveedores-btn--danger {
-  background: var(--proveedores-danger);
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+}
+
+.proveedores-btn--danger:hover {
+  background: #dc2626;
   color: white;
 }
 
-.proveedores-btn--ghost {
-  background: #f8fafc;
-  color: #334155;
-  border: 1px solid #d1d5db;
+.proveedores-cell-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
-.proveedores-state,
-.proveedores-empty {
-  padding: 18px;
-  border-radius: 10px;
-  background: #f8fafc;
-  color: #475569;
+/* === BADGES === */
+.badge--active {
+  background: #dcfce7;
+  color: #15803d;
 }
 
-.proveedores-state--error {
-  color: var(--proveedores-danger);
-  background: #fef2f2;
+.badge--disabled {
+  background: #fee2e2;
+  color: #b91c1c;
 }
 
+/* === TOAST === */
 .proveedores-toast {
   position: fixed;
   top: 20px;
   right: 20px;
-  padding: 12px 16px;
-  border-radius: 10px;
+  padding: 14px 22px;
+  border-radius: 12px;
   color: white;
   font-weight: 700;
-  z-index: 2100;
+  font-size: 14px;
+  z-index: 2200;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
 }
 
 .proveedores-toast.success {
@@ -133,10 +254,12 @@
   background: var(--proveedores-danger);
 }
 
+/* === MODAL === */
 .proveedores-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -145,10 +268,13 @@
 }
 
 .proveedores-modal {
-  background: white;
-  border-radius: 12px;
-  width: min(480px, 100%);
-  padding: 20px;
+  background: #ffffff;
+  border-radius: 18px;
+  width: min(500px, 94vw);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  padding: clamp(18px, 3vw, 24px);
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.2);
 }
 
 .proveedores-modal__header {
@@ -156,84 +282,141 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 12px;
 }
 
 .proveedores-modal__body {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .proveedores-modal__body input {
-  padding: 10px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
+  padding: 10px 14px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 14px;
 }
 
 .proveedores-modal__actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: 16px;
+  margin-top: 18px;
 }
 
-/* ── Botones nuevos ── */
-.proveedores-btn--warning {
-  background: #f59e0b;
-  color: white;
-  border: none;
-}
-.proveedores-btn--warning:hover:not(:disabled) { background: #d97706; }
-
-.proveedores-btn--success {
-  background: #10b981;
-  color: white;
-  border: none;
-}
-.proveedores-btn--success:hover:not(:disabled) { background: #059669; }
-
-.proveedores-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
+/* === TARJETAS MÓVILES DE PROVEEDORES === */
+.proveedores-cards {
+  display: none;
 }
 
-/* ── Celda de acciones ── */
-.proveedores-cell-actions {
+.proveedor-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 16px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
   display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.proveedor-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.proveedor-card__id {
+  font-size: 11px;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.proveedor-card__name {
+  margin: 2px 0 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.proveedor-card__info {
+  display: flex;
+  flex-direction: column;
   gap: 6px;
-  flex-wrap: wrap;
-  align-items: center;
+  font-size: 13.5px;
+  color: #475569;
+  padding: 10px 0;
+  border-top: 1px dashed var(--border);
+  border-bottom: 1px dashed var(--border);
 }
 
-/* ── Badges de estado ── */
-.badge {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
+.proveedor-card__info p {
+  margin: 0;
 }
-.badge--active { background: #d1fae5; color: #065f46; }
-.badge--disabled { background: #fee2e2; color: #991b1b; }
 
-/* ── Chips de estadísticas ── */
-.proveedores-stats {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
+.proveedor-card__actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
 }
-.stat-chip {
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 600;
-  background: #f1f5f9;
-  color: #374151;
-  border: 1px solid #e5e7eb;
-  user-select: none;
+
+.proveedor-card__actions button {
+  width: 100%;
+  padding: 10px 8px;
+  font-size: 12.5px;
 }
-.stat-chip:hover { background: #e2e8f0; }
-.stat-chip--green { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
-.stat-chip--red { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+
+/* === RESPONSIVE BREAKPOINTS === */
+@media (max-width: 768px) {
+  .proveedores-table-wrap {
+    display: none !important;
+  }
+
+  .proveedores-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+}
+
+@media (max-width: 640px) {
+  .proveedores-page {
+    padding: 12px 10px 32px;
+  }
+
+  .proveedores-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .proveedores-actions {
+    width: 100%;
+  }
+
+  .proveedores-actions button {
+    flex: 1;
+  }
+
+  .proveedores-input {
+    max-width: 100%;
+  }
+
+  .proveedores-modal__actions {
+    flex-direction: column;
+  }
+
+  .proveedores-modal__actions button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .proveedor-card__actions {
+    grid-template-columns: 1fr;
+  }
+}
 

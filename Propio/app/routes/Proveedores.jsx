@@ -211,7 +211,8 @@ export default function Proveedores() {
         )}
 
         {!loading && !error && proveedoresFiltrados.length > 0 && (
-          <div className="proveedores-table-wrap">
+          <>
+            <div className="proveedores-table-wrap">
             <table className="proveedores-table">
               <thead>
                 <tr>
@@ -284,6 +285,71 @@ export default function Proveedores() {
               </tbody>
             </table>
           </div>
+
+          <div className="proveedores-cards">
+            {proveedoresFiltrados.map((p) => (
+              <article key={p.id} className="proveedor-card" style={{ opacity: p.activo === false ? 0.65 : 1 }}>
+                <div className="proveedor-card__header">
+                  <div>
+                    <span className="proveedor-card__id">ID #{p.id}</span>
+                    <h3 className="proveedor-card__name">{`${p.nombre || ""} ${p.apellido || ""}`.trim()}</h3>
+                  </div>
+                  {p.activo !== false
+                    ? <span className="badge badge--active">Activo</span>
+                    : <span className="badge badge--disabled">Deshabilitado</span>}
+                </div>
+
+                <div className="proveedor-card__info">
+                  <p><strong>Teléfono:</strong> {p.telefono || "—"}</p>
+                  <p>
+                    <strong>Productos vinculados:</strong>{" "}
+                    <span style={{ fontWeight: 700, color: p.total_productos > 0 ? "#10b981" : "#6b7280" }}>
+                      {p.total_productos}
+                    </span>
+                  </p>
+                </div>
+
+                <div className="proveedor-card__actions">
+                  <button
+                    className="proveedores-btn proveedores-btn--secondary"
+                    onClick={() => abrirEditar(p)}
+                    disabled={operando}
+                  >
+                    Editar
+                  </button>
+
+                  {p.activo !== false ? (
+                    <button
+                      className="proveedores-btn proveedores-btn--warning"
+                      onClick={() => deshabilitar(p)}
+                      disabled={operando}
+                      title="Oculta el proveedor sin eliminarlo"
+                    >
+                      Deshabilitar
+                    </button>
+                  ) : (
+                    <button
+                      className="proveedores-btn proveedores-btn--success"
+                      onClick={() => habilitar(p)}
+                      disabled={operando}
+                    >
+                      Habilitar
+                    </button>
+                  )}
+
+                  <button
+                    className="proveedores-btn proveedores-btn--danger"
+                    onClick={() => eliminar(p)}
+                    disabled={operando || p.total_productos > 0}
+                    title={p.total_productos > 0 ? `Tiene ${p.total_productos} producto(s): usa Deshabilitar` : "Eliminar permanentemente"}
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+          </>
         )}
       </div>
 

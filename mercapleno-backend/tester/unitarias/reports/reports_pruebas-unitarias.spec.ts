@@ -43,7 +43,7 @@ describe('ReportsService (Unitarias)', () => {
       const result = await service.getVentasMes();
 
       expect(db.query).toHaveBeenCalledWith(
-        expect.stringContaining('GROUP BY mes ORDER BY mes'),
+        expect.stringContaining("GROUP BY TO_CHAR(fecha, 'YYYY-MM') ORDER BY TO_CHAR(fecha, 'YYYY-MM')"),
         [],
       );
       expect(result).toEqual(mockRows);
@@ -56,7 +56,7 @@ describe('ReportsService (Unitarias)', () => {
       const result = await service.getVentasMes('2026-03');
 
       expect(db.query).toHaveBeenCalledWith(
-        expect.stringContaining("AND DATE_FORMAT(fecha, '%Y-%m') >= ?"),
+        expect.stringContaining("AND TO_CHAR(fecha, 'YYYY-MM') >= $1"),
         ['2026-03'],
       );
       expect(result).toEqual(mockRows);
@@ -69,7 +69,7 @@ describe('ReportsService (Unitarias)', () => {
       const result = await service.getVentasMes(undefined, '2026-01');
 
       expect(db.query).toHaveBeenCalledWith(
-        expect.stringContaining("AND DATE_FORMAT(fecha, '%Y-%m') <= ?"),
+        expect.stringContaining("AND TO_CHAR(fecha, 'YYYY-MM') <= $1"),
         ['2026-01'],
       );
       expect(result).toEqual(mockRows);
@@ -86,7 +86,7 @@ describe('ReportsService (Unitarias)', () => {
 
       expect(db.query).toHaveBeenCalledWith(
         expect.stringContaining(
-          "AND DATE_FORMAT(fecha, '%Y-%m') >= ? AND DATE_FORMAT(fecha, '%Y-%m') <= ?",
+          "AND TO_CHAR(fecha, 'YYYY-MM') >= $1 AND TO_CHAR(fecha, 'YYYY-MM') <= $2",
         ),
         ['2026-02', '2026-03'],
       );
@@ -145,12 +145,12 @@ describe('ReportsService (Unitarias)', () => {
       expect(result).toEqual(mockRow);
     });
 
-    it('debe retornar undefined o estructura vacía si no hay filas', async () => {
+    it('debe retornar estructura por defecto con ceros si no hay filas', async () => {
       db.query.mockResolvedValueOnce([[]]);
 
       const result = await service.getResumen();
 
-      expect(result).toBeUndefined();
+      expect(result).toEqual({ total_ventas: 0, dinero_total: 0, promedio: 0 });
     });
   });
 
@@ -165,10 +165,10 @@ describe('ReportsService (Unitarias)', () => {
       const result = await service.getResumenMes();
 
       expect(db.query).toHaveBeenCalledWith(
-        expect.stringContaining('GROUP BY mes'),
+        expect.stringContaining("GROUP BY TO_CHAR(fecha, 'YYYY-MM')"),
       );
       expect(db.query).toHaveBeenCalledWith(
-        expect.stringContaining('ORDER BY mes DESC'),
+        expect.stringContaining("ORDER BY TO_CHAR(fecha, 'YYYY-MM') DESC"),
       );
       expect(result).toEqual(mockRows);
     });
@@ -184,23 +184,33 @@ describe('ReportsService (Unitarias)', () => {
 
   describe('buildResumenPdf', () => {
     it('debe generar un buffer PDF correctamente cuando hay datos completos', async () => {
-      const mockResumen = {
-        total_ventas: 25,
-        dinero_total: 1850000,
-        promedio: 74000,
-      };
       const mockTopProductos = [
-        { nombre: 'Arroz Diana 1kg', total_vendido: 40, total_facturado: 160000 },
-        { nombre: 'Aceite Premier 1L', total_vendido: 20, total_facturado: 180000 },
+        { nombre: 'Arroz Diana 1kg', unidades_vendidas: 40, total_facturado: 160000, ganancia_total: 60000, margen_pct: 37.5 },
+        { nombre: 'Aceite Premier 1L', unidades_vendidas: 20, total_facturado: 180000, ganancia_total: 50000, margen_pct: 27.8 },
       ];
       const mockResumenMes = [
         { mes: '2026-03', cantidad_ventas: 10, total_mes: 800000 },
         { mes: '2026-02', cantidad_ventas: 15, total_mes: 1050000 },
       ];
 
-      db.query.mockResolvedValueOnce([[mockResumen]]);
-      db.query.mockResolvedValueOnce([mockTopProductos]);
-      db.query.mockResolvedValueOnce([mockResumenMes]);
+      jest.spyOn(service, 'getFinancialSummary').mockResolvedValue({
+        total_ventas: 25,
+        ingresos_totales: 1850000,
+        ticket_promedio: 74000,
+        costo_estimado: 1200000,
+        ganancia_bruta: 650000,
+        margen_porcentaje: 35.1,
+        inventario: {
+          valor_venta: 2500000,
+          unidades_stock_total: 150,
+          productos_stock_bajo: 2,
+        },
+      } as any);
+      jest.spyOn(service, 'getProductosRentabilidad').mockResolvedValue(mockTopProductos as any);
+      jest.spyOn(service, 'getVentasPorCategoria').mockResolvedValue([
+        { categoria: 'Despensa', cantidad_vendida: 30, total_ingresos: 120000, participacion_pct: 60 },
+      ] as any);
+      jest.spyOn(service, 'getResumenMes').mockResolvedValue(mockResumenMes as any);
 
       const buffer = await service.buildResumenPdf();
 
@@ -210,15 +220,22 @@ describe('ReportsService (Unitarias)', () => {
     });
 
     it('debe generar un buffer PDF correctamente cuando no hay productos ni resumen mensual', async () => {
-      const mockResumen = {
+      jest.spyOn(service, 'getFinancialSummary').mockResolvedValue({
         total_ventas: 0,
-        dinero_total: null,
-        promedio: null,
-      };
-
-      db.query.mockResolvedValueOnce([[mockResumen]]);
-      db.query.mockResolvedValueOnce([[]]);
-      db.query.mockResolvedValueOnce([[]]);
+        ingresos_totales: 0,
+        ticket_promedio: 0,
+        costo_estimado: 0,
+        ganancia_bruta: 0,
+        margen_porcentaje: 0,
+        inventario: {
+          valor_venta: 0,
+          unidades_stock_total: 0,
+          productos_stock_bajo: 0,
+        },
+      } as any);
+      jest.spyOn(service, 'getProductosRentabilidad').mockResolvedValue([]);
+      jest.spyOn(service, 'getVentasPorCategoria').mockResolvedValue([]);
+      jest.spyOn(service, 'getResumenMes').mockResolvedValue([]);
 
       const buffer = await service.buildResumenPdf();
 
@@ -228,9 +245,10 @@ describe('ReportsService (Unitarias)', () => {
     });
 
     it('debe generar un buffer PDF manejando resumen con valores undefined', async () => {
-      db.query.mockResolvedValueOnce([[{}]]);
-      db.query.mockResolvedValueOnce([[]]);
-      db.query.mockResolvedValueOnce([[]]);
+      jest.spyOn(service, 'getFinancialSummary').mockResolvedValue({} as any);
+      jest.spyOn(service, 'getProductosRentabilidad').mockResolvedValue([]);
+      jest.spyOn(service, 'getVentasPorCategoria').mockResolvedValue([]);
+      jest.spyOn(service, 'getResumenMes').mockResolvedValue([]);
 
       const buffer = await service.buildResumenPdf();
 
