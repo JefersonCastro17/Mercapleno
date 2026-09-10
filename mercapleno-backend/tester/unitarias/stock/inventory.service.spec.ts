@@ -100,6 +100,21 @@ describe('InventoryService', () => {
       expect(connectionMock.release).toHaveBeenCalled();
     });
 
+    it('debe asignar ND por defecto si id_documento no es proporcionado', async () => {
+      const dto = { id_producto: 1, tipo_movimiento: 'ENTRADA' as const, cantidad: 10 };
+      
+      // query for stock snapshot
+      connectionMock.query.mockResolvedValueOnce([[{ id: 1, nombre: 'Producto 1', stock: 20 }]]);
+      
+      const result = await service.registerMovement(dto as any, 1);
+      
+      expect(result.message).toBe('Movimiento registrado con exito');
+      expect(connectionMock.execute).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO entrada_productos'),
+        expect.arrayContaining(['ND']),
+      );
+    });
+
     it('debe registrar salida exitosamente', async () => {
       const dto = { id_producto: 1, tipo_movimiento: 'SALIDA' as const, cantidad: 5, id_documento: 'CC' };
       
