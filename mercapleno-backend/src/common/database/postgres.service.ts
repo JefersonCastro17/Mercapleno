@@ -119,13 +119,16 @@ export class PostgresService implements OnModuleDestroy {
   constructor() {
     if (envs.databaseUrl) {
       const isSsl =
-        envs.databaseUrl.includes('sslmode=require') ||
+        envs.databaseUrl.includes('sslmode=') ||
         envs.databaseUrl.includes('neon.tech') ||
         envs.databaseUrl.includes('render.com') ||
-        envs.databaseUrl.includes('supabase');
+        envs.databaseUrl.includes('supabase') ||
+        envs.databaseUrl.includes('pooler.supabase.com');
+
+      const cleanUrl = envs.databaseUrl.replace(/[?&]sslmode=[^&]+/g, '').replace(/\?$/, '');
 
       this.pool = new Pool({
-        connectionString: envs.databaseUrl,
+        connectionString: cleanUrl,
         ssl: isSsl ? { rejectUnauthorized: false } : undefined,
         max: 10,
       });
