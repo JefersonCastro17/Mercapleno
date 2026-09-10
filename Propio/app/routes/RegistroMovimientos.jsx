@@ -54,7 +54,8 @@ const ModalMovimiento = ({
       id_producto: producto.id,
       tipo_movimiento: tipo,
       cantidad: numCantidad,
-      comentario: comentario.trim()
+      comentario: comentario.trim(),
+      id_documento: "ND"
     });
   };
 

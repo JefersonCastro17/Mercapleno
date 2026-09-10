@@ -57,12 +57,9 @@ export class InventoryService {
   async registerMovement(dto: RegisterMovementDto, userId?: number) {
     const id_mov_db = dto.tipo_movimiento === 'ENTRADA' ? 2 : 3;
     const id_usuario = Number.isFinite(Number(userId)) ? Number(userId) : 1;
-    // Normalize provided document ID (may be undefined if not applicable)
-    const normalizedDocumentId = this.normalizeReferenceDocumentId(dto.id_documento);
-    // Validate that a document ID is provided for movements that require it (non-empty string)
-    if (!dto.id_documento || dto.id_documento.trim() === '') {
-      throw new BadRequestException({ error: 'Documento de referencia requerido' });
-    }
+    // Normalize provided document ID, defaulting to 'ND' (max 2 characters for DB schema) if not provided
+    const rawDoc = this.normalizeReferenceDocumentId(dto.id_documento);
+    const normalizedDocumentId = rawDoc ? rawDoc.slice(0, 2) : 'ND';
 
     let connection: PoolConnection | null = null;
     let lowStockAlert: LowStockAlert | null = null;
