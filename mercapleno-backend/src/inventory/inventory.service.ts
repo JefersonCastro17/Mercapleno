@@ -32,7 +32,7 @@ export class InventoryService {
       FROM productos p
       LEFT JOIN categoria c ON p.id_categoria = c.id_categoria
       LEFT JOIN stock_actual s ON p.id_productos = s.id_productos
-      WHERE LOWER(TRIM(COALESCE(p.estado, ''))) NOT IN ('deshabilitado', 'no disponible', 'no-disponible')
+      WHERE LOWER(TRIM(COALESCE(CAST(p.estado AS VARCHAR), ''))) NOT IN ('deshabilitado', 'no disponible', 'no-disponible')
       ORDER BY p.nombre ASC
     `;
 
