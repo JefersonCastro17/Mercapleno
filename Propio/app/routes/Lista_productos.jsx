@@ -163,16 +163,17 @@ function ProductModal({
       <div className="products-modal">
         <div className="products-modal__header">
           <div>
-            <span className="products-modal__eyebrow">Producto</span>
+            <span className="products-modal__eyebrow">Gestión de Producto</span>
             <h2>{title}</h2>
           </div>
 
           <button
             type="button"
-            className="products-btn products-btn--ghost"
+            className="products-modal__close"
             onClick={onCerrar}
+            aria-label="Cerrar modal"
           >
-            Cerrar
+            ✕
           </button>
         </div>
 
@@ -476,7 +477,7 @@ function ProductRow({
             className={
               estaDeshabilitado
                 ? "products-btn products-btn--primary"
-                : "products-btn products-btn--danger"
+                : "products-btn products-btn--warning"
             }
             onClick={() => onToggleEstado(producto)}
           >
@@ -489,9 +490,9 @@ function ProductRow({
             type="button"
             className="products-btn products-btn--danger"
             onClick={() => onDelete(producto.id_productos)}
-            >
-              Eliminar
-            </button>
+          >
+            Eliminar
+          </button>
         </div>
       </td>
     </tr>
@@ -523,28 +524,30 @@ function ProductCard({
         </div>
 
         <div className="products-card__heading">
-          <p>ID {producto.id_productos}</p>
+          <div className="products-card__top">
+            <span className="products-card__id">ID {producto.id_productos}</span>
 
-          <h3>{producto.nombre}</h3>
+            <span
+              className={`products-status ${
+                String(producto.estado).toLowerCase() ===
+                "agotado"
+                  ? "is-empty"
+                  : estaDeshabilitado
+                  ? "is-disabled"
+                  : "is-ready"
+              }`}
+            >
+              {producto.estado}
+            </span>
+          </div>
 
-          <span
-            className={`products-status ${
-              String(producto.estado).toLowerCase() ===
-              "agotado"
-                ? "is-empty"
-                : estaDeshabilitado
-                ? "is-disabled"
-                : "is-ready"
-            }`}
-          >
-            {producto.estado}
-          </span>
+          <h3 className="products-card__title">{producto.nombre}</h3>
+
+          <p className="products-card__price">
+            {formatPrice(producto.precio)}
+          </p>
         </div>
       </div>
-
-      <p className="products-card__price">
-        {formatPrice(producto.precio)}
-      </p>
 
       <p className="products-card__description">
         {producto.descripcion ||
@@ -552,16 +555,12 @@ function ProductCard({
       </p>
 
       <div className="products-card__meta">
-        <span>
-          Categoria:{" "}
-          {producto.categoria_nombre ||
-            producto.id_categoria}
+        <span className="products-card__tag">
+          📂 {producto.categoria_nombre || producto.id_categoria}
         </span>
 
-        <span>
-          Proveedor:{" "}
-          {producto.proveedor_nombre ||
-            producto.id_proveedor}
+        <span className="products-card__tag">
+          🏢 {producto.proveedor_nombre || producto.id_proveedor}
         </span>
       </div>
 
@@ -581,7 +580,7 @@ function ProductCard({
           className={
             estaDeshabilitado
               ? "products-btn products-btn--primary"
-              : "products-btn products-btn--danger"
+              : "products-btn products-btn--warning"
           }
           onClick={() => onToggleEstado(producto)}
         >
@@ -594,9 +593,9 @@ function ProductCard({
           type="button"
           className="products-btn products-btn--danger"
           onClick={() => onDelete(producto.id_productos)}
-          >
-            Eliminar
-          </button>
+        >
+          Eliminar
+        </button>
       </div>
     </article>
   );
