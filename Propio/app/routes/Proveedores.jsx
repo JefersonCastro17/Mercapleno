@@ -23,9 +23,9 @@ export default function Proveedores() {
   const [filtroEstado, setFiltroEstado] = useState("activos"); // "activos" | "inactivos" | "todos"
   const [operando, setOperando] = useState(false);
 
-  const mostrarToast = (mensaje, tipo = "success") => {
+  const mostrarToast = (mensaje, tipo = "success", duracion = 3500) => {
     setToast({ mensaje, tipo });
-    setTimeout(() => setToast(null), 3000);
+    setTimeout(() => setToast(null), duracion);
   };
 
   const manejarErrorAuth = (err) => {
@@ -127,7 +127,11 @@ export default function Proveedores() {
 
   const eliminar = async (p) => {
     if (p.total_productos > 0) {
-      mostrarToast(`No se puede eliminar: tiene ${p.total_productos} producto(s). Usa "Deshabilitar".`, "error");
+      mostrarToast(
+        `No se puede eliminar a "${p.nombre} ${p.apellido}" porque tiene ${p.total_productos} producto(s) vinculado(s). Usa la opción "Deshabilitar" para conservar el historial.`,
+        "error",
+        5500
+      );
       return;
     }
     if (!window.confirm(`¿Eliminar permanentemente a "${p.nombre} ${p.apellido}"?`)) return;
@@ -138,7 +142,7 @@ export default function Proveedores() {
       cargarProveedores();
     } catch (err) {
       if (manejarErrorAuth(err)) return;
-      mostrarToast(err?.data?.message || err?.message || "Error al eliminar.", "error");
+      mostrarToast(err?.data?.message || err?.message || "Error al eliminar el proveedor.", "error", 5500);
     } finally {
       setOperando(false);
     }
@@ -270,12 +274,12 @@ export default function Proveedores() {
                         </button>
                       )}
 
-                      {/* Eliminar — solo si no tiene productos */}
+                      {/* Eliminar */}
                       <button
-                        className="proveedores-btn proveedores-btn--danger"
+                        className={`proveedores-btn ${p.total_productos > 0 ? "proveedores-btn--blocked" : "proveedores-btn--danger"}`}
                         onClick={() => eliminar(p)}
-                        disabled={operando || p.total_productos > 0}
-                        title={p.total_productos > 0 ? `Tiene ${p.total_productos} producto(s): usa Deshabilitar` : "Eliminar permanentemente"}
+                        disabled={operando}
+                        title={p.total_productos > 0 ? `Tiene ${p.total_productos} producto(s): clic para más información` : "Eliminar permanentemente"}
                       >
                         Eliminar
                       </button>
@@ -338,10 +342,10 @@ export default function Proveedores() {
                   )}
 
                   <button
-                    className="proveedores-btn proveedores-btn--danger"
+                    className={`proveedores-btn ${p.total_productos > 0 ? "proveedores-btn--blocked" : "proveedores-btn--danger"}`}
                     onClick={() => eliminar(p)}
-                    disabled={operando || p.total_productos > 0}
-                    title={p.total_productos > 0 ? `Tiene ${p.total_productos} producto(s): usa Deshabilitar` : "Eliminar permanentemente"}
+                    disabled={operando}
+                    title={p.total_productos > 0 ? `Tiene ${p.total_productos} producto(s): clic para más información` : "Eliminar permanentemente"}
                   >
                     Eliminar
                   </button>
