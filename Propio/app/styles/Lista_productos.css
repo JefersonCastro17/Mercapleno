@@ -171,16 +171,117 @@ tbody tr:hover {
   transform: translateY(-1px);
 }
 
-.btn-registrar {
+.btn-registrar,
+.btn-primary {
   background: var(--blue);
   color: #ffffff;
-  padding: 7px 14px;
-  border-radius: 8px;
-  font-size: 13px;
 }
 
-.btn-registrar:hover {
+.btn-registrar:hover,
+.btn-primary:hover {
   background: var(--blue-dark);
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12.5px;
+  border-radius: 8px;
+}
+
+/* === TARJETAS MÓVILES DE MOVIMIENTOS === */
+.movimientos-cards {
+  display: none;
+}
+
+.movimiento-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 16px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.movimiento-card__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.movimiento-card__thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.movimiento-card__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.movimiento-card__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.movimiento-card__id {
+  font-size: 11px;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.movimiento-card__heading h3 {
+  margin: 0;
+  font-size: 15.5px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.movimiento-card__cat {
+  font-size: 12px;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 2px 8px;
+  border-radius: 4px;
+  width: fit-content;
+  margin-top: 2px;
+}
+
+.movimiento-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 0;
+  border-top: 1px dashed var(--border);
+  border-bottom: 1px dashed var(--border);
+  font-size: 13.5px;
+}
+
+.movimiento-card__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.movimiento-card__btn {
+  width: 100%;
+  padding: 11px;
+  font-size: 14px;
+  font-weight: 800;
 }
 
 /* === MODAL DE MOVIMIENTOS === */
@@ -262,6 +363,18 @@ tbody tr:hover {
 }
 
 /* === RESPONSIVE BREAKPOINTS === */
+@media (max-width: 768px) {
+  .table-responsive {
+    display: none !important;
+  }
+
+  .movimientos-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+}
+
 @media (max-width: 640px) {
   .dashboard-container {
     padding: 12px 10px 32px;
@@ -288,3 +401,4 @@ tbody tr:hover {
     width: 100%;
   }
 }
+

@@ -271,6 +271,8 @@
   background: #ffffff;
   border-radius: 18px;
   width: min(500px, 94vw);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
   padding: clamp(18px, 3vw, 24px);
   box-shadow: 0 20px 45px rgba(15, 23, 42, 0.2);
 }
@@ -304,7 +306,83 @@
   margin-top: 18px;
 }
 
+/* === TARJETAS MÓVILES DE PROVEEDORES === */
+.proveedores-cards {
+  display: none;
+}
+
+.proveedor-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 16px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.proveedor-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.proveedor-card__id {
+  font-size: 11px;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.proveedor-card__name {
+  margin: 2px 0 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.proveedor-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13.5px;
+  color: #475569;
+  padding: 10px 0;
+  border-top: 1px dashed var(--border);
+  border-bottom: 1px dashed var(--border);
+}
+
+.proveedor-card__info p {
+  margin: 0;
+}
+
+.proveedor-card__actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.proveedor-card__actions button {
+  width: 100%;
+  padding: 10px 8px;
+  font-size: 12.5px;
+}
+
 /* === RESPONSIVE BREAKPOINTS === */
+@media (max-width: 768px) {
+  .proveedores-table-wrap {
+    display: none !important;
+  }
+
+  .proveedores-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+}
+
 @media (max-width: 640px) {
   .proveedores-page {
     padding: 12px 10px 32px;
@@ -335,3 +413,10 @@
     width: 100%;
   }
 }
+
+@media (max-width: 480px) {
+  .proveedor-card__actions {
+    grid-template-columns: 1fr;
+  }
+}
+

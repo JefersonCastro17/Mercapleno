@@ -345,3 +345,36 @@ a {
     min-height: 36px;
   }
 }
+
+@media (max-width: 380px) {
+  .barra-navegacion {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+
+  .texto-logo {
+    font-size: 15px;
+    gap: 6px;
+  }
+
+  .texto-logo .logo-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+
+  .contenedor-botones {
+    gap: 4px;
+  }
+
+  .boton-nav {
+    padding: 6px 8px;
+    font-size: 11px;
+    min-height: 32px;
+  }
+
+  .contenedor-usuario {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+}

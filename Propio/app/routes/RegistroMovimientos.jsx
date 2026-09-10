@@ -325,6 +325,52 @@ export default function RegistroMovimientos() {
               </table>
             )}
           </div>
+
+          {!loading && !error && productosFiltrados.length > 0 && (
+            <div className="movimientos-cards">
+              {productosFiltrados.map((p) => (
+                <article key={p.id} className="movimiento-card">
+                  <div className="movimiento-card__header">
+                    <div className="movimiento-card__thumb">
+                      <img
+                        src={resolveImageUrl(p.imagen)}
+                        alt={p.nombre}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = FALLBACK_IMAGE;
+                        }}
+                      />
+                    </div>
+                    <div className="movimiento-card__heading">
+                      <span className="movimiento-card__id">ID #{p.id}</span>
+                      <h3>{p.nombre}</h3>
+                      <span className="movimiento-card__cat">{p.categoria}</span>
+                    </div>
+                  </div>
+
+                  <div className="movimiento-card__body">
+                    <div className="movimiento-card__row">
+                      <span>Precio Venta:</span>
+                      <strong>{formatPrice(p.precio)}</strong>
+                    </div>
+                    <div className="movimiento-card__row">
+                      <span>Stock Actual:</span>
+                      <strong style={{ color: getStockColor(p) }}>
+                        {p.stock} {p.isLowStock && p.stock > 0 ? "· Stock bajo" : ""}
+                      </strong>
+                    </div>
+                  </div>
+
+                  <button
+                    className="btn btn-primary movimiento-card__btn"
+                    onClick={() => setProductoSeleccionado(p)}
+                  >
+                    Registrar Movimiento
+                  </button>
+                </article>
+              ))}
+            </div>
+          )}
         </section>
       </main>
 

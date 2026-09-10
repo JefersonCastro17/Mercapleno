@@ -384,13 +384,8 @@
     white-space: normal;
   }
 
-  .cart-item-row__bottom {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    border-top: 1px solid #f1f5f9;
-    padding-top: 10px;
+  .cart-item-row__qty {
+    margin-top: 4px;
   }
 
   .cart-item-row__subtotal {

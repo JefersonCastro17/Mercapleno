@@ -363,6 +363,75 @@
   cursor: pointer;
 }
 
+/* === TARJETAS MÓVILES DE USUARIOS === */
+.usuarios-cards {
+  display: none;
+}
+
+.usuario-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 16px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.usuario-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.usuario-card__id {
+  font-size: 11px;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.usuario-card__name {
+  margin: 2px 0 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.usuario-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13.5px;
+  color: #475569;
+  padding: 10px 0;
+  border-top: 1px dashed var(--border);
+  border-bottom: 1px dashed var(--border);
+}
+
+.usuario-card__info p {
+  margin: 0;
+  word-break: break-all;
+}
+
+.usuario-card__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.usuario-card__actions button {
+  width: 100%;
+  padding: 10px;
+  font-size: 13.5px;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* === RESPONSIVE BREAKPOINTS === */
 @media (max-width: 768px) {
   .controles {
@@ -372,6 +441,16 @@
 
   .btn-crear {
     width: 100%;
+  }
+
+  .tabla-container {
+    display: none !important;
+  }
+
+  .usuarios-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
   }
 
   .modal-footer {
@@ -395,5 +474,9 @@
 
   .input-busqueda--small {
     max-width: 100%;
+  }
+
+  .usuario-card__actions {
+    grid-template-columns: 1fr;
   }
 }
