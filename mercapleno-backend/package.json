@@ -13,6 +13,8 @@
     "seed:catalog": "node scripts/seed-catalog-products.js",
     "seed:full": "node scripts/import-full-database.js",
     "seed:cypress": "node scripts/seed-cypress-users.js",
+    "import:users": "node scripts/import-real-users.js",
+    "import:products": "node scripts/check-and-import-real-products.js",
     "prisma:migrate": "prisma migrate deploy --schema prisma/schema.prisma",
     "prisma:pull": "prisma db pull --schema prisma/schema.prisma",
     "prisma:generate": "prisma generate --schema prisma/schema.prisma",
