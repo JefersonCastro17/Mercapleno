@@ -11,6 +11,7 @@ import { handlePrismaPersistenceError } from '../common/utils/prisma-error.util'
 import { mapAdminUserResponse, RawUserWithRelations } from '../common/utils/user-mapper.util';
 import { CreateUserAdminDto } from './dto/create-user-admin.dto';
 import { UpdateUserAdminDto } from './dto/update-user-admin.dto';
+import { AuthUser } from '../auth/interfaces/auth-user.interface';
 
 const USER_SELECT_PROJECTION = {
   id: true,
@@ -275,15 +276,24 @@ export class UsersAdminService {
     return { success: true, message: 'Usuario actualizado correctamente' };
   }
 
-  async remove(id: string) {
+  async remove(id: string, currentUser: AuthUser) {
     const userId = this.parseUserId(id);
+
+    if (userId === currentUser.id) {
+      throw new ConflictException({ success: false, message: 'No puedes eliminar tu propia cuenta' });
+    }
+
     const existing = await this.prisma.usuarios.findUnique({
       where: { id: userId },
-      select: { id: true },
+      select: { id: true, id_rol: true },
     });
 
     if (!existing) {
       throw new NotFoundException({ success: false, message: 'Usuario no encontrado' });
+    }
+
+    if (existing.id_rol === 1) {
+      throw new ConflictException({ success: false, message: 'No se puede eliminar a otro administrador' });
     }
 
     try {

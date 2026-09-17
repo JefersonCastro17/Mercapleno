@@ -4,6 +4,8 @@ import { CreateUserAdminDto } from './dto/create-user-admin.dto';
 import { UpdateUserAdminDto } from './dto/update-user-admin.dto';
 import { UsersAdminService } from './users-admin.service';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { AuthUser } from '../auth/interfaces/auth-user.interface';
 
 @Roles(1) //validacion del rol
 @ApiTags('Admin Users')
@@ -57,7 +59,7 @@ export class UsersAdminController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Eliminar usuario' })
-  remove(@Param('id') id: string) {
-    return this.usersAdminService.remove(id);
+  remove(@Param('id') id: string, @CurrentUser() currentUser: AuthUser) {
+    return this.usersAdminService.remove(id, currentUser);
   }
 }

@@ -1,9 +1,11 @@
-﻿import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
 import { Request } from 'express';
 import { envs } from '../../config';
 import { AuthUser } from '../interfaces/auth-user.interface';
+
+import { PrismaService } from '../../prisma/prisma.service';
 
 interface JwtPayload {
   sub: string | number;
@@ -14,7 +16,7 @@ interface JwtPayload {
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor() {
+  constructor(private readonly prisma: PrismaService) {
     super({
       jwtFromRequest: (req: Request) => {
         let token = null;
@@ -37,7 +39,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  validate(payload: JwtPayload): AuthUser {
+  async validate(payload: JwtPayload): Promise<AuthUser> {
     if (
       payload.sub === undefined ||
       payload.sub === null ||
@@ -48,8 +50,18 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Token invalido');
     }
 
+    const userId = Number(payload.sub);
+    const userExists = await this.prisma.usuarios.findUnique({
+      where: { id: userId },
+      select: { id: true }
+    });
+
+    if (!userExists) {
+      throw new UnauthorizedException('El usuario ha sido eliminado');
+    }
+
     return {
-      id: Number(payload.sub),
+      id: userId,
       id_rol: payload.id_rol,
       email: payload.email,
     };
