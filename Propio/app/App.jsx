@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate, useNavigate } from 'react-router-dom';
 // Importación de Contextos y Componentes
 import { CartProvider } from './contexts/CartContext'; 
 import { useAuthContext } from './contexts/AuthContext'; 
@@ -59,13 +59,27 @@ function App() {
         return roleId === 3 ? "/catalogo" : "/usuarioC";
     };
 
-        const roleId = user ? Number(user.id_rol) : null;
+    const roleId = user ? Number(user.id_rol) : null;
     // Mostrar el Header solo para clientes autenticados.
     const showHeader = isAuthenticated && roleId === 3;
+    
+    // Mostrar botón de regreso al dashboard para Admin y Empleados si no están en el inicio
+    const navigate = useNavigate();
+    const showDashboardBack = isAuthenticated && (roleId === 1 || roleId === 2) && location.pathname !== '/usuarioC';
 
 	return (
 		<CartProvider>
             {showHeader && <Header />}
+            {showDashboardBack && (
+                <div style={{ padding: '10px 20px', background: '#f8f9fa', borderBottom: '1px solid #ddd', display: 'flex', alignItems: 'center' }}>
+                    <button 
+                        onClick={() => navigate('/usuarioC')} 
+                        style={{ padding: '8px 16px', cursor: 'pointer', background: '#0B4A8B', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold' }}
+                    >
+                        ← Volver al Panel de Control
+                    </button>
+                </div>
+            )}
 			<Routes>
 				
 				{/*RUTAS PÚBLICAS */}       // aqui se pone los roles donde se validaron a la bd donde en el backend cada componente lo valida
