@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="Definitions_CierreManual"
+                  targetNamespace="http://mercapleno.com/bpmn/cierre-manual">
+  <bpmn:collaboration id="Collaboration_CierreManual">
+    <bpmn:participant id="Participant_CierreManual" name="Proceso de Cierre de Caja y Cálculo Financiero Manual (Problemática) - Mercapleno" processRef="Process_CierreManual" />
+  </bpmn:collaboration>
+
+  <bpmn:process id="Process_CierreManual" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_CierreManual">
+      <bpmn:lane id="Lane_Caj_Cierre" name="Cajero de Turno">
+        <bpmn:flowNodeRef>Start_Cierre</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ContarEfectivo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_TirillaZ</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EntregarSobre</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Admin_Cierre" name="Administrador / Dueño del Negocio">
+        <bpmn:flowNodeRef>Task_RecibirSobre</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CompararArqueo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_CheckCuadre</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RegistrarDescuadre</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_FinDia</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_CheckPeriodo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Diario</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ReunirFacturas</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SumarCostos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SumarVentas</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RestarGanancia</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EscribirLibro</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Balance</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_PapeleriaCierre" name="Comprobantes y Archivo Físico">
+        <bpmn:flowNodeRef>Task_DocArqueo</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <!-- Flow Nodes -->
+    <bpmn:startEvent id="Start_Cierre" name="Fin de jornada comercial">
+      <bpmn:outgoing>Flow_CC1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:userTask id="Task_ContarEfectivo" name="Contar físicamente monedas y billetes de la gaveta de caja">
+      <bpmn:incoming>Flow_CC1</bpmn:incoming>
+      <bpmn:outgoing>Flow_CC2</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_TirillaZ" name="Emitir tirilla física del reporte diario de la registradora">
+      <bpmn:incoming>Flow_CC2</bpmn:incoming>
+      <bpmn:outgoing>Flow_CC3</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_EntregarSobre" name="Meter efectivo, tirillas y vouchers en sobre y entregar">
+      <bpmn:incoming>Flow_CC3</bpmn:incoming>
+      <bpmn:outgoing>Flow_CC4</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_RecibirSobre" name="Abrir sobre y contar dinero en efectivo con calculadora">
+      <bpmn:incoming>Flow_CC4</bpmn:incoming>
+      <bpmn:outgoing>Flow_CC5</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_CompararArqueo" name="Sumar tirillas y comparar contra el efectivo contado">
+      <bpmn:incoming>Flow_CC5</bpmn:incoming>
+      <bpmn:outgoing>Flow_CC6</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_CheckCuadre" name="¿El dinero físico coincide con las tirillas?">
+      <bpmn:incoming>Flow_CC6</bpmn:incoming>
+      <bpmn:outgoing>Flow_CuadreNo</bpmn:outgoing>
+      <bpmn:outgoing>Flow_CuadreSi</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="Task_RegistrarDescuadre" name="Anotar faltante o sobrante en planilla y pedir justificación">
+      <bpmn:incoming>Flow_CuadreNo</bpmn:incoming>
+      <bpmn:outgoing>Flow_CC7A</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_FinDia" name="Guardar dinero en caja fuerte y archivar tirillas del día">
+      <bpmn:incoming>Flow_CuadreSi</bpmn:incoming>
+      <bpmn:incoming>Flow_CC7A</bpmn:incoming>
+      <bpmn:outgoing>Flow_CC7B</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ToDocArqueo</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_DocArqueo" name="Archivar sobre con tirillas y planilla de arqueo del día">
+      <bpmn:incoming>Flow_ToDocArqueo</bpmn:incoming>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_CheckPeriodo" name="¿Corresponde hacer balance mensual?">
+      <bpmn:incoming>Flow_CC7B</bpmn:incoming>
+      <bpmn:outgoing>Flow_PeriodoDia</bpmn:outgoing>
+      <bpmn:outgoing>Flow_PeriodoMes</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:endEvent id="End_Diario" name="Caja cerrada y guardada físicamente">
+      <bpmn:incoming>Flow_PeriodoDia</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:userTask id="Task_ReunirFacturas" name="Reunir del archivador facturas de proveedores y recibos de gastos">
+      <bpmn:incoming>Flow_PeriodoMes</bpmn:incoming>
+      <bpmn:outgoing>Flow_CC8</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_SumarCostos" name="Sumar con calculadora compras del mes y gastos operativos">
+      <bpmn:incoming>Flow_CC8</bpmn:incoming>
+      <bpmn:outgoing>Flow_CC9</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_SumarVentas" name="Sumar todas las tirillas del mes para obtener ventas brutas">
+      <bpmn:incoming>Flow_CC9</bpmn:incoming>
+      <bpmn:outgoing>Flow_CC10</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_RestarGanancia" name="Calcular a mano: Ganancia = Ventas - Compras - Gastos">
+      <bpmn:incoming>Flow_CC10</bpmn:incoming>
+      <bpmn:outgoing>Flow_CC11</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_EscribirLibro" name="Escribir resumen del balance a mano en cuaderno contable">
+      <bpmn:incoming>Flow_CC11</bpmn:incoming>
+      <bpmn:outgoing>Flow_CC12</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:endEvent id="End_Balance" name="Balance mensual elaborado con retraso y sin métricas automáticas">
+      <bpmn:incoming>Flow_CC12</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Sequence Flows -->
+    <bpmn:sequenceFlow id="Flow_CC1" sourceRef="Start_Cierre" targetRef="Task_ContarEfectivo" />
+    <bpmn:sequenceFlow id="Flow_CC2" sourceRef="Task_ContarEfectivo" targetRef="Task_TirillaZ" />
+    <bpmn:sequenceFlow id="Flow_CC3" sourceRef="Task_TirillaZ" targetRef="Task_EntregarSobre" />
+    <bpmn:sequenceFlow id="Flow_CC4" sourceRef="Task_EntregarSobre" targetRef="Task_RecibirSobre" />
+    <bpmn:sequenceFlow id="Flow_CC5" sourceRef="Task_RecibirSobre" targetRef="Task_CompararArqueo" />
+    <bpmn:sequenceFlow id="Flow_CC6" sourceRef="Task_CompararArqueo" targetRef="Gateway_CheckCuadre" />
+    <bpmn:sequenceFlow id="Flow_CuadreNo" name="Descuadre" sourceRef="Gateway_CheckCuadre" targetRef="Task_RegistrarDescuadre" />
+    <bpmn:sequenceFlow id="Flow_CuadreSi" name="Cuadra" sourceRef="Gateway_CheckCuadre" targetRef="Task_FinDia" />
+    <bpmn:sequenceFlow id="Flow_CC7A" sourceRef="Task_RegistrarDescuadre" targetRef="Task_FinDia" />
+    <bpmn:sequenceFlow id="Flow_ToDocArqueo" sourceRef="Task_FinDia" targetRef="Task_DocArqueo" />
+    <bpmn:sequenceFlow id="Flow_CC7B" sourceRef="Task_FinDia" targetRef="Gateway_CheckPeriodo" />
+    <bpmn:sequenceFlow id="Flow_PeriodoDia" name="Solo día" sourceRef="Gateway_CheckPeriodo" targetRef="End_Diario" />
+    <bpmn:sequenceFlow id="Flow_PeriodoMes" name="Fin de mes" sourceRef="Gateway_CheckPeriodo" targetRef="Task_ReunirFacturas" />
+    <bpmn:sequenceFlow id="Flow_CC8" sourceRef="Task_ReunirFacturas" targetRef="Task_SumarCostos" />
+    <bpmn:sequenceFlow id="Flow_CC9" sourceRef="Task_SumarCostos" targetRef="Task_SumarVentas" />
+    <bpmn:sequenceFlow id="Flow_CC10" sourceRef="Task_SumarVentas" targetRef="Task_RestarGanancia" />
+    <bpmn:sequenceFlow id="Flow_CC11" sourceRef="Task_RestarGanancia" targetRef="Task_EscribirLibro" />
+    <bpmn:sequenceFlow id="Flow_CC12" sourceRef="Task_EscribirLibro" targetRef="End_Balance" />
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_CierreManual">
+    <bpmndi:BPMNPlane id="BPMNPlane_CierreManual" bpmnElement="Collaboration_CierreManual">
+      <!-- Pool -->
+      <bpmndi:BPMNShape id="Participant_CierreManual_di" bpmnElement="Participant_CierreManual" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="1540" height="660" />
+      </bpmndi:BPMNShape>
+
+      <!-- Lanes -->
+      <bpmndi:BPMNShape id="Lane_Caj_Cierre_di" bpmnElement="Lane_Caj_Cierre" isHorizontal="true">
+        <dc:Bounds x="190" y="80" width="1510" height="170" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Admin_Cierre_di" bpmnElement="Lane_Admin_Cierre" isHorizontal="true">
+        <dc:Bounds x="190" y="250" width="1510" height="260" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_PapeleriaCierre_di" bpmnElement="Lane_PapeleriaCierre" isHorizontal="true">
+        <dc:Bounds x="190" y="510" width="1510" height="230" />
+      </bpmndi:BPMNShape>
+
+      <!-- Lane Cajero Elements -->
+      <bpmndi:BPMNShape id="Start_Cierre_di" bpmnElement="Start_Cierre">
+        <dc:Bounds x="232" y="132" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="214" y="175" width="73" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ContarEfectivo_di" bpmnElement="Task_ContarEfectivo">
+        <dc:Bounds x="310" y="110" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_TirillaZ_di" bpmnElement="Task_TirillaZ">
+        <dc:Bounds x="470" y="110" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EntregarSobre_di" bpmnElement="Task_EntregarSobre">
+        <dc:Bounds x="630" y="110" width="130" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- Lane Admin Elements -->
+      <bpmndi:BPMNShape id="Task_RecibirSobre_di" bpmnElement="Task_RecibirSobre">
+        <dc:Bounds x="630" y="280" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CompararArqueo_di" bpmnElement="Task_CompararArqueo">
+        <dc:Bounds x="790" y="280" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_CheckCuadre_di" bpmnElement="Gateway_CheckCuadre" isMarkerVisible="true">
+        <dc:Bounds x="955" y="295" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="938" y="250" width="84" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RegistrarDescuadre_di" bpmnElement="Task_RegistrarDescuadre">
+        <dc:Bounds x="920" y="380" width="120" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_FinDia_di" bpmnElement="Task_FinDia">
+        <dc:Bounds x="1050" y="280" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_CheckPeriodo_di" bpmnElement="Gateway_CheckPeriodo" isMarkerVisible="true">
+        <dc:Bounds x="1215" y="295" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1200" y="250" width="80" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Diario_di" bpmnElement="End_Diario">
+        <dc:Bounds x="1222" y="382" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1198" y="425" width="85" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ReunirFacturas_di" bpmnElement="Task_ReunirFacturas">
+        <dc:Bounds x="1310" y="280" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SumarCostos_di" bpmnElement="Task_SumarCostos">
+        <dc:Bounds x="1450" y="280" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SumarVentas_di" bpmnElement="Task_SumarVentas">
+        <dc:Bounds x="1310" y="380" width="120" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RestarGanancia_di" bpmnElement="Task_RestarGanancia">
+        <dc:Bounds x="1450" y="380" width="120" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EscribirLibro_di" bpmnElement="Task_EscribirLibro">
+        <dc:Bounds x="1580" y="340" width="100" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Balance_di" bpmnElement="End_Balance">
+        <dc:Bounds x="1632" y="442" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1608" y="485" width="85" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Lane Papeleria Elements -->
+      <bpmndi:BPMNShape id="Task_DocArqueo_di" bpmnElement="Task_DocArqueo">
+        <dc:Bounds x="1050" y="560" width="130" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- Edges -->
+      <bpmndi:BPMNEdge id="Flow_CC1_di" bpmnElement="Flow_CC1">
+        <di:waypoint x="268" y="150" />
+        <di:waypoint x="310" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CC2_di" bpmnElement="Flow_CC2">
+        <di:waypoint x="440" y="150" />
+        <di:waypoint x="470" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CC3_di" bpmnElement="Flow_CC3">
+        <di:waypoint x="600" y="150" />
+        <di:waypoint x="630" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CC4_di" bpmnElement="Flow_CC4">
+        <di:waypoint x="695" y="190" />
+        <di:waypoint x="695" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CC5_di" bpmnElement="Flow_CC5">
+        <di:waypoint x="760" y="320" />
+        <di:waypoint x="790" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CC6_di" bpmnElement="Flow_CC6">
+        <di:waypoint x="920" y="320" />
+        <di:waypoint x="955" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CuadreNo_di" bpmnElement="Flow_CuadreNo">
+        <di:waypoint x="980" y="345" />
+        <di:waypoint x="980" y="380" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="985" y="355" width="53" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CuadreSi_di" bpmnElement="Flow_CuadreSi">
+        <di:waypoint x="1005" y="320" />
+        <di:waypoint x="1050" y="320" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1005" y="302" width="37" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CC7A_di" bpmnElement="Flow_CC7A">
+        <di:waypoint x="1040" y="415" />
+        <di:waypoint x="1115" y="415" />
+        <di:waypoint x="1115" y="360" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToDocArqueo_di" bpmnElement="Flow_ToDocArqueo">
+        <di:waypoint x="1115" y="360" />
+        <di:waypoint x="1115" y="560" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CC7B_di" bpmnElement="Flow_CC7B">
+        <di:waypoint x="1180" y="320" />
+        <di:waypoint x="1215" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_PeriodoDia_di" bpmnElement="Flow_PeriodoDia">
+        <di:waypoint x="1240" y="345" />
+        <di:waypoint x="1240" y="382" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1245" y="355" width="41" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_PeriodoMes_di" bpmnElement="Flow_PeriodoMes">
+        <di:waypoint x="1265" y="320" />
+        <di:waypoint x="1310" y="320" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1255" y="302" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CC8_di" bpmnElement="Flow_CC8">
+        <di:waypoint x="1430" y="320" />
+        <di:waypoint x="1450" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CC9_di" bpmnElement="Flow_CC9">
+        <di:waypoint x="1510" y="360" />
+        <di:waypoint x="1510" y="370" />
+        <di:waypoint x="1370" y="370" />
+        <di:waypoint x="1370" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CC10_di" bpmnElement="Flow_CC10">
+        <di:waypoint x="1430" y="415" />
+        <di:waypoint x="1450" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CC11_di" bpmnElement="Flow_CC11">
+        <di:waypoint x="1570" y="415" />
+        <di:waypoint x="1580" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CC12_di" bpmnElement="Flow_CC12">
+        <di:waypoint x="1650" y="410" />
+        <di:waypoint x="1650" y="442" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

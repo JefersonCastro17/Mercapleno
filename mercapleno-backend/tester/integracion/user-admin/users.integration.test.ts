@@ -94,7 +94,7 @@ describe('Módulo User-Admin - Pruebas de Integración con BD Real (e2e)', () =>
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(Array.isArray(res.body.usuarios)).toBe(true);
-      expect(res.body.usuarios.length).toBe(2);
+      expect(res.body.usuarios).toHaveLength(2);
       expect(res.body.usuarios[0]).toHaveProperty('email', 'admin@test.local');
     });
 
@@ -106,7 +106,7 @@ describe('Módulo User-Admin - Pruebas de Integración con BD Real (e2e)', () =>
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.usuarios.length).toBe(1);
+      expect(res.body.usuarios).toHaveLength(1);
       expect(res.body.usuarios[0].nombre).toBe('Carlos');
     });
   });
@@ -121,7 +121,7 @@ describe('Módulo User-Admin - Pruebas de Integración con BD Real (e2e)', () =>
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(Array.isArray(res.body.roles)).toBe(true);
-      expect(res.body.roles.length).toBe(3);
+      expect(res.body.roles).toHaveLength(3);
     });
   });
 
@@ -135,7 +135,7 @@ describe('Módulo User-Admin - Pruebas de Integración con BD Real (e2e)', () =>
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(Array.isArray(res.body.tipos_identificacion)).toBe(true);
-      expect(res.body.tipos_identificacion.length).toBe(2);
+      expect(res.body.tipos_identificacion).toHaveLength(2);
     });
   });
 

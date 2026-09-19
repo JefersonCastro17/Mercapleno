@@ -86,99 +86,124 @@ export class EmailService {
     return envs.appName ? `"${envs.appName}" <${from}>` : from;
   }
 
+  private resolveResendFromAddress(): string {
+    if (envs.smtpFromEmail && !envs.smtpFromEmail.endsWith('@gmail.com')) {
+      return envs.appName ? `"${envs.appName}" <${envs.smtpFromEmail}>` : envs.smtpFromEmail;
+    }
+    const appName = envs.appName || 'Mercapleno';
+    return `${appName} <onboarding@resend.dev>`;
+  }
+
+  private async sendViaResend(options: SendMailOptions, recipients: string[], toStr: string): Promise<SendMailResult | null> {
+    if (!envs.resendApiKey) {
+      return null;
+    }
+    try {
+      const from = this.resolveResendFromAddress();
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${envs.resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from,
+          to: recipients,
+          subject: options.subject,
+          html: options.html,
+          text: options.text,
+        }),
+      });
+
+      const data: any = await response.json().catch(() => ({}));
+      if (response.ok && data?.id) {
+        this.logger.log(`✓ [Resend HTTP] Correo enviado exitosamente a ${toStr}. ID: ${data.id}`);
+        return { success: true, provider: 'resend', id: data.id };
+      }
+      const errMsg = data?.message || response.statusText || 'Error desconocido';
+      this.logger.error(`✗ [Resend HTTP] Fallo al enviar correo a ${toStr}: ${errMsg}`);
+    } catch (err: any) {
+      this.logger.error(`✗ [Resend HTTP] Error de conexion al enviar a ${toStr}: ${err.message}`);
+    }
+    return null;
+  }
+
+  private async sendViaBrevo(options: SendMailOptions, recipients: string[], toStr: string): Promise<SendMailResult | null> {
+    if (!envs.brevoApiKey) {
+      return null;
+    }
+    try {
+      const senderEmail = envs.smtpFromEmail || envs.smtpUser || 'notificaciones@mercapleno.com';
+      const senderName = envs.appName || 'Mercapleno';
+
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'api-key': envs.brevoApiKey,
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          sender: { name: senderName, email: senderEmail },
+          to: recipients.map((email) => ({ email })),
+          subject: options.subject,
+          htmlContent: options.html,
+          textContent: options.text,
+        }),
+      });
+
+      const data: any = await response.json().catch(() => ({}));
+      if (response.ok && (data?.messageId || data?.id)) {
+        const id = data.messageId || data.id;
+        this.logger.log(`✓ [Brevo HTTP] Correo enviado exitosamente a ${toStr}. Message ID: ${id}`);
+        return { success: true, provider: 'brevo', id };
+      }
+      const errMsg = data?.message || response.statusText || 'Error desconocido';
+      this.logger.error(`✗ [Brevo HTTP] Fallo al enviar correo a ${toStr}: ${errMsg}`);
+    } catch (err: any) {
+      this.logger.error(`✗ [Brevo HTTP] Error de conexion al enviar a ${toStr}: ${err.message}`);
+    }
+    return null;
+  }
+
+  private async sendViaSmtp(options: SendMailOptions, toStr: string): Promise<SendMailResult | null> {
+    const transporter = this.getTransporter();
+    if (!transporter) {
+      return null;
+    }
+    try {
+      const info = await transporter.sendMail({
+        from: this.fromAddress(),
+        to: toStr,
+        subject: options.subject,
+        text: options.text,
+        html: options.html,
+      });
+      this.logger.log(`✓ [Nodemailer SMTP] Correo enviado exitosamente a ${toStr}. Message ID: ${info.messageId}`);
+      return { success: true, provider: 'smtp', id: info.messageId };
+    } catch (err: any) {
+      this.logger.error(`✗ [Nodemailer SMTP] Fallo al enviar a ${toStr}: ${err.message}`);
+      return { success: false, provider: 'smtp', error: err.message };
+    }
+  }
+
   async sendEmail(options: SendMailOptions): Promise<SendMailResult> {
     const recipients = Array.isArray(options.to) ? options.to : [options.to];
     const toStr = recipients.join(', ');
 
-    // 1. Enviar vía RESEND HTTP API (Puerto 443 HTTPS - Nunca bloqueado por Render ni la nube)
-    if (envs.resendApiKey) {
-      try {
-        const from =
-          envs.smtpFromEmail && !envs.smtpFromEmail.endsWith('@gmail.com')
-            ? (envs.appName ? `"${envs.appName}" <${envs.smtpFromEmail}>` : envs.smtpFromEmail)
-            : `${envs.appName || 'Mercapleno'} <onboarding@resend.dev>`;
-
-        const response = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${envs.resendApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from,
-            to: recipients,
-            subject: options.subject,
-            html: options.html,
-            text: options.text,
-          }),
-        });
-
-        const data: any = await response.json().catch(() => ({}));
-        if (response.ok && data?.id) {
-          this.logger.log(`✓ [Resend HTTP] Correo enviado exitosamente a ${toStr}. ID: ${data.id}`);
-          return { success: true, provider: 'resend', id: data.id };
-        } else {
-          const errMsg = data?.message || response.statusText || 'Error desconocido';
-          this.logger.error(`✗ [Resend HTTP] Fallo al enviar correo a ${toStr}: ${errMsg}`);
-        }
-      } catch (err: any) {
-        this.logger.error(`✗ [Resend HTTP] Error de conexion al enviar a ${toStr}: ${err.message}`);
-      }
+    const resendResult = await this.sendViaResend(options, recipients, toStr);
+    if (resendResult?.success) {
+      return resendResult;
     }
 
-    // 2. Enviar vía BREVO HTTP API (Puerto 443 HTTPS)
-    if (envs.brevoApiKey) {
-      try {
-        const senderEmail = envs.smtpFromEmail || envs.smtpUser || 'notificaciones@mercapleno.com';
-        const senderName = envs.appName || 'Mercapleno';
-
-        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-          method: 'POST',
-          headers: {
-            'api-key': envs.brevoApiKey,
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-          body: JSON.stringify({
-            sender: { name: senderName, email: senderEmail },
-            to: recipients.map((email) => ({ email })),
-            subject: options.subject,
-            htmlContent: options.html,
-            textContent: options.text,
-          }),
-        });
-
-        const data: any = await response.json().catch(() => ({}));
-        if (response.ok && (data?.messageId || data?.id)) {
-          const id = data.messageId || data.id;
-          this.logger.log(`✓ [Brevo HTTP] Correo enviado exitosamente a ${toStr}. Message ID: ${id}`);
-          return { success: true, provider: 'brevo', id };
-        } else {
-          const errMsg = data?.message || response.statusText || 'Error desconocido';
-          this.logger.error(`✗ [Brevo HTTP] Fallo al enviar correo a ${toStr}: ${errMsg}`);
-        }
-      } catch (err: any) {
-        this.logger.error(`✗ [Brevo HTTP] Error de conexion al enviar a ${toStr}: ${err.message}`);
-      }
+    const brevoResult = await this.sendViaBrevo(options, recipients, toStr);
+    if (brevoResult?.success) {
+      return brevoResult;
     }
 
-    // 3. Fallback a Nodemailer SMTP
-    const transporter = this.getTransporter();
-    if (transporter) {
-      try {
-        const info = await transporter.sendMail({
-          from: this.fromAddress(),
-          to: toStr,
-          subject: options.subject,
-          text: options.text,
-          html: options.html,
-        });
-        this.logger.log(`✓ [Nodemailer SMTP] Correo enviado exitosamente a ${toStr}. Message ID: ${info.messageId}`);
-        return { success: true, provider: 'smtp', id: info.messageId };
-      } catch (err: any) {
-        this.logger.error(`✗ [Nodemailer SMTP] Fallo al enviar a ${toStr}: ${err.message}`);
-        return { success: false, provider: 'smtp', error: err.message };
-      }
+    const smtpResult = await this.sendViaSmtp(options, toStr);
+    if (smtpResult) {
+      return smtpResult;
     }
 
     if (!envs.resendApiKey && !envs.brevoApiKey) {

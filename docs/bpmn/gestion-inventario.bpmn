@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="Definitions_InvManual"
+                  targetNamespace="http://mercapleno.com/bpmn/inventario-manual">
+  <bpmn:collaboration id="Collaboration_InvManual">
+    <bpmn:participant id="Participant_InvManual" name="Proceso de Control y Gestión Manual de Inventario en Bodega (Problemática) - Mercapleno" processRef="Process_InvManual" />
+  </bpmn:collaboration>
+
+  <bpmn:process id="Process_InvManual" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_InvManual">
+      <bpmn:lane id="Lane_Prov" name="Proveedor / Transportador">
+        <bpmn:flowNodeRef>Start_ProvCamion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EntregarCajas</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RecibirFactura</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Prov</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Bodeg" name="Encargado de Bodega (Bodeguero)">
+        <bpmn:flowNodeRef>Task_Contar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RevisarEstado</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_CheckCoincide</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AnotarDiferencia</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Firmar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Acomodar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RevisionOjo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_CheckAgotado</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Continuar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AnotarFaltante</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Doc" name="Planillas de Papel y Cuaderno de Kardex">
+        <bpmn:flowNodeRef>Task_AnotarKardex</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_AdminComp" name="Administrador / Compras">
+        <bpmn:flowNodeRef>Task_RecibirHoja</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_LlamarProv</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Pedido</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <!-- Flow Nodes -->
+    <bpmn:startEvent id="Start_ProvCamion" name="Camión llega a la bodega">
+      <bpmn:outgoing>Flow_I1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:userTask id="Task_EntregarCajas" name="Descargar cajas y presentar factura física en papel">
+      <bpmn:incoming>Flow_I1</bpmn:incoming>
+      <bpmn:outgoing>Flow_I2</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_Contar" name="Realizar conteo físico manual, unidad por unidad">
+      <bpmn:incoming>Flow_I2</bpmn:incoming>
+      <bpmn:outgoing>Flow_I3</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_RevisarEstado" name="Inspeccionar visualmente empaques y fechas de vencimiento">
+      <bpmn:incoming>Flow_I3</bpmn:incoming>
+      <bpmn:outgoing>Flow_I4</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_CheckCoincide" name="¿Cantidad física coincide con la factura de papel?">
+      <bpmn:incoming>Flow_I4</bpmn:incoming>
+      <bpmn:outgoing>Flow_CoincideNo</bpmn:outgoing>
+      <bpmn:outgoing>Flow_CoincideSi</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="Task_AnotarDiferencia" name="Anotar a mano la diferencia o avería en la remisión">
+      <bpmn:incoming>Flow_CoincideNo</bpmn:incoming>
+      <bpmn:outgoing>Flow_I5A</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_Firmar" name="Firmar y sellar copia física de la factura">
+      <bpmn:incoming>Flow_CoincideSi</bpmn:incoming>
+      <bpmn:incoming>Flow_I5A</bpmn:incoming>
+      <bpmn:outgoing>Flow_I5B</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ToAcomodar</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_RecibirFactura" name="Recibir factura física firmada con constancia">
+      <bpmn:incoming>Flow_I5B</bpmn:incoming>
+      <bpmn:outgoing>Flow_I6</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:endEvent id="End_Prov" name="Entrega concluida por el transportador">
+      <bpmn:incoming>Flow_I6</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:userTask id="Task_Acomodar" name="Cargar y ubicar bultos en estantes de bodega y góndolas">
+      <bpmn:incoming>Flow_ToAcomodar</bpmn:incoming>
+      <bpmn:outgoing>Flow_I7</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ToKardex</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_AnotarKardex" name="Anotar a mano la entrada en el cuaderno de inventario (Kardex)">
+      <bpmn:incoming>Flow_ToKardex</bpmn:incoming>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_RevisionOjo" name="Recorrer periódicamente la tienda observando estantes vacíos">
+      <bpmn:incoming>Flow_I7</bpmn:incoming>
+      <bpmn:outgoing>Flow_I8</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_CheckAgotado" name="¿Se observa producto agotado a simple vista?">
+      <bpmn:incoming>Flow_I8</bpmn:incoming>
+      <bpmn:outgoing>Flow_AgotadoNo</bpmn:outgoing>
+      <bpmn:outgoing>Flow_AgotadoSi</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:endEvent id="End_Continuar" name="Continúa operación sin conocer el inventario real restante">
+      <bpmn:incoming>Flow_AgotadoNo</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:userTask id="Task_AnotarFaltante" name="Anotar producto agotado en hoja de papel de faltantes">
+      <bpmn:incoming>Flow_AgotadoSi</bpmn:incoming>
+      <bpmn:outgoing>Flow_I9</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_RecibirHoja" name="Recibir hoja de faltantes y buscar teléfono del proveedor">
+      <bpmn:incoming>Flow_I9</bpmn:incoming>
+      <bpmn:outgoing>Flow_I10</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_LlamarProv" name="Llamar por teléfono al proveedor para pedir mercancía de urgencia">
+      <bpmn:incoming>Flow_I10</bpmn:incoming>
+      <bpmn:outgoing>Flow_I11</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:endEvent id="End_Pedido" name="Pedido solicitado con demora tras ocurrir quiebre de stock">
+      <bpmn:incoming>Flow_I11</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Sequence Flows -->
+    <bpmn:sequenceFlow id="Flow_I1" sourceRef="Start_ProvCamion" targetRef="Task_EntregarCajas" />
+    <bpmn:sequenceFlow id="Flow_I2" sourceRef="Task_EntregarCajas" targetRef="Task_Contar" />
+    <bpmn:sequenceFlow id="Flow_I3" sourceRef="Task_Contar" targetRef="Task_RevisarEstado" />
+    <bpmn:sequenceFlow id="Flow_I4" sourceRef="Task_RevisarEstado" targetRef="Gateway_CheckCoincide" />
+    <bpmn:sequenceFlow id="Flow_CoincideNo" name="No coincide" sourceRef="Gateway_CheckCoincide" targetRef="Task_AnotarDiferencia" />
+    <bpmn:sequenceFlow id="Flow_CoincideSi" name="Sí coincide" sourceRef="Gateway_CheckCoincide" targetRef="Task_Firmar" />
+    <bpmn:sequenceFlow id="Flow_I5A" sourceRef="Task_AnotarDiferencia" targetRef="Task_Firmar" />
+    <bpmn:sequenceFlow id="Flow_I5B" sourceRef="Task_Firmar" targetRef="Task_RecibirFactura" />
+    <bpmn:sequenceFlow id="Flow_I6" sourceRef="Task_RecibirFactura" targetRef="End_Prov" />
+    <bpmn:sequenceFlow id="Flow_ToAcomodar" sourceRef="Task_Firmar" targetRef="Task_Acomodar" />
+    <bpmn:sequenceFlow id="Flow_ToKardex" sourceRef="Task_Acomodar" targetRef="Task_AnotarKardex" />
+    <bpmn:sequenceFlow id="Flow_I7" sourceRef="Task_Acomodar" targetRef="Task_RevisionOjo" />
+    <bpmn:sequenceFlow id="Flow_I8" sourceRef="Task_RevisionOjo" targetRef="Gateway_CheckAgotado" />
+    <bpmn:sequenceFlow id="Flow_AgotadoNo" name="No (Aún hay)" sourceRef="Gateway_CheckAgotado" targetRef="End_Continuar" />
+    <bpmn:sequenceFlow id="Flow_AgotadoSi" name="Sí (Góndola vacía)" sourceRef="Gateway_CheckAgotado" targetRef="Task_AnotarFaltante" />
+    <bpmn:sequenceFlow id="Flow_I9" sourceRef="Task_AnotarFaltante" targetRef="Task_RecibirHoja" />
+    <bpmn:sequenceFlow id="Flow_I10" sourceRef="Task_RecibirHoja" targetRef="Task_LlamarProv" />
+    <bpmn:sequenceFlow id="Flow_I11" sourceRef="Task_LlamarProv" targetRef="End_Pedido" />
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_InvManual">
+    <bpmndi:BPMNPlane id="BPMNPlane_InvManual" bpmnElement="Collaboration_InvManual">
+      <!-- Pool -->
+      <bpmndi:BPMNShape id="Participant_InvManual_di" bpmnElement="Participant_InvManual" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="1440" height="740" />
+      </bpmndi:BPMNShape>
+
+      <!-- Lanes -->
+      <bpmndi:BPMNShape id="Lane_Prov_di" bpmnElement="Lane_Prov" isHorizontal="true">
+        <dc:Bounds x="190" y="80" width="1410" height="170" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Bodeg_di" bpmnElement="Lane_Bodeg" isHorizontal="true">
+        <dc:Bounds x="190" y="250" width="1410" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Doc_di" bpmnElement="Lane_Doc" isHorizontal="true">
+        <dc:Bounds x="190" y="480" width="1410" height="130" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_AdminComp_di" bpmnElement="Lane_AdminComp" isHorizontal="true">
+        <dc:Bounds x="190" y="610" width="1410" height="210" />
+      </bpmndi:BPMNShape>
+
+      <!-- Lane Proveedor Elements -->
+      <bpmndi:BPMNShape id="Start_ProvCamion_di" bpmnElement="Start_ProvCamion">
+        <dc:Bounds x="232" y="132" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="214" y="175" width="73" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EntregarCajas_di" bpmnElement="Task_EntregarCajas">
+        <dc:Bounds x="310" y="110" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RecibirFactura_di" bpmnElement="Task_RecibirFactura">
+        <dc:Bounds x="730" y="110" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Prov_di" bpmnElement="End_Prov">
+        <dc:Bounds x="912" y="132" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="888" y="175" width="85" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Lane Bodeguero Elements -->
+      <bpmndi:BPMNShape id="Task_Contar_di" bpmnElement="Task_Contar">
+        <dc:Bounds x="310" y="280" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RevisarEstado_di" bpmnElement="Task_RevisarEstado">
+        <dc:Bounds x="470" y="280" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_CheckCoincide_di" bpmnElement="Gateway_CheckCoincide" isMarkerVisible="true">
+        <dc:Bounds x="635" y="295" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="620" y="240" width="80" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AnotarDiferencia_di" bpmnElement="Task_AnotarDiferencia">
+        <dc:Bounds x="600" y="380" width="120" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Firmar_di" bpmnElement="Task_Firmar">
+        <dc:Bounds x="730" y="280" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Acomodar_di" bpmnElement="Task_Acomodar">
+        <dc:Bounds x="890" y="280" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RevisionOjo_di" bpmnElement="Task_RevisionOjo">
+        <dc:Bounds x="1050" y="280" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_CheckAgotado_di" bpmnElement="Gateway_CheckAgotado" isMarkerVisible="true">
+        <dc:Bounds x="1215" y="295" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1200" y="240" width="80" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Continuar_di" bpmnElement="End_Continuar">
+        <dc:Bounds x="1332" y="302" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1308" y="345" width="85" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AnotarFaltante_di" bpmnElement="Task_AnotarFaltante">
+        <dc:Bounds x="1175" y="380" width="130" height="70" />
+      </bpmndi:BPMNShape>
+
+      <!-- Lane Documentos Elements -->
+      <bpmndi:BPMNShape id="Task_AnotarKardex_di" bpmnElement="Task_AnotarKardex">
+        <dc:Bounds x="890" y="505" width="130" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- Lane Administrador Compras Elements -->
+      <bpmndi:BPMNShape id="Task_RecibirHoja_di" bpmnElement="Task_RecibirHoja">
+        <dc:Bounds x="1175" y="650" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_LlamarProv_di" bpmnElement="Task_LlamarProv">
+        <dc:Bounds x="1335" y="650" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Pedido_di" bpmnElement="End_Pedido">
+        <dc:Bounds x="1512" y="672" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1488" y="715" width="85" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Edges -->
+      <bpmndi:BPMNEdge id="Flow_I1_di" bpmnElement="Flow_I1">
+        <di:waypoint x="268" y="150" />
+        <di:waypoint x="310" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_I2_di" bpmnElement="Flow_I2">
+        <di:waypoint x="375" y="190" />
+        <di:waypoint x="375" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_I3_di" bpmnElement="Flow_I3">
+        <di:waypoint x="440" y="320" />
+        <di:waypoint x="470" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_I4_di" bpmnElement="Flow_I4">
+        <di:waypoint x="600" y="320" />
+        <di:waypoint x="635" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CoincideNo_di" bpmnElement="Flow_CoincideNo">
+        <di:waypoint x="660" y="345" />
+        <di:waypoint x="660" y="380" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="662" y="355" width="60" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CoincideSi_di" bpmnElement="Flow_CoincideSi">
+        <di:waypoint x="685" y="320" />
+        <di:waypoint x="730" y="320" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="680" y="302" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_I5A_di" bpmnElement="Flow_I5A">
+        <di:waypoint x="720" y="415" />
+        <di:waypoint x="795" y="415" />
+        <di:waypoint x="795" y="360" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_I5B_di" bpmnElement="Flow_I5B">
+        <di:waypoint x="795" y="280" />
+        <di:waypoint x="795" y="190" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_I6_di" bpmnElement="Flow_I6">
+        <di:waypoint x="860" y="150" />
+        <di:waypoint x="912" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToAcomodar_di" bpmnElement="Flow_ToAcomodar">
+        <di:waypoint x="860" y="320" />
+        <di:waypoint x="890" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToKardex_di" bpmnElement="Flow_ToKardex">
+        <di:waypoint x="955" y="360" />
+        <di:waypoint x="955" y="505" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_I7_di" bpmnElement="Flow_I7">
+        <di:waypoint x="1020" y="320" />
+        <di:waypoint x="1050" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_I8_di" bpmnElement="Flow_I8">
+        <di:waypoint x="1180" y="320" />
+        <di:waypoint x="1215" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AgotadoNo_di" bpmnElement="Flow_AgotadoNo">
+        <di:waypoint x="1265" y="320" />
+        <di:waypoint x="1332" y="320" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1262" y="302" width="67" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AgotadoSi_di" bpmnElement="Flow_AgotadoSi">
+        <di:waypoint x="1240" y="345" />
+        <di:waypoint x="1240" y="380" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1242" y="355" width="76" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_I9_di" bpmnElement="Flow_I9">
+        <di:waypoint x="1240" y="450" />
+        <di:waypoint x="1240" y="650" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_I10_di" bpmnElement="Flow_I10">
+        <di:waypoint x="1305" y="690" />
+        <di:waypoint x="1335" y="690" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_I11_di" bpmnElement="Flow_I11">
+        <di:waypoint x="1465" y="690" />
+        <di:waypoint x="1512" y="690" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

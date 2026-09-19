@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="Definitions_SegManual"
+                  targetNamespace="http://mercapleno.com/bpmn/seguridad-manual">
+  <bpmn:collaboration id="Collaboration_SegManual">
+    <bpmn:participant id="Participant_SegManual" name="Proceso de Control de Turnos, Llaves y Apertura Manual de Caja (Problemática) - Mercapleno" processRef="Process_SegManual" />
+  </bpmn:collaboration>
+
+  <bpmn:process id="Process_SegManual" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_SegManual">
+      <bpmn:lane id="Lane_Emp_Seg" name="Empleado / Cajero">
+        <bpmn:flowNodeRef>Start_Llegada</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EsperarLlave</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RecibirSobre</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ContarBase</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_CheckBase</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Reclamar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AbrirCaja</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_CajaLista</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Admin_Seg" name="Administrador del Establecimiento">
+        <bpmn:flowNodeRef>Task_AsignarCaja</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ContarSobre</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SacarLlave</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_LibroFirmas" name="Registros Físicos de Personal (Libro y Planilla)">
+        <bpmn:flowNodeRef>Task_FirmarLlegada</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_FirmarPlanilla</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <!-- Flow Nodes -->
+    <bpmn:startEvent id="Start_Llegada" name="Empleado llega al supermercado a iniciar turno">
+      <bpmn:outgoing>Flow_S1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:userTask id="Task_FirmarLlegada" name="Escribir hora de llegada y firmar en el libro de asistencia en papel">
+      <bpmn:incoming>Flow_S1</bpmn:incoming>
+      <bpmn:outgoing>Flow_S2</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_EsperarLlave" name="Aguardar asignación de caja por parte del administrador">
+      <bpmn:incoming>Flow_S2</bpmn:incoming>
+      <bpmn:outgoing>Flow_S3</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_AsignarCaja" name="Designar verbalmente qué caja le corresponde operar al empleado">
+      <bpmn:incoming>Flow_S3</bpmn:incoming>
+      <bpmn:outgoing>Flow_S4</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_ContarSobre" name="Contar billetes y monedas para armar el sobre de dinero base">
+      <bpmn:incoming>Flow_S4</bpmn:incoming>
+      <bpmn:outgoing>Flow_S5</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_SacarLlave" name="Sacar llave metálica de la gaveta de la caja del casillero">
+      <bpmn:incoming>Flow_S5</bpmn:incoming>
+      <bpmn:outgoing>Flow_S6</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_RecibirSobre" name="Recibir sobre con dinero base en efectivo y llave metálica de la caja">
+      <bpmn:incoming>Flow_S6</bpmn:incoming>
+      <bpmn:incoming>Flow_S8_Reclamar</bpmn:incoming>
+      <bpmn:outgoing>Flow_S7</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_ContarBase" name="Contar el dinero base billete por billete en presencia del administrador">
+      <bpmn:incoming>Flow_S7</bpmn:incoming>
+      <bpmn:outgoing>Flow_S8</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_CheckBase" name="¿El monto coincide con lo anotado en la planilla?">
+      <bpmn:incoming>Flow_S8</bpmn:incoming>
+      <bpmn:outgoing>Flow_BaseNo</bpmn:outgoing>
+      <bpmn:outgoing>Flow_BaseSi</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="Task_Reclamar" name="Avisar al administrador para corregir el valor antes de firmar">
+      <bpmn:incoming>Flow_BaseNo</bpmn:incoming>
+      <bpmn:outgoing>Flow_S8_Reclamar</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_FirmarPlanilla" name="Firmar en la planilla de papel la recepción del dinero base y la llave">
+      <bpmn:incoming>Flow_BaseSi</bpmn:incoming>
+      <bpmn:outgoing>Flow_S9</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_AbrirCaja" name="Insertar llave física en registradora, encender y colocar billetes en gaveta">
+      <bpmn:incoming>Flow_S9</bpmn:incoming>
+      <bpmn:outgoing>Flow_S10</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:endEvent id="End_CajaLista" name="Caja habilitada manualmente (Sin control de usuario digital)">
+      <bpmn:incoming>Flow_S10</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Sequence Flows -->
+    <bpmn:sequenceFlow id="Flow_S1" sourceRef="Start_Llegada" targetRef="Task_FirmarLlegada" />
+    <bpmn:sequenceFlow id="Flow_S2" sourceRef="Task_FirmarLlegada" targetRef="Task_EsperarLlave" />
+    <bpmn:sequenceFlow id="Flow_S3" sourceRef="Task_EsperarLlave" targetRef="Task_AsignarCaja" />
+    <bpmn:sequenceFlow id="Flow_S4" sourceRef="Task_AsignarCaja" targetRef="Task_ContarSobre" />
+    <bpmn:sequenceFlow id="Flow_S5" sourceRef="Task_ContarSobre" targetRef="Task_SacarLlave" />
+    <bpmn:sequenceFlow id="Flow_S6" sourceRef="Task_SacarLlave" targetRef="Task_RecibirSobre" />
+    <bpmn:sequenceFlow id="Flow_S7" sourceRef="Task_RecibirSobre" targetRef="Task_ContarBase" />
+    <bpmn:sequenceFlow id="Flow_S8" sourceRef="Task_ContarBase" targetRef="Gateway_CheckBase" />
+    <bpmn:sequenceFlow id="Flow_BaseNo" name="Diferencia" sourceRef="Gateway_CheckBase" targetRef="Task_Reclamar" />
+    <bpmn:sequenceFlow id="Flow_S8_Reclamar" sourceRef="Task_Reclamar" targetRef="Task_RecibirSobre" />
+    <bpmn:sequenceFlow id="Flow_BaseSi" name="Coincide" sourceRef="Gateway_CheckBase" targetRef="Task_FirmarPlanilla" />
+    <bpmn:sequenceFlow id="Flow_S9" sourceRef="Task_FirmarPlanilla" targetRef="Task_AbrirCaja" />
+    <bpmn:sequenceFlow id="Flow_S10" sourceRef="Task_AbrirCaja" targetRef="End_CajaLista" />
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_SegManual">
+    <bpmndi:BPMNPlane id="BPMNPlane_SegManual" bpmnElement="Collaboration_SegManual">
+      <!-- Pool -->
+      <bpmndi:BPMNShape id="Participant_SegManual_di" bpmnElement="Participant_SegManual" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="1440" height="660" />
+      </bpmndi:BPMNShape>
+
+      <!-- Lanes -->
+      <bpmndi:BPMNShape id="Lane_Emp_Seg_di" bpmnElement="Lane_Emp_Seg" isHorizontal="true">
+        <dc:Bounds x="190" y="80" width="1410" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Admin_Seg_di" bpmnElement="Lane_Admin_Seg" isHorizontal="true">
+        <dc:Bounds x="190" y="310" width="1410" height="220" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_LibroFirmas_di" bpmnElement="Lane_LibroFirmas" isHorizontal="true">
+        <dc:Bounds x="190" y="530" width="1410" height="210" />
+      </bpmndi:BPMNShape>
+
+      <!-- Lane Empleado Elements -->
+      <bpmndi:BPMNShape id="Start_Llegada_di" bpmnElement="Start_Llegada">
+        <dc:Bounds x="232" y="142" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="210" y="185" width="80" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EsperarLlave_di" bpmnElement="Task_EsperarLlave">
+        <dc:Bounds x="380" y="120" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RecibirSobre_di" bpmnElement="Task_RecibirSobre">
+        <dc:Bounds x="690" y="120" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ContarBase_di" bpmnElement="Task_ContarBase">
+        <dc:Bounds x="850" y="120" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_CheckBase_di" bpmnElement="Gateway_CheckBase" isMarkerVisible="true">
+        <dc:Bounds x="1015" y="135" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1000" y="80" width="80" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Reclamar_di" bpmnElement="Task_Reclamar">
+        <dc:Bounds x="980" y="220" width="120" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AbrirCaja_di" bpmnElement="Task_AbrirCaja">
+        <dc:Bounds x="1270" y="120" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_CajaLista_di" bpmnElement="End_CajaLista">
+        <dc:Bounds x="1452" y="142" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1428" y="185" width="85" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Lane Administrador Elements -->
+      <bpmndi:BPMNShape id="Task_AsignarCaja_di" bpmnElement="Task_AsignarCaja">
+        <dc:Bounds x="380" y="370" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ContarSobre_di" bpmnElement="Task_ContarSobre">
+        <dc:Bounds x="530" y="370" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SacarLlave_di" bpmnElement="Task_SacarLlave">
+        <dc:Bounds x="690" y="370" width="130" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- Lane Libro Firmas Elements -->
+      <bpmndi:BPMNShape id="Task_FirmarLlegada_di" bpmnElement="Task_FirmarLlegada">
+        <dc:Bounds x="230" y="580" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_FirmarPlanilla_di" bpmnElement="Task_FirmarPlanilla">
+        <dc:Bounds x="1110" y="580" width="130" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- Edges -->
+      <bpmndi:BPMNEdge id="Flow_S1_di" bpmnElement="Flow_S1">
+        <di:waypoint x="250" y="178" />
+        <di:waypoint x="250" y="580" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S2_di" bpmnElement="Flow_S2">
+        <di:waypoint x="360" y="620" />
+        <di:waypoint x="440" y="620" />
+        <di:waypoint x="440" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S3_di" bpmnElement="Flow_S3">
+        <di:waypoint x="440" y="200" />
+        <di:waypoint x="440" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S4_di" bpmnElement="Flow_S4">
+        <di:waypoint x="500" y="410" />
+        <di:waypoint x="530" y="410" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S5_di" bpmnElement="Flow_S5">
+        <di:waypoint x="650" y="410" />
+        <di:waypoint x="690" y="410" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S6_di" bpmnElement="Flow_S6">
+        <di:waypoint x="755" y="370" />
+        <di:waypoint x="755" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S7_di" bpmnElement="Flow_S7">
+        <di:waypoint x="820" y="160" />
+        <di:waypoint x="850" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S8_di" bpmnElement="Flow_S8">
+        <di:waypoint x="980" y="160" />
+        <di:waypoint x="1015" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_BaseNo_di" bpmnElement="Flow_BaseNo">
+        <di:waypoint x="1040" y="185" />
+        <di:waypoint x="1040" y="220" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1044" y="195" width="53" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S8_Reclamar_di" bpmnElement="Flow_S8_Reclamar">
+        <di:waypoint x="980" y="255" />
+        <di:waypoint x="755" y="255" />
+        <di:waypoint x="755" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_BaseSi_di" bpmnElement="Flow_BaseSi">
+        <di:waypoint x="1065" y="160" />
+        <di:waypoint x="1175" y="160" />
+        <di:waypoint x="1175" y="580" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1078" y="142" width="43" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S9_di" bpmnElement="Flow_S9">
+        <di:waypoint x="1240" y="620" />
+        <di:waypoint x="1335" y="620" />
+        <di:waypoint x="1335" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S10_di" bpmnElement="Flow_S10">
+        <di:waypoint x="1400" y="160" />
+        <di:waypoint x="1452" y="160" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

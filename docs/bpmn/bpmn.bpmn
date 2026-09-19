@@ -1,0 +1,366 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="Definitions_VentaFisica"
+                  targetNamespace="http://mercapleno.com/bpmn/venta-fisica">
+  <bpmn:collaboration id="Collaboration_VentaFisica">
+    <bpmn:participant id="Participant_VentaFisica" name="Proceso de Venta Física en Tienda y Cobro en Caja (Problemática) - Mercapleno" processRef="Process_VentaFisica" />
+  </bpmn:collaboration>
+
+  <bpmn:process id="Process_VentaFisica" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_VentaFisica">
+      <bpmn:lane id="Lane_Cliente" name="Cliente en Tienda Física">
+        <bpmn:flowNodeRef>Start_Compra</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_TomarProd</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Gondola</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_SinProd</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Fila</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Pagar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Recibir</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Exito</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Cajero" name="Cajero en Punto de Venta">
+        <bpmn:flowNodeRef>Task_RecibirArt</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_CheckPrecio</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_BuscarLista</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Digitar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Sumar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Cobro</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ContarDinero</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EntregarVuelto</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Datafono</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Empacar</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Papel" name="Comprobantes Físicos">
+        <bpmn:flowNodeRef>Task_CintaPapel</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <!-- Flow Nodes -->
+    <bpmn:startEvent id="Start_Compra" name="Cliente ingresa al supermercado">
+      <bpmn:outgoing>Flow_V1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:userTask id="Task_TomarProd" name="Recorrer pasillos y tomar productos en la canasta física">
+      <bpmn:incoming>Flow_V1</bpmn:incoming>
+      <bpmn:outgoing>Flow_V2</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_Gondola" name="¿El producto está disponible en la góndola?">
+      <bpmn:incoming>Flow_V2</bpmn:incoming>
+      <bpmn:outgoing>Flow_GondolaNo</bpmn:outgoing>
+      <bpmn:outgoing>Flow_GondolaSi</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:endEvent id="End_SinProd" name="Venta perdida por desabastecimiento en estante">
+      <bpmn:incoming>Flow_GondolaNo</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:userTask id="Task_Fila" name="Hacer fila y colocar artículos sobre el mostrador">
+      <bpmn:incoming>Flow_GondolaSi</bpmn:incoming>
+      <bpmn:outgoing>Flow_V3</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_RecibirArt" name="Tomar artículos uno a uno del mostrador">
+      <bpmn:incoming>Flow_V3</bpmn:incoming>
+      <bpmn:outgoing>Flow_V4</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_CheckPrecio" name="¿El producto tiene precio marcado o código legible?">
+      <bpmn:incoming>Flow_V4</bpmn:incoming>
+      <bpmn:outgoing>Flow_PrecioNo</bpmn:outgoing>
+      <bpmn:outgoing>Flow_PrecioSi</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="Task_BuscarLista" name="Buscar precio en lista impresa en papel o preguntar">
+      <bpmn:incoming>Flow_PrecioNo</bpmn:incoming>
+      <bpmn:outgoing>Flow_V5</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_Digitar" name="Digitar precio en la máquina registradora">
+      <bpmn:incoming>Flow_PrecioSi</bpmn:incoming>
+      <bpmn:incoming>Flow_V5</bpmn:incoming>
+      <bpmn:outgoing>Flow_V6</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_Sumar" name="Calcular importe total acumulado de la compra">
+      <bpmn:incoming>Flow_V6</bpmn:incoming>
+      <bpmn:outgoing>Flow_V7</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_Pagar" name="Entregar dinero en efectivo o presentar tarjeta">
+      <bpmn:incoming>Flow_V7</bpmn:incoming>
+      <bpmn:outgoing>Flow_V8</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_Cobro" name="¿Forma de pago recibida?">
+      <bpmn:incoming>Flow_V8</bpmn:incoming>
+      <bpmn:outgoing>Flow_PagoEfectivo</bpmn:outgoing>
+      <bpmn:outgoing>Flow_PagoTarjeta</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="Task_ContarDinero" name="Contar billetes, verificar autenticidad y calcular cambio">
+      <bpmn:incoming>Flow_PagoEfectivo</bpmn:incoming>
+      <bpmn:outgoing>Flow_V9</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_EntregarVuelto" name="Sacar cambio en efectivo de la gaveta y entregar al cliente">
+      <bpmn:incoming>Flow_V9</bpmn:incoming>
+      <bpmn:outgoing>Flow_V10A</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_Datafono" name="Digitar monto en datáfono físico y esperar voucher impreso">
+      <bpmn:incoming>Flow_PagoTarjeta</bpmn:incoming>
+      <bpmn:outgoing>Flow_V10B</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_Empacar" name="Imprimir tirilla física de papel y empacar mercancía">
+      <bpmn:incoming>Flow_V10A</bpmn:incoming>
+      <bpmn:incoming>Flow_V10B</bpmn:incoming>
+      <bpmn:outgoing>Flow_V11</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ToCinta</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_CintaPapel" name="Queda registrado en la cinta de papel (Sin descuento automático en inventario)">
+      <bpmn:incoming>Flow_ToCinta</bpmn:incoming>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_Recibir" name="Recibir cambio, tirilla de papel y productos empacados">
+      <bpmn:incoming>Flow_V11</bpmn:incoming>
+      <bpmn:outgoing>Flow_V12</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:endEvent id="End_Exito" name="Compra física terminada (Sin actualización de stock en tiempo real)">
+      <bpmn:incoming>Flow_V12</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Sequence Flows -->
+    <bpmn:sequenceFlow id="Flow_V1" sourceRef="Start_Compra" targetRef="Task_TomarProd" />
+    <bpmn:sequenceFlow id="Flow_V2" sourceRef="Task_TomarProd" targetRef="Gateway_Gondola" />
+    <bpmn:sequenceFlow id="Flow_GondolaNo" name="No (Agotado)" sourceRef="Gateway_Gondola" targetRef="End_SinProd" />
+    <bpmn:sequenceFlow id="Flow_GondolaSi" name="Sí (Disponible)" sourceRef="Gateway_Gondola" targetRef="Task_Fila" />
+    <bpmn:sequenceFlow id="Flow_V3" sourceRef="Task_Fila" targetRef="Task_RecibirArt" />
+    <bpmn:sequenceFlow id="Flow_V4" sourceRef="Task_RecibirArt" targetRef="Gateway_CheckPrecio" />
+    <bpmn:sequenceFlow id="Flow_PrecioNo" name="No marcado" sourceRef="Gateway_CheckPrecio" targetRef="Task_BuscarLista" />
+    <bpmn:sequenceFlow id="Flow_PrecioSi" name="Sí marcado" sourceRef="Gateway_CheckPrecio" targetRef="Task_Digitar" />
+    <bpmn:sequenceFlow id="Flow_V5" sourceRef="Task_BuscarLista" targetRef="Task_Digitar" />
+    <bpmn:sequenceFlow id="Flow_V6" sourceRef="Task_Digitar" targetRef="Task_Sumar" />
+    <bpmn:sequenceFlow id="Flow_V7" sourceRef="Task_Sumar" targetRef="Task_Pagar" />
+    <bpmn:sequenceFlow id="Flow_V8" sourceRef="Task_Pagar" targetRef="Gateway_Cobro" />
+    <bpmn:sequenceFlow id="Flow_PagoEfectivo" name="Efectivo" sourceRef="Gateway_Cobro" targetRef="Task_ContarDinero" />
+    <bpmn:sequenceFlow id="Flow_PagoTarjeta" name="Tarjeta" sourceRef="Gateway_Cobro" targetRef="Task_Datafono" />
+    <bpmn:sequenceFlow id="Flow_V9" sourceRef="Task_ContarDinero" targetRef="Task_EntregarVuelto" />
+    <bpmn:sequenceFlow id="Flow_V10A" sourceRef="Task_EntregarVuelto" targetRef="Task_Empacar" />
+    <bpmn:sequenceFlow id="Flow_V10B" sourceRef="Task_Datafono" targetRef="Task_Empacar" />
+    <bpmn:sequenceFlow id="Flow_ToCinta" sourceRef="Task_Empacar" targetRef="Task_CintaPapel" />
+    <bpmn:sequenceFlow id="Flow_V11" sourceRef="Task_Empacar" targetRef="Task_Recibir" />
+    <bpmn:sequenceFlow id="Flow_V12" sourceRef="Task_Recibir" targetRef="End_Exito" />
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_VentaFisica">
+    <bpmndi:BPMNPlane id="BPMNPlane_VentaFisica" bpmnElement="Collaboration_VentaFisica">
+      <!-- Pool -->
+      <bpmndi:BPMNShape id="Participant_VentaFisica_di" bpmnElement="Participant_VentaFisica" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="1460" height="660" />
+      </bpmndi:BPMNShape>
+
+      <!-- Lanes -->
+      <bpmndi:BPMNShape id="Lane_Cliente_di" bpmnElement="Lane_Cliente" isHorizontal="true">
+        <dc:Bounds x="190" y="80" width="1430" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Cajero_di" bpmnElement="Lane_Cajero" isHorizontal="true">
+        <dc:Bounds x="190" y="280" width="1430" height="280" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Papel_di" bpmnElement="Lane_Papel" isHorizontal="true">
+        <dc:Bounds x="190" y="560" width="1430" height="180" />
+      </bpmndi:BPMNShape>
+
+      <!-- Lane Cliente Elements -->
+      <bpmndi:BPMNShape id="Start_Compra_di" bpmnElement="Start_Compra">
+        <dc:Bounds x="232" y="142" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="208" y="185" width="85" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_TomarProd_di" bpmnElement="Task_TomarProd">
+        <dc:Bounds x="300" y="120" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Gondola_di" bpmnElement="Gateway_Gondola" isMarkerVisible="true">
+        <dc:Bounds x="465" y="135" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="445" y="85" width="90" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_SinProd_di" bpmnElement="End_SinProd">
+        <dc:Bounds x="472" y="222" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="448" y="265" width="85" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Fila_di" bpmnElement="Task_Fila">
+        <dc:Bounds x="560" y="120" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Pagar_di" bpmnElement="Task_Pagar">
+        <dc:Bounds x="970" y="120" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Recibir_di" bpmnElement="Task_Recibir">
+        <dc:Bounds x="1350" y="120" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Exito_di" bpmnElement="End_Exito">
+        <dc:Bounds x="1522" y="142" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1498" y="185" width="85" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Lane Cajero Elements -->
+      <bpmndi:BPMNShape id="Task_RecibirArt_di" bpmnElement="Task_RecibirArt">
+        <dc:Bounds x="560" y="320" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_CheckPrecio_di" bpmnElement="Gateway_CheckPrecio" isMarkerVisible="true">
+        <dc:Bounds x="725" y="335" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="708" y="280" width="84" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_BuscarLista_di" bpmnElement="Task_BuscarLista">
+        <dc:Bounds x="690" y="440" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Digitar_di" bpmnElement="Task_Digitar">
+        <dc:Bounds x="830" y="320" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Sumar_di" bpmnElement="Task_Sumar">
+        <dc:Bounds x="830" y="120" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Cobro_di" bpmnElement="Gateway_Cobro" isMarkerVisible="true">
+        <dc:Bounds x="1005" y="335" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="990" y="295" width="80" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ContarDinero_di" bpmnElement="Task_ContarDinero">
+        <dc:Bounds x="1080" y="320" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EntregarVuelto_di" bpmnElement="Task_EntregarVuelto">
+        <dc:Bounds x="1220" y="320" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Datafono_di" bpmnElement="Task_Datafono">
+        <dc:Bounds x="1080" y="440" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Empacar_di" bpmnElement="Task_Empacar">
+        <dc:Bounds x="1350" y="320" width="120" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- Lane Papel Elements -->
+      <bpmndi:BPMNShape id="Task_CintaPapel_di" bpmnElement="Task_CintaPapel">
+        <dc:Bounds x="1345" y="600" width="130" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- Edges -->
+      <bpmndi:BPMNEdge id="Flow_V1_di" bpmnElement="Flow_V1">
+        <di:waypoint x="268" y="160" />
+        <di:waypoint x="300" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_V2_di" bpmnElement="Flow_V2">
+        <di:waypoint x="420" y="160" />
+        <di:waypoint x="465" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_GondolaNo_di" bpmnElement="Flow_GondolaNo">
+        <di:waypoint x="490" y="185" />
+        <di:waypoint x="490" y="222" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="496" y="195" width="67" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_GondolaSi_di" bpmnElement="Flow_GondolaSi">
+        <di:waypoint x="515" y="160" />
+        <di:waypoint x="560" y="160" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="507" y="142" width="71" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_V3_di" bpmnElement="Flow_V3">
+        <di:waypoint x="620" y="200" />
+        <di:waypoint x="620" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_V4_di" bpmnElement="Flow_V4">
+        <di:waypoint x="680" y="360" />
+        <di:waypoint x="725" y="360" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_PrecioNo_di" bpmnElement="Flow_PrecioNo">
+        <di:waypoint x="750" y="385" />
+        <di:waypoint x="750" y="440" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="755" y="405" width="60" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_PrecioSi_di" bpmnElement="Flow_PrecioSi">
+        <di:waypoint x="775" y="360" />
+        <di:waypoint x="830" y="360" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="775" y="342" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_V5_di" bpmnElement="Flow_V5">
+        <di:waypoint x="810" y="480" />
+        <di:waypoint x="885" y="480" />
+        <di:waypoint x="885" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_V6_di" bpmnElement="Flow_V6">
+        <di:waypoint x="885" y="320" />
+        <di:waypoint x="885" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_V7_di" bpmnElement="Flow_V7">
+        <di:waypoint x="940" y="160" />
+        <di:waypoint x="970" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_V8_di" bpmnElement="Flow_V8">
+        <di:waypoint x="1030" y="200" />
+        <di:waypoint x="1030" y="335" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_PagoEfectivo_di" bpmnElement="Flow_PagoEfectivo">
+        <di:waypoint x="1055" y="360" />
+        <di:waypoint x="1080" y="360" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1048" y="342" width="40" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_PagoTarjeta_di" bpmnElement="Flow_PagoTarjeta">
+        <di:waypoint x="1030" y="385" />
+        <di:waypoint x="1030" y="480" />
+        <di:waypoint x="1080" y="480" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1038" y="445" width="34" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_V9_di" bpmnElement="Flow_V9">
+        <di:waypoint x="1200" y="360" />
+        <di:waypoint x="1220" y="360" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_V10A_di" bpmnElement="Flow_V10A">
+        <di:waypoint x="1330" y="360" />
+        <di:waypoint x="1350" y="360" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_V10B_di" bpmnElement="Flow_V10B">
+        <di:waypoint x="1200" y="480" />
+        <di:waypoint x="1410" y="480" />
+        <di:waypoint x="1410" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToCinta_di" bpmnElement="Flow_ToCinta">
+        <di:waypoint x="1410" y="400" />
+        <di:waypoint x="1410" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_V11_di" bpmnElement="Flow_V11">
+        <di:waypoint x="1410" y="320" />
+        <di:waypoint x="1410" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_V12_di" bpmnElement="Flow_V12">
+        <di:waypoint x="1470" y="160" />
+        <di:waypoint x="1522" y="160" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
