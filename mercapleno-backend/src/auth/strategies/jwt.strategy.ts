@@ -32,6 +32,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
           }
         }
 
+        if (!token && req?.query?.token && typeof req.query.token === 'string') {
+          token = req.query.token;
+        }
+
         return token;
       },
       ignoreExpiration: false,
