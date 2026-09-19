@@ -5,14 +5,15 @@ import { API_ENDPOINTS } from "../config/api.config";
 const BASE_REPORTS_URL = "/reports";
 
 export const formatPrice = (price) => {
-  if (typeof price !== "number" || Number.isNaN(price)) return "$0";
+  const num = Number(price);
+  if (!Number.isFinite(num)) return "$0";
 
   return new Intl.NumberFormat("es-CO", {
     style: "currency",
     currency: "COP",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
-  }).format(price);
+  }).format(num);
 };
 
 export const getVentasMes = async (inicio, fin) => {

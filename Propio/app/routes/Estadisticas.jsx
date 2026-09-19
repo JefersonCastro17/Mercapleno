@@ -135,10 +135,20 @@ export default function Estadisticas() {
       }
 
       setVentasMes(Array.isArray(rVentasMes) ? rVentasMes.map(v => ({ ...v, total: safeNumber(v.total) })) : []);
-      setTopProductos(Array.isArray(rTopProductos) ? rTopProductos : []);
+      setTopProductos(Array.isArray(rTopProductos) ? rTopProductos.map(p => ({
+        ...p,
+        total_vendido: safeNumber(p.total_vendido),
+        total_facturado: safeNumber(p.total_facturado)
+      })) : []);
       setVentasCategoria(Array.isArray(rVentasCat) ? rVentasCat.map(c => ({ ...c, total_ingresos: safeNumber(c.total_ingresos), unidades_vendidas: safeNumber(c.unidades_vendidas) })) : []);
       setVentasMetodo(Array.isArray(rVentasMet) ? rVentasMet.map(m => ({ ...m, total_recaudado: safeNumber(m.total_recaudado), transacciones: safeNumber(m.transacciones) })) : []);
-      setProductosRentabilidad(Array.isArray(rProdRentables) ? rProdRentables : []);
+      setProductosRentabilidad(Array.isArray(rProdRentables) ? rProdRentables.map(p => ({
+        ...p,
+        unidades_vendidas: safeNumber(p.unidades_vendidas),
+        total_facturado: safeNumber(p.total_facturado),
+        ganancia_total: safeNumber(p.ganancia_total),
+        margen_pct: safeNumber(p.margen_pct)
+      })) : []);
       setResumenMes(Array.isArray(rResumenMes) ? rResumenMes.map(m => ({ ...m, total_mes: safeNumber(m.total_mes), cantidad_ventas: safeNumber(m.cantidad_ventas) })) : []);
       setLastUpdated(new Date());
     } catch (error) {

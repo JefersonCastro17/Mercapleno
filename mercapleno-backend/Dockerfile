@@ -17,3 +17,4 @@ RUN npm run build
 EXPOSE 4000
 
 CMD ["node", "scripts/docker-start.js"]
+
