@@ -121,12 +121,18 @@ describe('UsersAdminController (Unitarias)', () => {
 
   describe('remove', () => {
     it('debe eliminar un usuario delegando al servicio', async () => {
+      const mockUser = {
+        userId: 2,
+        email: 'superadmin@example.com',
+        id_rol: 1,
+        rol: 'SuperAdmin',
+      };
       const mockResponse = { success: true, message: 'Usuario eliminado correctamente' };
       mockUsersAdminService.remove.mockResolvedValue(mockResponse);
 
-      const result = await controller.remove('1');
+      const result = await controller.remove('1', mockUser as any);
 
-      expect(service.remove).toHaveBeenCalledWith('1');
+      expect(service.remove).toHaveBeenCalledWith('1', mockUser);
       expect(result).toEqual(mockResponse);
     });
   });

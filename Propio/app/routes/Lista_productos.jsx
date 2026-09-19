@@ -438,6 +438,16 @@ function ProductRow({
       <td>{formatPrice(producto.precio)}</td>
 
       <td>
+        <span style={{
+          fontWeight: 700,
+          color: Number(producto.stock || 0) <= 0 ? '#dc2626' : Number(producto.stock || 0) <= 5 ? '#d97706' : '#16a34a',
+          fontSize: '13.5px'
+        }}>
+          {Number(producto.stock || 0)} un.
+        </span>
+      </td>
+
+      <td>
         {producto.categoria_nombre || producto.id_categoria}
       </td>
 
@@ -555,6 +565,13 @@ function ProductCard({
       </p>
 
       <div className="products-card__meta">
+        <span className="products-card__tag" style={{
+          fontWeight: 700,
+          color: Number(producto.stock || 0) <= 0 ? '#dc2626' : Number(producto.stock || 0) <= 5 ? '#d97706' : '#16a34a'
+        }}>
+          Stock: {Number(producto.stock || 0)} un.
+        </span>
+
         <span className="products-card__tag">
           📂 {producto.categoria_nombre || producto.id_categoria}
         </span>
@@ -1195,6 +1212,7 @@ export default function Lista_productos() {
                     <tr>
                       <th>Producto</th>
                       <th>Precio</th>
+                      <th>Stock</th>
                       <th>Categoria</th>
                       <th>Proveedor</th>
                       <th>Estado</th>

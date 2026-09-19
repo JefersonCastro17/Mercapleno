@@ -45,25 +45,44 @@ export class ProductsService {
             apellido: true,
           },
         },
+        stock_actual: {
+          select: {
+            stock: true,
+          },
+        },
       },
       orderBy: { id_productos: 'asc' },
     });
 
-    return products.map((product) => ({
-      id_productos: product.id_productos,
-      nombre: product.nombre,
-      precio: product.precio,
-      id_categoria: product.id_categoria,
-      id_proveedor: product.id_proveedor,
-      descripcion: product.descripcion,
-      estado: product.estado,
-      imagen: product.imagen,
-      categoria_nombre: product.categoria?.nombre ?? null,
-      proveedor_nombre: [product.proveedor?.nombre, product.proveedor?.apellido]
-        .filter(Boolean)
-        .join(' ')
-        .trim() || null,
-    }));
+    return products.map((product) => {
+      const stock = Number(product.stock_actual?.[0]?.stock ?? 0);
+      const rawEstado = product.estado ?? 'Disponible';
+      const estadoCalculado =
+        rawEstado === 'Deshabilitado'
+          ? 'Deshabilitado'
+          : stock <= 0
+          ? 'Agotado'
+          : 'Disponible';
+
+      return {
+        id_productos: product.id_productos,
+        id: product.id_productos,
+        nombre: product.nombre,
+        precio: Number(product.precio || 0),
+        id_categoria: product.id_categoria,
+        id_proveedor: product.id_proveedor,
+        descripcion: product.descripcion,
+        estado: estadoCalculado,
+        estado_original: rawEstado,
+        stock,
+        imagen: product.imagen,
+        categoria_nombre: product.categoria?.nombre ?? null,
+        proveedor_nombre: [product.proveedor?.nombre, product.proveedor?.apellido]
+          .filter(Boolean)
+          .join(' ')
+          .trim() || null,
+      };
+    });
   }
 
   async getCatalogs() {
@@ -114,6 +133,11 @@ export class ProductsService {
           descripcion: dto.descripcion || null,
           estado: this.mapEstado(dto.estado),
           imagen: normalizedImage,
+          stock_actual: {
+            create: {
+              stock: 0,
+            },
+          },
         },
       });
 
