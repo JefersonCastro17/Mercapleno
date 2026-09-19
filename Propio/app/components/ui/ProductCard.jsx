@@ -54,30 +54,21 @@ function ProductCard({ product }) {
   const renderStockBadge = () => {
     if (isOutOfStock) {
       return (
-        <span
-          className="product-card__stock-badge"
-          style={{ background: "#ef4444", color: "#ffffff", padding: "4px 8px", borderRadius: "6px", fontSize: "12px", fontWeight: "bold" }}
-        >
-          🚫 Agotado
+        <span className="product-card__stock-badge product-card__stock-badge--out">
+          Agotado
         </span>
       );
     }
     if (stock <= 5) {
       return (
-        <span
-          className="product-card__stock-badge"
-          style={{ background: "#f59e0b", color: "#ffffff", padding: "4px 8px", borderRadius: "6px", fontSize: "12px", fontWeight: "bold" }}
-        >
-          ⚠️ ¡Solo {stock} disponibles!
+        <span className="product-card__stock-badge product-card__stock-badge--warning">
+          Últimas {stock} un.
         </span>
       );
     }
     return (
-      <span
-        className="product-card__stock-badge"
-        style={{ background: "#10b981", color: "#ffffff", padding: "4px 8px", borderRadius: "6px", fontSize: "12px", fontWeight: "bold" }}
-      >
-        📦 Stock: {stock} un.
+      <span className="product-card__stock-badge">
+        Stock: {stock} un.
       </span>
     );
   };
@@ -113,21 +104,9 @@ function ProductCard({ product }) {
         </p>
 
         {inCartCount > 0 && (
-          <div style={{ marginTop: "8px" }}>
-            <span style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "4px",
-              background: "#e0f2fe",
-              color: "#0369a1",
-              padding: "3px 10px",
-              borderRadius: "12px",
-              fontSize: "12px",
-              fontWeight: "bold"
-            }}>
-              🛒 En tu carrito: {inCartCount} un.
-            </span>
-          </div>
+          <p style={{ margin: "6px 0 0", fontSize: "12px", color: "#0B4A8B", fontWeight: "600" }}>
+            En carrito: {inCartCount} un.
+          </p>
         )}
       </div>
 
@@ -160,9 +139,9 @@ function ProductCard({ product }) {
               : isMaxReached
               ? "Máximo alcanzado"
               : justAdded
-              ? "✓ ¡Agregado!"
+              ? "Agregado"
               : inCartCount > 0
-              ? "+ Agregar otro"
+              ? "Agregar otro"
               : "Agregar al carrito"}
           </button>
         </div>

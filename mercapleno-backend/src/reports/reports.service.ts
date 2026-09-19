@@ -91,16 +91,28 @@ export class ReportsService {
         SELECT id_productos, AVG(costo_unitario) AS costo_promedio
         FROM entrada_productos
         GROUP BY id_productos
+      ),
+      ventas_filtradas AS (
+        SELECT v.id_venta, v.total
+        FROM venta v
+        WHERE 1 = 1 ${dateFilter}
+      ),
+      costos_por_venta AS (
+        SELECT 
+          vp.id_venta,
+          SUM(vp.cantidad * COALESCE(cp.costo_promedio, vp.precio * 0.70)) AS costo_venta
+        FROM venta_productos vp
+        JOIN ventas_filtradas vf ON vf.id_venta = vp.id_venta
+        LEFT JOIN costos_promedio cp ON cp.id_productos = vp.id_productos
+        GROUP BY vp.id_venta
       )
       SELECT 
-        COUNT(DISTINCT v.id_venta) AS total_ventas,
-        COALESCE(SUM(v.total), 0) AS ingresos_totales,
-        COALESCE(AVG(v.total), 0) AS ticket_promedio,
-        COALESCE(SUM(vp.cantidad * COALESCE(cp.costo_promedio, vp.precio * 0.70)), 0) AS costo_estimado
-      FROM venta v
-      LEFT JOIN venta_productos vp ON vp.id_venta = v.id_venta
-      LEFT JOIN costos_promedio cp ON cp.id_productos = vp.id_productos
-      WHERE 1 = 1 ${dateFilter}
+        COUNT(vf.id_venta) AS total_ventas,
+        COALESCE(SUM(vf.total), 0) AS ingresos_totales,
+        COALESCE(AVG(vf.total), 0) AS ticket_promedio,
+        COALESCE(SUM(cv.costo_venta), 0) AS costo_estimado
+      FROM ventas_filtradas vf
+      LEFT JOIN costos_por_venta cv ON cv.id_venta = vf.id_venta
     `;
 
     const [[resVentas]] = await this.db.query<any>(sqlVentas, params);
