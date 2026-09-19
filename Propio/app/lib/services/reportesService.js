@@ -89,4 +89,4 @@ export const fetchReportPdf = async () => {
     }
     throw error;
   }
-};
+};
