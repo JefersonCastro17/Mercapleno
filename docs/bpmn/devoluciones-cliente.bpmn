@@ -1,0 +1,384 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="Definitions_DevManual"
+                  targetNamespace="http://mercapleno.com/bpmn/devoluciones-manual">
+  <bpmn:collaboration id="Collaboration_DevManual">
+    <bpmn:participant id="Participant_DevManual" name="Proceso de Devoluciones y Cambios Físicos en Punto de Venta (Problemática) - Mercapleno" processRef="Process_DevManual" />
+  </bpmn:collaboration>
+
+  <bpmn:process id="Process_DevManual" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_DevManual">
+      <bpmn:lane id="Lane_Cli_Dev" name="Cliente con Reclamo">
+        <bpmn:flowNodeRef>Start_DevFisica</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PresentarDev</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_DevRechazo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RecibirSolucion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_DevOk</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Caj_Dev" name="Cajero en Mostrador">
+        <bpmn:flowNodeRef>Task_RevisarRecibo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_CheckCondicion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ExplicarNo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_LlamarSuper</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EntregarDinero</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PermitirCambio</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Super_Dev" name="Supervisor / Administrador">
+        <bpmn:flowNodeRef>Task_Acercarse</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Autoriza</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_FirmarRecibo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_TipoComp</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Averias" name="Registro de Novedades y Mermas">
+        <bpmn:flowNodeRef>Task_AnotarCuaderno</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_EvalFisico</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_DevolverGondola</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CajaAverias</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <!-- Flow Nodes -->
+    <bpmn:startEvent id="Start_DevFisica" name="Cliente regresa con producto defectuoso">
+      <bpmn:outgoing>Flow_D1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:userTask id="Task_PresentarDev" name="Presentar producto físico y tirilla de compra en mostrador">
+      <bpmn:incoming>Flow_D1</bpmn:incoming>
+      <bpmn:outgoing>Flow_D2</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_RevisarRecibo" name="Revisar fecha de compra en la tirilla física y examinar producto">
+      <bpmn:incoming>Flow_D2</bpmn:incoming>
+      <bpmn:outgoing>Flow_D3</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_CheckCondicion" name="¿El producto cumple condiciones para reclamo?">
+      <bpmn:incoming>Flow_D3</bpmn:incoming>
+      <bpmn:outgoing>Flow_CondicionNo</bpmn:outgoing>
+      <bpmn:outgoing>Flow_CondicionSi</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="Task_ExplicarNo" name="Informar verbalmente al cliente por qué no aplica la garantía">
+      <bpmn:incoming>Flow_CondicionNo</bpmn:incoming>
+      <bpmn:incoming>Flow_AutorizaNo</bpmn:incoming>
+      <bpmn:outgoing>Flow_DRechazoEnd</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:endEvent id="End_DevRechazo" name="Reclamo no aceptado en tienda">
+      <bpmn:incoming>Flow_DRechazoEnd</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:userTask id="Task_LlamarSuper" name="Llamar en voz alta al supervisor a la caja">
+      <bpmn:incoming>Flow_CondicionSi</bpmn:incoming>
+      <bpmn:outgoing>Flow_D4</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_Acercarse" name="Acercarse a la caja y examinar el producto físicamente con las manos">
+      <bpmn:incoming>Flow_D4</bpmn:incoming>
+      <bpmn:outgoing>Flow_D5</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_Autoriza" name="¿Autoriza el cambio o devolución?">
+      <bpmn:incoming>Flow_D5</bpmn:incoming>
+      <bpmn:outgoing>Flow_AutorizaNo</bpmn:outgoing>
+      <bpmn:outgoing>Flow_AutorizaSi</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="Task_FirmarRecibo" name="Firmar y sellar a mano la tirilla de compra del cliente">
+      <bpmn:incoming>Flow_AutorizaSi</bpmn:incoming>
+      <bpmn:outgoing>Flow_D6</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_TipoComp" name="¿Compensación solicitada por el cliente?">
+      <bpmn:incoming>Flow_D6</bpmn:incoming>
+      <bpmn:outgoing>Flow_CompEfectivo</bpmn:outgoing>
+      <bpmn:outgoing>Flow_CompProducto</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="Task_EntregarDinero" name="Sacar dinero de la gaveta de la caja y entregarlo al cliente">
+      <bpmn:incoming>Flow_CompEfectivo</bpmn:incoming>
+      <bpmn:outgoing>Flow_D7A</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_PermitirCambio" name="Permitir que el cliente tome un producto idéntico del estante">
+      <bpmn:incoming>Flow_CompProducto</bpmn:incoming>
+      <bpmn:outgoing>Flow_D7B</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_RecibirSolucion" name="Recibir dinero en efectivo o nuevo producto del estante">
+      <bpmn:incoming>Flow_D7A</bpmn:incoming>
+      <bpmn:incoming>Flow_D7B</bpmn:incoming>
+      <bpmn:outgoing>Flow_D8</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:endEvent id="End_DevOk" name="Devolución física resuelta">
+      <bpmn:incoming>Flow_D8</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:userTask id="Task_AnotarCuaderno" name="Anotar a mano la salida de dinero o cambio en cuaderno de caja">
+      <bpmn:incoming>Flow_D7A</bpmn:incoming>
+      <bpmn:incoming>Flow_D7B</bpmn:incoming>
+      <bpmn:outgoing>Flow_D9</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_EvalFisico" name="¿El producto devuelto puede revenderse?">
+      <bpmn:incoming>Flow_D9</bpmn:incoming>
+      <bpmn:outgoing>Flow_FisicoBueno</bpmn:outgoing>
+      <bpmn:outgoing>Flow_FisicoMalo</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="Task_DevolverGondola" name="Regresar el producto a la estantería física a mano">
+      <bpmn:incoming>Flow_FisicoBueno</bpmn:incoming>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_CajaAverias" name="Echar el producto a una caja de cartón de mermas en bodega">
+      <bpmn:incoming>Flow_FisicoMalo</bpmn:incoming>
+    </bpmn:userTask>
+
+    <!-- Sequence Flows -->
+    <bpmn:sequenceFlow id="Flow_D1" sourceRef="Start_DevFisica" targetRef="Task_PresentarDev" />
+    <bpmn:sequenceFlow id="Flow_D2" sourceRef="Task_PresentarDev" targetRef="Task_RevisarRecibo" />
+    <bpmn:sequenceFlow id="Flow_D3" sourceRef="Task_RevisarRecibo" targetRef="Gateway_CheckCondicion" />
+    <bpmn:sequenceFlow id="Flow_CondicionNo" name="No cumple" sourceRef="Gateway_CheckCondicion" targetRef="Task_ExplicarNo" />
+    <bpmn:sequenceFlow id="Flow_DRechazoEnd" sourceRef="Task_ExplicarNo" targetRef="End_DevRechazo" />
+    <bpmn:sequenceFlow id="Flow_CondicionSi" name="Sí cumple" sourceRef="Gateway_CheckCondicion" targetRef="Task_LlamarSuper" />
+    <bpmn:sequenceFlow id="Flow_D4" sourceRef="Task_LlamarSuper" targetRef="Task_Acercarse" />
+    <bpmn:sequenceFlow id="Flow_D5" sourceRef="Task_Acercarse" targetRef="Gateway_Autoriza" />
+    <bpmn:sequenceFlow id="Flow_AutorizaNo" name="No autoriza" sourceRef="Gateway_Autoriza" targetRef="Task_ExplicarNo" />
+    <bpmn:sequenceFlow id="Flow_AutorizaSi" name="Sí autoriza" sourceRef="Gateway_Autoriza" targetRef="Task_FirmarRecibo" />
+    <bpmn:sequenceFlow id="Flow_D6" sourceRef="Task_FirmarRecibo" targetRef="Gateway_TipoComp" />
+    <bpmn:sequenceFlow id="Flow_CompEfectivo" name="Efectivo" sourceRef="Gateway_TipoComp" targetRef="Task_EntregarDinero" />
+    <bpmn:sequenceFlow id="Flow_CompProducto" name="Cambio" sourceRef="Gateway_TipoComp" targetRef="Task_PermitirCambio" />
+    <bpmn:sequenceFlow id="Flow_D7A" sourceRef="Task_EntregarDinero" targetRef="Task_RecibirSolucion" />
+    <bpmn:sequenceFlow id="Flow_D7B" sourceRef="Task_PermitirCambio" targetRef="Task_RecibirSolucion" />
+    <bpmn:sequenceFlow id="Flow_D8" sourceRef="Task_RecibirSolucion" targetRef="End_DevOk" />
+    <bpmn:sequenceFlow id="Flow_D9" sourceRef="Task_AnotarCuaderno" targetRef="Gateway_EvalFisico" />
+    <bpmn:sequenceFlow id="Flow_FisicoBueno" name="Intacto" sourceRef="Gateway_EvalFisico" targetRef="Task_DevolverGondola" />
+    <bpmn:sequenceFlow id="Flow_FisicoMalo" name="Dañado" sourceRef="Gateway_EvalFisico" targetRef="Task_CajaAverias" />
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_DevManual">
+    <bpmndi:BPMNPlane id="BPMNPlane_DevManual" bpmnElement="Collaboration_DevManual">
+      <!-- Pool -->
+      <bpmndi:BPMNShape id="Participant_DevManual_di" bpmnElement="Participant_DevManual" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="1540" height="740" />
+      </bpmndi:BPMNShape>
+
+      <!-- Lanes -->
+      <bpmndi:BPMNShape id="Lane_Cli_Dev_di" bpmnElement="Lane_Cli_Dev" isHorizontal="true">
+        <dc:Bounds x="190" y="80" width="1510" height="170" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Caj_Dev_di" bpmnElement="Lane_Caj_Dev" isHorizontal="true">
+        <dc:Bounds x="190" y="250" width="1510" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Super_Dev_di" bpmnElement="Lane_Super_Dev" isHorizontal="true">
+        <dc:Bounds x="190" y="450" width="1510" height="180" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Averias_di" bpmnElement="Lane_Averias" isHorizontal="true">
+        <dc:Bounds x="190" y="630" width="1510" height="190" />
+      </bpmndi:BPMNShape>
+
+      <!-- Lane Cliente Elements -->
+      <bpmndi:BPMNShape id="Start_DevFisica_di" bpmnElement="Start_DevFisica">
+        <dc:Bounds x="232" y="132" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="210" y="175" width="80" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PresentarDev_di" bpmnElement="Task_PresentarDev">
+        <dc:Bounds x="310" y="110" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_DevRechazo_di" bpmnElement="End_DevRechazo">
+        <dc:Bounds x="562" y="132" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="548" y="95" width="65" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RecibirSolucion_di" bpmnElement="Task_RecibirSolucion">
+        <dc:Bounds x="1350" y="110" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_DevOk_di" bpmnElement="End_DevOk">
+        <dc:Bounds x="1532" y="132" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1510" y="175" width="80" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Lane Cajero Elements -->
+      <bpmndi:BPMNShape id="Task_RevisarRecibo_di" bpmnElement="Task_RevisarRecibo">
+        <dc:Bounds x="310" y="280" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_CheckCondicion_di" bpmnElement="Gateway_CheckCondicion" isMarkerVisible="true">
+        <dc:Bounds x="475" y="295" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="460" y="240" width="80" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ExplicarNo_di" bpmnElement="Task_ExplicarNo">
+        <dc:Bounds x="560" y="280" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_LlamarSuper_di" bpmnElement="Task_LlamarSuper">
+        <dc:Bounds x="440" y="370" width="120" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EntregarDinero_di" bpmnElement="Task_EntregarDinero">
+        <dc:Bounds x="1200" y="280" width="120" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PermitirCambio_di" bpmnElement="Task_PermitirCambio">
+        <dc:Bounds x="1200" y="360" width="120" height="70" />
+      </bpmndi:BPMNShape>
+
+      <!-- Lane Supervisor Elements -->
+      <bpmndi:BPMNShape id="Task_Acercarse_di" bpmnElement="Task_Acercarse">
+        <dc:Bounds x="600" y="490" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Autoriza_di" bpmnElement="Gateway_Autoriza" isMarkerVisible="true">
+        <dc:Bounds x="765" y="505" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="750" y="562" width="80" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_FirmarRecibo_di" bpmnElement="Task_FirmarRecibo">
+        <dc:Bounds x="860" y="490" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_TipoComp_di" bpmnElement="Gateway_TipoComp" isMarkerVisible="true">
+        <dc:Bounds x="1035" y="505" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1020" y="562" width="80" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Lane Averías Elements -->
+      <bpmndi:BPMNShape id="Task_AnotarCuaderno_di" bpmnElement="Task_AnotarCuaderno">
+        <dc:Bounds x="1200" y="650" width="120" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_EvalFisico_di" bpmnElement="Gateway_EvalFisico" isMarkerVisible="true">
+        <dc:Bounds x="1355" y="660" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1340" y="615" width="80" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_DevolverGondola_di" bpmnElement="Task_DevolverGondola">
+        <dc:Bounds x="1440" y="640" width="110" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CajaAverias_di" bpmnElement="Task_CajaAverias">
+        <dc:Bounds x="1440" y="720" width="110" height="60" />
+      </bpmndi:BPMNShape>
+
+      <!-- Edges -->
+      <bpmndi:BPMNEdge id="Flow_D1_di" bpmnElement="Flow_D1">
+        <di:waypoint x="268" y="150" />
+        <di:waypoint x="310" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_D2_di" bpmnElement="Flow_D2">
+        <di:waypoint x="375" y="190" />
+        <di:waypoint x="375" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_D3_di" bpmnElement="Flow_D3">
+        <di:waypoint x="440" y="320" />
+        <di:waypoint x="475" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CondicionNo_di" bpmnElement="Flow_CondicionNo">
+        <di:waypoint x="525" y="320" />
+        <di:waypoint x="560" y="320" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="515" y="302" width="53" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_DRechazoEnd_di" bpmnElement="Flow_DRechazoEnd">
+        <di:waypoint x="620" y="280" />
+        <di:waypoint x="620" y="150" />
+        <di:waypoint x="598" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CondicionSi_di" bpmnElement="Flow_CondicionSi">
+        <di:waypoint x="500" y="345" />
+        <di:waypoint x="500" y="370" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="505" y="345" width="49" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_D4_di" bpmnElement="Flow_D4">
+        <di:waypoint x="500" y="430" />
+        <di:waypoint x="500" y="530" />
+        <di:waypoint x="600" y="530" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_D5_di" bpmnElement="Flow_D5">
+        <di:waypoint x="730" y="530" />
+        <di:waypoint x="765" y="530" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AutorizaNo_di" bpmnElement="Flow_AutorizaNo">
+        <di:waypoint x="790" y="505" />
+        <di:waypoint x="790" y="320" />
+        <di:waypoint x="680" y="320" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="790" y="410" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AutorizaSi_di" bpmnElement="Flow_AutorizaSi">
+        <di:waypoint x="815" y="530" />
+        <di:waypoint x="860" y="530" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="810" y="512" width="52" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_D6_di" bpmnElement="Flow_D6">
+        <di:waypoint x="990" y="530" />
+        <di:waypoint x="1035" y="530" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CompEfectivo_di" bpmnElement="Flow_CompEfectivo">
+        <di:waypoint x="1060" y="505" />
+        <di:waypoint x="1060" y="315" />
+        <di:waypoint x="1200" y="315" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1065" y="410" width="40" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CompProducto_di" bpmnElement="Flow_CompProducto">
+        <di:waypoint x="1085" y="530" />
+        <di:waypoint x="1140" y="530" />
+        <di:waypoint x="1140" y="395" />
+        <di:waypoint x="1200" y="395" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1145" y="460" width="39" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_D7A_di" bpmnElement="Flow_D7A">
+        <di:waypoint x="1320" y="315" />
+        <di:waypoint x="1415" y="315" />
+        <di:waypoint x="1415" y="190" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_D7B_di" bpmnElement="Flow_D7B">
+        <di:waypoint x="1320" y="395" />
+        <di:waypoint x="1415" y="395" />
+        <di:waypoint x="1415" y="190" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_D8_di" bpmnElement="Flow_D8">
+        <di:waypoint x="1480" y="150" />
+        <di:waypoint x="1532" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_D9_di" bpmnElement="Flow_D9">
+        <di:waypoint x="1320" y="685" />
+        <di:waypoint x="1355" y="685" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_FisicoBueno_di" bpmnElement="Flow_FisicoBueno">
+        <di:waypoint x="1380" y="660" />
+        <di:waypoint x="1380" y="670" />
+        <di:waypoint x="1440" y="670" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1388" y="650" width="34" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_FisicoMalo_di" bpmnElement="Flow_FisicoMalo">
+        <di:waypoint x="1380" y="710" />
+        <di:waypoint x="1380" y="750" />
+        <di:waypoint x="1440" y="750" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1385" y="725" width="39" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

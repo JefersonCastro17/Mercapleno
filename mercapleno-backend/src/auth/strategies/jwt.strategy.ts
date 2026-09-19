@@ -51,19 +51,19 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     const userId = Number(payload.sub);
-    const userExists = await this.prisma.usuarios.findUnique({
+    const user = await this.prisma.usuarios.findUnique({
       where: { id: userId },
-      select: { id: true }
+      select: { id: true, id_rol: true, email: true },
     });
 
-    if (!userExists) {
+    if (!user) {
       throw new UnauthorizedException('El usuario ha sido eliminado');
     }
 
     return {
-      id: userId,
-      id_rol: payload.id_rol,
-      email: payload.email,
+      id: user.id,
+      id_rol: user.id_rol,
+      email: user.email,
     };
   }
 }

@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PostgresService, DbConnection, DbQueryResult } from './postgres.service';
+import { PostgresService, DbConnection } from './postgres.service';
 
 export type PoolConnection = DbConnection;
-export type FieldPacket = any;
 
 @Injectable()
 export class MysqlService extends PostgresService {}

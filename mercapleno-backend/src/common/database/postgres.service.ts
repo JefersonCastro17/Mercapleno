@@ -22,12 +22,12 @@ export function translateSqlToPostgres(sql: string): string {
 
   // Reemplazar funciones de fecha comunes de MySQL
   translated = translated.replace(/\bCURDATE\(\)/gi, 'CURRENT_DATE');
-  translated = translated.replace(/DATE_FORMAT\s*\(\s*([^,]+)\s*,\s*'%Y-%m'\s*\)/gi, 'TO_CHAR($1, \'YYYY-MM\')');
-  translated = translated.replace(/DATE_FORMAT\s*\(\s*([^,]+)\s*,\s*'%Y-%m-%d'\s*\)/gi, 'TO_CHAR($1, \'YYYY-MM-DD\')');
+  translated = translated.replace(/\bDATE_FORMAT\(\s*([\w.]+)\s*,\s*'%Y-%m'\s*\)/gi, 'TO_CHAR($1, \'YYYY-MM\')');
+  translated = translated.replace(/\bDATE_FORMAT\(\s*([\w.]+)\s*,\s*'%Y-%m-%d'\s*\)/gi, 'TO_CHAR($1, \'YYYY-MM-DD\')');
 
   // Reemplazar parámetros posicionales '?' por '$1', '$2', ...
   let paramIndex = 1;
-  translated = translated.replace(/\?/g, () => `$${paramIndex++}`);
+  translated = translated.replaceAll('?', () => `$${paramIndex++}`);
 
   // Para INSERTs sin RETURNING, agregar RETURNING * para capturar el insertId
   const trimmed = translated.trim();

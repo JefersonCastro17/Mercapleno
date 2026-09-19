@@ -252,22 +252,35 @@ describe('AuthController y Guardias (Unitarias)', () => {
   // =========================================================================
   describe('Estrategia JwtStrategy', () => {
     let strategy: JwtStrategy;
+    const mockPrisma = {
+      usuarios: {
+        findUnique: jest.fn(),
+      },
+    };
 
     beforeEach(() => {
-      strategy = new JwtStrategy();
+      jest.clearAllMocks();
+      strategy = new JwtStrategy(mockPrisma as any);
     });
 
-    it('debe validar y retornar AuthUser si el payload es válido', () => {
+    it('debe validar y retornar AuthUser con el rol de BD si el payload es válido', async () => {
+      mockPrisma.usuarios.findUnique.mockResolvedValue({ id: 123, id_rol: 2, email: 'user@test.com' });
+      const payload = { sub: '123', email: 'user@test.com', id_rol: 1, token_type: 'access' };
+      const result = await strategy.validate(payload);
+      expect(result).toEqual({ id: 123, email: 'user@test.com', id_rol: 2 });
+    });
+
+    it('debe lanzar UnauthorizedException si el usuario ya no existe en la base de datos', async () => {
+      mockPrisma.usuarios.findUnique.mockResolvedValue(null);
       const payload = { sub: '123', email: 'user@test.com', id_rol: 3, token_type: 'access' };
-      const result = strategy.validate(payload);
-      expect(result).toEqual({ id: 123, email: 'user@test.com', id_rol: 3 });
+      await expect(strategy.validate(payload)).rejects.toThrow(UnauthorizedException);
     });
 
-    it('debe lanzar UnauthorizedException si sub o email son inválidos', () => {
-      expect(() => strategy.validate({ sub: null, email: 'user@test.com', id_rol: 3, token_type: 'access' } as any)).toThrow(UnauthorizedException);
-      expect(() => strategy.validate({ sub: '123', email: '', id_rol: 3, token_type: 'access' })).toThrow(UnauthorizedException);
-      expect(() => strategy.validate({ sub: '123', email: 'user@test.com', id_rol: undefined, token_type: 'access' } as any)).toThrow(UnauthorizedException);
-      expect(() => strategy.validate({ sub: '123', email: 'user@test.com', id_rol: 3, token_type: 'refresh' })).toThrow(UnauthorizedException);
+    it('debe lanzar UnauthorizedException si sub o email son inválidos', async () => {
+      await expect(strategy.validate({ sub: null, email: 'user@test.com', id_rol: 3, token_type: 'access' } as any)).rejects.toThrow(UnauthorizedException);
+      await expect(strategy.validate({ sub: '123', email: '', id_rol: 3, token_type: 'access' })).rejects.toThrow(UnauthorizedException);
+      await expect(strategy.validate({ sub: '123', email: 'user@test.com', id_rol: undefined, token_type: 'access' } as any)).rejects.toThrow(UnauthorizedException);
+      await expect(strategy.validate({ sub: '123', email: 'user@test.com', id_rol: 3, token_type: 'refresh' })).rejects.toThrow(UnauthorizedException);
     });
 
     it('debe extraer el token desde cookies o desde header Bearer', () => {

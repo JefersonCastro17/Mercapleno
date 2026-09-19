@@ -18,7 +18,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const request = ctx.getRequest<Request>();
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Error Interno del Servidor';
-    let errorCode = 'ERR_500_INTERNAL_SERVER_ERROR';
+    let errorCode: string | undefined = undefined;
 
     let additionalResponseData: Record<string, unknown> = {};
 
@@ -82,10 +82,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
       this.logger.error(`Error: ${exception.message}`, exception.stack);
     }
 
+    const finalErrorCode = errorCode || 'ERR_500_INTERNAL_SERVER_ERROR';
+
     const errorResponse = {
       ...additionalResponseData,
       statusCode: status,
-      errorCode,
+      errorCode: finalErrorCode,
       message,
       timestamp: new Date().toISOString(),
       path: request.url,
@@ -93,7 +95,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     };
 
     this.logger.error(
-      `[${errorCode}] ${request.method} ${request.url} - ${message}`,
+      `[${finalErrorCode}] ${request.method} ${request.url} - ${message}`,
     );
 
     response.status(status).json(errorResponse);

@@ -1,4 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
+import { randomBytes } from 'node:crypto';
 import { existsSync, mkdirSync, unlinkSync } from 'node:fs';
 import { basename, extname, join } from 'node:path';
 import { diskStorage } from 'multer';
@@ -94,7 +95,7 @@ export const productImageUploadOptions = {
       const originalName = file.originalname || 'producto';
       const cleanBaseName = sanitizeFileName(originalName.replace(/\.[^.]+$/, ''));
       const extension = resolveImageExtension(file);
-      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1_000_000_000)}`;
+      const uniqueSuffix = `${Date.now()}-${randomBytes(6).toString('hex')}`;
 
       callback(null, `${uniqueSuffix}-${cleanBaseName}${extension}`);
     },

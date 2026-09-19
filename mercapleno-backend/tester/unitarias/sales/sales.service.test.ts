@@ -212,4 +212,26 @@ describe('SalesService (Unitarias)', () => {
       expect(connection.rollback).toHaveBeenCalled();
     });
   });
+
+  describe('resolvePaymentMethod helper', () => {
+    it('debe resolver numeros a formato M{id}', () => {
+      expect((service as any).resolvePaymentMethod(1)).toBe('M1');
+      expect((service as any).resolvePaymentMethod(3.9)).toBe('M3');
+    });
+
+    it('debe resolver strings numericos a formato M{id}', () => {
+      expect((service as any).resolvePaymentMethod('2')).toBe('M2');
+      expect((service as any).resolvePaymentMethod('M5')).toBe('M5');
+      expect((service as any).resolvePaymentMethod('TRANSFERENCIA')).toBe('TRANSFERENCIA');
+    });
+
+    it('debe retornar null para valores invalidos', () => {
+      expect((service as any).resolvePaymentMethod(null)).toBeNull();
+      expect((service as any).resolvePaymentMethod(undefined)).toBeNull();
+      expect((service as any).resolvePaymentMethod('')).toBeNull();
+      expect((service as any).resolvePaymentMethod('   ')).toBeNull();
+      expect((service as any).resolvePaymentMethod(-1)).toBeNull();
+      expect((service as any).resolvePaymentMethod(NaN)).toBeNull();
+    });
+  });
 });
