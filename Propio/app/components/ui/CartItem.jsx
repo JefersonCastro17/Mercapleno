@@ -7,6 +7,8 @@ function CartItem({ item }) {
   const { setItemQuantity, removeFromCart } = useCartContext();
   const subtotal = item.price * item.cantidad;
   const imageSrc = resolveImageUrl(item.image);
+  const maxStock = Number(item.stock ?? 999);
+  const isMaxReached = item.stock !== undefined && item.cantidad >= maxStock;
 
   return (
     <article className="cart-item-row">
@@ -22,6 +24,11 @@ function CartItem({ item }) {
         <div className="cart-item-row__text">
           <p className="cart-item-row__name">{item.nombre}</p>
           <p className="cart-item-row__unit">{formatPrice(item.price)} c/u</p>
+          {item.stock !== undefined && (
+            <span style={{ fontSize: "11px", color: isMaxReached ? "#e11d48" : "#64748b", fontWeight: "600" }}>
+              {isMaxReached ? `⚠️ Máximo stock (${maxStock} un.)` : `Disponibles: ${maxStock} un.`}
+            </span>
+          )}
         </div>
       </div>
 
@@ -34,11 +41,17 @@ function CartItem({ item }) {
         >
           -
         </button>
-        <span>{item.cantidad}</span>
+        <span style={{ minWidth: "24px", textAlign: "center", fontWeight: "bold" }}>{item.cantidad}</span>
         <button
           type="button"
           className="cart-item-row__qty-btn"
           onClick={() => setItemQuantity(item.id, item.cantidad + 1)}
+          disabled={isMaxReached}
+          style={{
+            cursor: isMaxReached ? "not-allowed" : "pointer",
+            opacity: isMaxReached ? 0.4 : 1,
+          }}
+          title={isMaxReached ? "Stock máximo alcanzado" : "Agregar una unidad"}
           aria-label="Agregar una unidad"
         >
           +

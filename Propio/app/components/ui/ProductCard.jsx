@@ -4,29 +4,82 @@ import { formatPrice } from "../../lib/services/productData";
 import { resolveImageUrl, FALLBACK_IMAGE } from "../../lib/services/imageUtils";
 
 function ProductCard({ product }) {
-  const { addToCart } = useCartContext();
+  const { cart, addToCart } = useCartContext();
   const [justAdded, setJustAdded] = useState(false);
 
   const priceValue = Number(product.precio ?? product.price ?? 0);
   const productId = Number(product.id ?? product.id_productos);
   const imageSrc = resolveImageUrl(product.image || product.imagen);
-  const categoryLabel = product.category || product.categoria || "Sin categoria";
-  const stockLabel = product.isLowStock ? "Stock bajo" : "Disponible";
+  const categoryLabel = product.category || product.categoria || "Sin categoría";
+  const stock = Number(product.stock ?? 0);
+
+  const inCartItem = cart.find(
+    (item) => Number(item.id ?? item.id_productos) === productId
+  );
+  const inCartCount = inCartItem ? Number(inCartItem.cantidad || 0) : 0;
+  const isOutOfStock = stock <= 0;
+  const isMaxReached = inCartCount >= stock;
 
   const handleAddToCart = () => {
+    if (isOutOfStock || isMaxReached) return;
+
     addToCart({
       ...product,
       id: productId,
       id_productos: productId,
+      stock,
       price: priceValue,
       precio: priceValue,
       image: product.image || product.imagen,
       nombre: product.nombre || product.name,
     });
+
     setJustAdded(true);
     setTimeout(() => {
       setJustAdded(false);
     }, 1200);
+
+    try {
+      window.dispatchEvent(
+        new CustomEvent("mercapleno:item-added", {
+          detail: {
+            name: product.nombre || product.name || "Producto",
+            count: inCartCount + 1,
+          },
+        })
+      );
+    } catch (_e) {}
+  };
+
+  const renderStockBadge = () => {
+    if (isOutOfStock) {
+      return (
+        <span
+          className="product-card__stock-badge"
+          style={{ background: "#ef4444", color: "#ffffff", padding: "4px 8px", borderRadius: "6px", fontSize: "12px", fontWeight: "bold" }}
+        >
+          🚫 Agotado
+        </span>
+      );
+    }
+    if (stock <= 5) {
+      return (
+        <span
+          className="product-card__stock-badge"
+          style={{ background: "#f59e0b", color: "#ffffff", padding: "4px 8px", borderRadius: "6px", fontSize: "12px", fontWeight: "bold" }}
+        >
+          ⚠️ ¡Solo {stock} disponibles!
+        </span>
+      );
+    }
+    return (
+      <span
+        className="product-card__stock-badge"
+        style={{ background: "#10b981", color: "#ffffff", padding: "4px 8px", borderRadius: "6px", fontSize: "12px", fontWeight: "bold" }}
+      >
+        📦 Stock: {stock} un.
+      </span>
+    );
   };
 
   return (
@@ -39,13 +92,7 @@ function ProductCard({ product }) {
     >
       <div className="product-card__header">
         <span className="product-card__category">{categoryLabel}</span>
-        <span
-          className={`product-card__stock-badge ${
-            product.isLowStock ? "product-card__stock-badge--warning" : ""
-          }`}
-        >
-          {stockLabel}
-        </span>
+        {renderStockBadge()}
       </div>
 
       <div className="imagen product-card__image">
@@ -65,10 +112,22 @@ function ProductCard({ product }) {
           {product.descripcion || "Producto listo para agregar al carrito."}
         </p>
 
-        {product.isLowStock && (
-          <p className="product-card__warning">
-            Quedan pocas unidades disponibles. Agrega tu pedido antes de que se agote.
-          </p>
+        {inCartCount > 0 && (
+          <div style={{ marginTop: "8px" }}>
+            <span style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "4px",
+              background: "#e0f2fe",
+              color: "#0369a1",
+              padding: "3px 10px",
+              borderRadius: "12px",
+              fontSize: "12px",
+              fontWeight: "bold"
+            }}>
+              🛒 En tu carrito: {inCartCount} un.
+            </span>
+          </div>
         )}
       </div>
 
@@ -82,9 +141,29 @@ function ProductCard({ product }) {
           <button
             className={`botoncito_producto ${justAdded ? "botoncito_producto--agregado" : ""}`}
             onClick={handleAddToCart}
-            style={justAdded ? { backgroundColor: "#10b981", color: "#ffffff", borderColor: "#10b981" } : {}}
+            disabled={isOutOfStock || isMaxReached}
+            style={{
+              backgroundColor: isOutOfStock
+                ? "#9ca3af"
+                : isMaxReached
+                ? "#cbd5e1"
+                : justAdded
+                ? "#10b981"
+                : undefined,
+              color: isOutOfStock || isMaxReached ? "#475569" : undefined,
+              cursor: isOutOfStock || isMaxReached ? "not-allowed" : "pointer",
+              transition: "all 0.2s ease-in-out",
+            }}
           >
-            {justAdded ? "✓ ¡Agregado!" : "Agregar al carrito"}
+            {isOutOfStock
+              ? "Agotado"
+              : isMaxReached
+              ? "Máximo alcanzado"
+              : justAdded
+              ? "✓ ¡Agregado!"
+              : inCartCount > 0
+              ? "+ Agregar otro"
+              : "Agregar al carrito"}
           </button>
         </div>
       </div>

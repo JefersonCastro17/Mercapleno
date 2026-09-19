@@ -228,9 +228,11 @@ export class SalesService {
         );
 
         if (!producto || producto.stock < cantidad) {
+          const productName = producto?.nombre ? `"${producto.nombre}"` : `ID ${idProducto}`;
+          const availableStock = producto ? Number(producto.stock || 0) : 0;
           throw new ConflictException({
             error: 'Stock Insuficiente',
-            message: `El producto ID ${idProducto} no tiene la cantidad solicitada disponible.`,
+            message: `El producto ${productName} no tiene suficiente stock disponible (solicitado: ${cantidad}, disponible: ${availableStock}).`,
           });
         }
 
