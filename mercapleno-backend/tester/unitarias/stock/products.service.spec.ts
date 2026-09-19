@@ -103,6 +103,7 @@ describe('ProductsService', () => {
         include: {
           categoria: { select: { id_categoria: true, nombre: true } },
           proveedor: { select: { id_proveedor: true, nombre: true, apellido: true } },
+          stock_actual: { select: { stock: true } },
         },
         orderBy: { id_productos: 'asc' },
       });
@@ -110,24 +111,30 @@ describe('ProductsService', () => {
       expect(result).toEqual([
         {
           id_productos: 1,
+          id: 1,
           nombre: 'Producto 1',
           precio: 100,
           id_categoria: 1,
           id_proveedor: 1,
           descripcion: 'Desc',
-          estado: 'Disponible',
+          estado: 'Agotado',
+          estado_original: 'Disponible',
+          stock: 0,
           imagen: 'img1.png',
           categoria_nombre: 'Categoria 1',
           proveedor_nombre: 'Juan Perez',
         },
         {
           id_productos: 2,
+          id: 2,
           nombre: 'Producto 2',
           precio: 200,
           id_categoria: 2,
           id_proveedor: 2,
           descripcion: null,
           estado: 'Agotado',
+          estado_original: 'Agotado',
+          stock: 0,
           imagen: null,
           categoria_nombre: null,
           proveedor_nombre: 'Empresa',
@@ -191,6 +198,11 @@ describe('ProductsService', () => {
           descripcion: dto.descripcion,
           estado: 'Disponible',
           imagen: 'img.png',
+          stock_actual: {
+            create: {
+              stock: 0,
+            },
+          },
         },
       });
       expect(result).toEqual({ message: 'Producto agregado correctamente', id: 10 });
@@ -206,6 +218,11 @@ describe('ProductsService', () => {
         data: expect.objectContaining({
           estado: 'Agotado',
           imagen: 'uploaded.png',
+          stock_actual: {
+            create: {
+              stock: 0,
+            },
+          },
         }),
       });
       expect(result).toEqual({ message: 'Producto agregado correctamente', id: 11 });

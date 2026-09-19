@@ -57,7 +57,7 @@ describe('SalesService (Unitarias)', () => {
         id: '1',
         nombre: 'Arroz Premium',
         price: 2500,
-        category: 'abarrotes',
+        category: 'Abarrotes',
         stock: 10,
       });
       expect(db.query).toHaveBeenCalled();
@@ -75,7 +75,7 @@ describe('SalesService (Unitarias)', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].nombre).toBe('Pan integral');
-      expect(result[0].category).toBe('panadería');
+      expect(result[0].category).toBe('Panadería');
       expect(result[0].price).toBe(3500);
       expect(db.query).toHaveBeenCalledWith(
         expect.stringContaining('LOWER(c.nombre) = LOWER(?)'),

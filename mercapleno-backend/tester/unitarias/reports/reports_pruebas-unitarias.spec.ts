@@ -46,7 +46,10 @@ describe('ReportsService (Unitarias)', () => {
         expect.stringContaining("GROUP BY TO_CHAR(fecha, 'YYYY-MM') ORDER BY TO_CHAR(fecha, 'YYYY-MM')"),
         [],
       );
-      expect(result).toEqual(mockRows);
+      expect(result).toEqual([
+        { mes: '2026-01', total: 150000 },
+        { mes: '2026-02', total: 230000 },
+      ]);
     });
 
     it('debe aplicar filtro de fecha inicio cuando se proporciona', async () => {
@@ -59,7 +62,7 @@ describe('ReportsService (Unitarias)', () => {
         expect.stringContaining("AND TO_CHAR(fecha, 'YYYY-MM') >= $1"),
         ['2026-03'],
       );
-      expect(result).toEqual(mockRows);
+      expect(result).toEqual([{ mes: '2026-03', total: 120000 }]);
     });
 
     it('debe aplicar filtro de fecha fin cuando se proporciona', async () => {
@@ -72,7 +75,7 @@ describe('ReportsService (Unitarias)', () => {
         expect.stringContaining("AND TO_CHAR(fecha, 'YYYY-MM') <= $1"),
         ['2026-01'],
       );
-      expect(result).toEqual(mockRows);
+      expect(result).toEqual([{ mes: '2026-01', total: 90000 }]);
     });
 
     it('debe aplicar filtros de inicio y fin simultáneamente', async () => {
@@ -90,7 +93,10 @@ describe('ReportsService (Unitarias)', () => {
         ),
         ['2026-02', '2026-03'],
       );
-      expect(result).toEqual(mockRows);
+      expect(result).toEqual([
+        { mes: '2026-02', total: 100000 },
+        { mes: '2026-03', total: 110000 },
+      ]);
     });
 
     it('debe retornar lista vacía si no hay registros', async () => {
@@ -105,8 +111,8 @@ describe('ReportsService (Unitarias)', () => {
   describe('getTopProductos', () => {
     it('debe consultar el top 10 de productos más vendidos', async () => {
       const mockRows = [
-        { nombre: 'Arroz Diana 1kg', total_vendido: 50, total_facturado: '200000.00' },
-        { nombre: 'Aceite Premier 1L', total_vendido: 30, total_facturado: '270000.00' },
+        { nombre: 'Arroz Diana 1kg', categoria: 'Granos', total_vendido: 50, total_facturado: '200000.00' },
+        { nombre: 'Aceite Premier 1L', categoria: 'Aceites', total_vendido: 30, total_facturado: '270000.00' },
       ];
       db.query.mockResolvedValueOnce([mockRows]);
 
@@ -116,7 +122,10 @@ describe('ReportsService (Unitarias)', () => {
         expect.stringContaining('ORDER BY total_vendido DESC'),
       );
       expect(db.query).toHaveBeenCalledWith(expect.stringContaining('LIMIT 10'));
-      expect(result).toEqual(mockRows);
+      expect(result).toEqual([
+        { nombre: 'Arroz Diana 1kg', categoria: 'Granos', total_vendido: 50, total_facturado: 200000 },
+        { nombre: 'Aceite Premier 1L', categoria: 'Aceites', total_vendido: 30, total_facturado: 270000 },
+      ]);
     });
 
     it('debe retornar array vacío si no hay ventas de productos', async () => {
@@ -142,7 +151,11 @@ describe('ReportsService (Unitarias)', () => {
       expect(db.query).toHaveBeenCalledWith(
         expect.stringContaining('SELECT COUNT(*) AS total_ventas'),
       );
-      expect(result).toEqual(mockRow);
+      expect(result).toEqual({
+        total_ventas: 15,
+        dinero_total: 1250000,
+        promedio: 83333.33,
+      });
     });
 
     it('debe retornar estructura por defecto con ceros si no hay filas', async () => {
@@ -170,7 +183,10 @@ describe('ReportsService (Unitarias)', () => {
       expect(db.query).toHaveBeenCalledWith(
         expect.stringContaining("ORDER BY TO_CHAR(fecha, 'YYYY-MM') DESC"),
       );
-      expect(result).toEqual(mockRows);
+      expect(result).toEqual([
+        { mes: '2026-03', cantidad_ventas: 8, total_mes: 600000 },
+        { mes: '2026-02', cantidad_ventas: 12, total_mes: 950000 },
+      ]);
     });
 
     it('debe retornar array vacío si no hay ventas mensuales', async () => {
