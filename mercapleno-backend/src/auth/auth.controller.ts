@@ -1,8 +1,12 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, MessageEvent, Post, Req, Res, Sse } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
+import { Observable } from 'rxjs';
 import { Public } from './decorators/public.decorator';
+import { CurrentUser } from './decorators/current-user.decorator';
+import { AuthUser } from './interfaces/auth-user.interface';
 import { AuthService } from './auth.service';
+import { SessionSyncService } from './session-sync.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RequestPasswordResetDto } from './dto/request-password-reset.dto';
@@ -14,7 +18,10 @@ import { VerifyLoginCodeDto } from './dto/verify-login-code.dto';
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly sessionSyncService: SessionSyncService,
+  ) {}
 
   private setAccessTokenCookie(res: Response, req: Request, token: string) {
     const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
@@ -118,6 +125,12 @@ export class AuthController {
       sameSite: isHttps ? 'none' : 'lax',
     });
     return this.authService.logout();
+  }
+
+  @Sse('session-events')
+  @ApiOperation({ summary: 'Flujo en tiempo real (SSE) de eventos de sesion del usuario' })
+  sessionEvents(@CurrentUser() user: AuthUser): Observable<MessageEvent> {
+    return this.sessionSyncService.getEventsForUser(user.id);
   }
 }
 

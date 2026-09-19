@@ -314,23 +314,34 @@ describe('UsersAdminService (Unitarias)', () => {
   });
 
   describe('RF-002.4 Eliminar Usuario', () => {
+    const mockAdmin = { id: 99, id_rol: 1, email: 'admin@test.com' };
+
     it('CP-063 - debe eliminar correctamente un usuario que no tiene registros asociados', async () => {
-      jest.spyOn(prismaService.usuarios, 'findUnique').mockResolvedValue({ id: 1 } as any);
-      jest.spyOn(prismaService.usuarios, 'delete').mockResolvedValue({ id: 1 } as any);
+      jest.spyOn(prismaService.usuarios, 'findUnique').mockResolvedValue({ id: 2, id_rol: 2 } as any);
+      jest.spyOn(prismaService.usuarios, 'delete').mockResolvedValue({ id: 2 } as any);
 
-      const result = await service.remove('1');
+      const result = await service.remove('2', mockAdmin);
 
-      expect(prismaService.usuarios.delete).toHaveBeenCalledWith({ where: { id: 1 } });
+      expect(prismaService.usuarios.delete).toHaveBeenCalledWith({ where: { id: 2 } });
       expect(result).toEqual({
         success: true,
         message: 'Usuario eliminado correctamente',
       });
     });
 
+    it('debe rechazar la auto-eliminación de cuenta', async () => {
+      await expect(service.remove('99', mockAdmin)).rejects.toThrow(ConflictException);
+    });
+
+    it('debe impedir eliminar a otro administrador', async () => {
+      jest.spyOn(prismaService.usuarios, 'findUnique').mockResolvedValue({ id: 5, id_rol: 1 } as any);
+      await expect(service.remove('5', mockAdmin)).rejects.toThrow(ConflictException);
+    });
+
     it('debe lanzar NotFoundException si el usuario a eliminar no existe', async () => {
       jest.spyOn(prismaService.usuarios, 'findUnique').mockResolvedValue(null);
 
-      await expect(service.remove('999')).rejects.toThrow(NotFoundException);
+      await expect(service.remove('999', mockAdmin)).rejects.toThrow(NotFoundException);
     });
 
     it('CP-064 - debe impedir eliminar un usuario que tiene registros asociados (P2003)', async () => {
@@ -339,10 +350,10 @@ describe('UsersAdminService (Unitarias)', () => {
         clientVersion: '6.0.0',
       });
 
-      jest.spyOn(prismaService.usuarios, 'findUnique').mockResolvedValue({ id: 1 } as any);
+      jest.spyOn(prismaService.usuarios, 'findUnique').mockResolvedValue({ id: 2, id_rol: 2 } as any);
       jest.spyOn(prismaService.usuarios, 'delete').mockRejectedValue(relationError);
 
-      await expect(service.remove('1')).rejects.toThrow(ConflictException);
+      await expect(service.remove('2', mockAdmin)).rejects.toThrow(ConflictException);
     });
   });
 });

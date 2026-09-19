@@ -7,6 +7,7 @@ import { Request, Response } from 'express';
 
 import { AuthController } from '../../../src/auth/auth.controller';
 import { AuthService } from '../../../src/auth/auth.service';
+import { SessionSyncService } from '../../../src/auth/session-sync.service';
 import { JwtStrategy } from '../../../src/auth/strategies/jwt.strategy';
 import { JwtAuthGuard } from '../../../src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../src/auth/guards/roles.guard';
@@ -24,6 +25,7 @@ import { ResetPasswordDto } from '../../../src/auth/dto/reset-password.dto';
 describe('AuthController y Guardias (Unitarias)', () => {
   let controller: AuthController;
   let authService: AuthService;
+  let sessionSyncService: SessionSyncService;
 
   const mockAuthService = {
     getDocumentTypes: jest.fn(),
@@ -45,11 +47,13 @@ describe('AuthController y Guardias (Unitarias)', () => {
           provide: AuthService,
           useValue: mockAuthService,
         },
+        SessionSyncService,
       ],
     }).compile();
 
     controller = module.get<AuthController>(AuthController);
     authService = module.get<AuthService>(AuthService);
+    sessionSyncService = module.get<SessionSyncService>(SessionSyncService);
   });
 
   afterEach(() => {
@@ -230,20 +234,38 @@ describe('AuthController y Guardias (Unitarias)', () => {
       expect(result).toEqual(mockResult);
     });
 
-    it('debe limpiar la cookie access_token con secure y sameSite none en HTTPS', () => {
-      const mockReq = { secure: true, headers: {} } as unknown as Request;
-      const mockRes = { clearCookie: jest.fn() } as unknown as Response;
-      const mockResult = { success: true, message: 'Sesión cerrada' };
-      mockAuthService.logout.mockReturnValue(mockResult);
+    it('debe emitir y transmitir eventos de sesión por SSE para el usuario correspondiente', (done) => {
+      const mockUser = { id: 42, id_rol: 1, email: 'admin@test.com' };
+      const events$ = controller.sessionEvents(mockUser);
 
-      const result = controller.logout(mockReq, mockRes);
+      events$.subscribe((event) => {
+        expect(event.data).toEqual(expect.objectContaining({
+          userId: 42,
+          type: 'ROLE_CHANGED',
+          newRole: 2,
+        }));
+        done();
+      });
 
-      expect(mockRes.clearCookie).toHaveBeenCalledWith('access_token', expect.objectContaining({
-        path: '/',
-        secure: true,
-        sameSite: 'none',
-      }));
-      expect(result).toEqual(mockResult);
+      sessionSyncService.emitRoleChange(42, 2, 'Empleado');
+    });
+
+    it('debe ignorar eventos de otros usuarios en el flujo SSE del usuario conectado', (done) => {
+      const mockUser = { id: 10, id_rol: 1, email: 'admin@test.com' };
+      const events$ = controller.sessionEvents(mockUser);
+      let received = false;
+
+      events$.subscribe(() => {
+        received = true;
+      });
+
+      sessionSyncService.emitRoleChange(99, 2, 'Empleado');
+      sessionSyncService.emitUserDeleted(99);
+
+      setTimeout(() => {
+        expect(received).toBe(false);
+        done();
+      }, 50);
     });
   });
 

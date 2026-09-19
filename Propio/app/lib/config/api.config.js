@@ -7,7 +7,8 @@ export const API_ENDPOINTS = {
     verifyEmail: "/api/auth/verify-email",
     resendVerification: "/api/auth/resend-verification",
     requestPasswordReset: "/api/auth/request-password-reset",
-    resetPassword: "/api/auth/reset-password"
+    resetPassword: "/api/auth/reset-password",
+    sessionEvents: "/api/auth/session-events"
   },
   admin: {
     users: "/api/admin/users",

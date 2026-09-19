@@ -3,6 +3,7 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
@@ -12,6 +13,7 @@ import { mapAdminUserResponse, RawUserWithRelations } from '../common/utils/user
 import { CreateUserAdminDto } from './dto/create-user-admin.dto';
 import { UpdateUserAdminDto } from './dto/update-user-admin.dto';
 import { AuthUser } from '../auth/interfaces/auth-user.interface';
+import { SessionSyncService } from '../auth/session-sync.service';
 
 const USER_SELECT_PROJECTION = {
   id: true,
@@ -40,7 +42,10 @@ const USER_SELECT_PROJECTION = {
 
 @Injectable()
 export class UsersAdminService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Optional() private readonly sessionSyncService?: SessionSyncService,
+  ) {}
 
   private parseUserId(id: string): number {
     const userId = Number(id);
@@ -265,6 +270,10 @@ export class UsersAdminService {
         where: { id: userId },
         data,
       });
+
+      if (dto.id_rol !== undefined) {
+        this.sessionSyncService?.emitRoleChange(userId, dto.id_rol);
+      }
     } catch (error) {
       handlePrismaPersistenceError(
         error,
@@ -300,6 +309,8 @@ export class UsersAdminService {
       await this.prisma.usuarios.delete({
         where: { id: userId },
       });
+
+      this.sessionSyncService?.emitUserDeleted(userId);
     } catch (error) {
       handlePrismaPersistenceError(
         error,
