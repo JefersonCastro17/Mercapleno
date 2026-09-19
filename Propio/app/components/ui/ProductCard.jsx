@@ -112,23 +112,36 @@ function ProductCard({ product }) {
           {product.descripcion || "Producto listo para agregar al carrito."}
         </p>
 
-        {inCartCount > 0 && (
-          <div style={{ marginTop: "8px" }}>
+        <div className="product-card__stock-status" style={{ marginTop: "6px", display: "flex", flexWrap: "wrap", gap: "6px", alignItems: "center" }}>
+          <span style={{
+            fontSize: "12.5px",
+            fontWeight: "700",
+            color: isOutOfStock ? "#dc2626" : stock <= 5 ? "#d97706" : "#059669",
+            background: isOutOfStock ? "#fee2e2" : stock <= 5 ? "#fef3c7" : "#ecfdf5",
+            padding: "2px 8px",
+            borderRadius: "6px",
+            border: `1px solid ${isOutOfStock ? "#fca5a5" : stock <= 5 ? "#fde68a" : "#a7f3d0"}`
+          }}>
+            {isOutOfStock ? "❌ Agotado" : `📦 Stock: ${stock} un.`}
+          </span>
+
+          {inCartCount > 0 && (
             <span style={{
               display: "inline-flex",
               alignItems: "center",
               gap: "4px",
               background: "#e0f2fe",
               color: "#0369a1",
-              padding: "3px 10px",
-              borderRadius: "12px",
+              padding: "2px 8px",
+              borderRadius: "6px",
               fontSize: "12px",
-              fontWeight: "bold"
+              fontWeight: "700",
+              border: "1px solid #bae6fd"
             }}>
-              🛒 En tu carrito: {inCartCount} un.
+              🛒 En carrito: {inCartCount}
             </span>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <div className="product-card__footer">

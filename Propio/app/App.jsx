@@ -4,6 +4,7 @@ import { Routes, Route, useLocation, Navigate, useNavigate } from 'react-router-
 import { CartProvider } from './contexts/CartContext'; 
 import { useAuthContext } from './contexts/AuthContext'; 
 import Header from './components/ui/Header'; 
+import CartToastNotification from './components/ui/CartToastNotification'; 
 import InventoryPage from './routes/InventoryPage'; 
 import CartPage from './routes/CartPage'; 			
 import TicketPage from './routes/TicketPage'; 	
@@ -69,6 +70,7 @@ function App() {
 
 	return (
 		<CartProvider>
+            <CartToastNotification />
             {showHeader && <Header />}
             {showDashboardBack && (
                 <div style={{ padding: '10px 20px', background: '#f8f9fa', borderBottom: '1px solid #ddd', display: 'flex', alignItems: 'center' }}>
