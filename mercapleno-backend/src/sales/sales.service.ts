@@ -101,11 +101,16 @@ export class SalesService {
 
       return {
         id: String(row.id),
+        id_productos: Number(row.id),
         nombre: row.nombre,
+        name: row.nombre,
         descripcion: row.descripcion || '',
         price: Number(row.precio),
-        category: (row.category || 'otros').toLowerCase(),
+        precio: Number(row.precio),
+        category: row.category || 'General',
+        categoria: row.category || 'General',
         image: row.image,
+        imagen: row.image,
         stock,
         ...getLowStockMetadata(stock),
       };
@@ -120,15 +125,15 @@ export class SalesService {
       FROM categoria c
       JOIN productos p ON c.id_categoria = p.id_categoria
       JOIN stock_actual sa ON p.id_productos = sa.id_productos
-      WHERE sa.stock > 0
+      WHERE p.estado = 'Disponible' AND sa.stock > 0
       GROUP BY c.nombre
-      ORDER BY c.nombre
+      ORDER BY c.nombre ASC
     `;
 
     const [rows] = await this.db.query<any>(sql);
     return rows.map((row: any) => ({
       value: String(row.category).toLowerCase(),
-      label: String(row.category).charAt(0).toUpperCase() + String(row.category).slice(1),
+      label: String(row.category),
       count: Number(row.product_count),
     }));
   }

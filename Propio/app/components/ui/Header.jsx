@@ -70,7 +70,7 @@ function Header() {
               fontWeight: 'bold'
             }}
           >
-            🛒 Carrito ({totalItems})
+            Carrito ({totalItems})
           </button>
         </div>
       </nav>

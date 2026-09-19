@@ -54,30 +54,21 @@ function ProductCard({ product }) {
   const renderStockBadge = () => {
     if (isOutOfStock) {
       return (
-        <span
-          className="product-card__stock-badge"
-          style={{ background: "#ef4444", color: "#ffffff", padding: "4px 8px", borderRadius: "6px", fontSize: "12px", fontWeight: "bold" }}
-        >
-          🚫 Agotado
+        <span className="product-card__stock-badge product-card__stock-badge--out">
+          Agotado
         </span>
       );
     }
     if (stock <= 5) {
       return (
-        <span
-          className="product-card__stock-badge"
-          style={{ background: "#f59e0b", color: "#ffffff", padding: "4px 8px", borderRadius: "6px", fontSize: "12px", fontWeight: "bold" }}
-        >
-          ⚠️ ¡Solo {stock} disponibles!
+        <span className="product-card__stock-badge product-card__stock-badge--warning">
+          Últimas {stock} un.
         </span>
       );
     }
     return (
-      <span
-        className="product-card__stock-badge"
-        style={{ background: "#10b981", color: "#ffffff", padding: "4px 8px", borderRadius: "6px", fontSize: "12px", fontWeight: "bold" }}
-      >
-        📦 Stock: {stock} un.
+      <span className="product-card__stock-badge">
+        Stock: {stock} un.
       </span>
     );
   };
@@ -112,36 +103,11 @@ function ProductCard({ product }) {
           {product.descripcion || "Producto listo para agregar al carrito."}
         </p>
 
-        <div className="product-card__stock-status" style={{ marginTop: "6px", display: "flex", flexWrap: "wrap", gap: "6px", alignItems: "center" }}>
-          <span style={{
-            fontSize: "12.5px",
-            fontWeight: "700",
-            color: isOutOfStock ? "#dc2626" : stock <= 5 ? "#d97706" : "#059669",
-            background: isOutOfStock ? "#fee2e2" : stock <= 5 ? "#fef3c7" : "#ecfdf5",
-            padding: "2px 8px",
-            borderRadius: "6px",
-            border: `1px solid ${isOutOfStock ? "#fca5a5" : stock <= 5 ? "#fde68a" : "#a7f3d0"}`
-          }}>
-            {isOutOfStock ? "❌ Agotado" : `📦 Stock: ${stock} un.`}
-          </span>
-
-          {inCartCount > 0 && (
-            <span style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "4px",
-              background: "#e0f2fe",
-              color: "#0369a1",
-              padding: "2px 8px",
-              borderRadius: "6px",
-              fontSize: "12px",
-              fontWeight: "700",
-              border: "1px solid #bae6fd"
-            }}>
-              🛒 En carrito: {inCartCount}
-            </span>
-          )}
-        </div>
+        {inCartCount > 0 && (
+          <p style={{ margin: "6px 0 0", fontSize: "12px", color: "#0B4A8B", fontWeight: "600" }}>
+            En carrito: {inCartCount} un.
+          </p>
+        )}
       </div>
 
       <div className="product-card__footer">
@@ -173,9 +139,9 @@ function ProductCard({ product }) {
               : isMaxReached
               ? "Máximo alcanzado"
               : justAdded
-              ? "✓ ¡Agregado!"
+              ? "Agregado"
               : inCartCount > 0
-              ? "+ Agregar otro"
+              ? "Agregar otro"
               : "Agregar al carrito"}
           </button>
         </div>

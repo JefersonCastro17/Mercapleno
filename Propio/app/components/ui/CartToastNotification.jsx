@@ -52,8 +52,7 @@ export default function CartToastNotification() {
       }}
     >
       <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span style={{ fontSize: '18px' }}>🛒</span>
-        <span>¡Agregaste <strong>"{toastItem.name}"</strong>!</span>
+        <span>Agregaste <strong>"{toastItem.name}"</strong> al carrito</span>
       </span>
 
       <button
@@ -109,3 +108,4 @@ export default function CartToastNotification() {
     </aside>
   );
 }
+
