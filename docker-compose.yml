@@ -19,7 +19,7 @@ services:
 
   backend:
     build:
-      context: ../mercapleno-backend
+      context: ./mercapleno-backend
       dockerfile: Dockerfile
     container_name: mercapleno-backend
     environment:
@@ -55,7 +55,7 @@ services:
 
   frontend:
     build:
-      context: ../Propio
+      context: ./Propio
       dockerfile: Dockerfile
     container_name: mercapleno-frontend
     environment:

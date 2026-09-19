@@ -27,7 +27,10 @@ export class ReportsService {
     sql += " GROUP BY TO_CHAR(fecha, 'YYYY-MM') ORDER BY TO_CHAR(fecha, 'YYYY-MM')";
 
     const [rows] = await this.db.query(sql, params);
-    return rows;
+    return (rows || []).map((row: any) => ({
+      mes: row.mes,
+      total: Number(row.total || 0),
+    }));
   }
 
   async getTopProductos() {
@@ -39,13 +42,18 @@ export class ReportsService {
       FROM venta_productos vp
       JOIN productos p ON p.id_productos = vp.id_productos
       LEFT JOIN categoria c ON c.id_categoria = p.id_categoria
-      GROUP BY p.nombre, c.nombre
+      GROUP BY p.id_productos, p.nombre, c.nombre
       ORDER BY total_vendido DESC
       LIMIT 10
     `;
 
     const [rows] = await this.db.query(sql);
-    return rows;
+    return (rows || []).map((row: any) => ({
+      nombre: row.nombre,
+      categoria: row.categoria,
+      total_vendido: Number(row.total_vendido || 0),
+      total_facturado: Number(row.total_facturado || 0),
+    }));
   }
 
   async getResumen() {
@@ -56,7 +64,11 @@ export class ReportsService {
       FROM venta
     `);
 
-    return row || { total_ventas: 0, dinero_total: 0, promedio: 0 };
+    return {
+      total_ventas: Number(row?.total_ventas || 0),
+      dinero_total: Number(row?.dinero_total || 0),
+      promedio: Number(row?.promedio || 0),
+    };
   }
 
   async getResumenMes() {
@@ -69,7 +81,11 @@ export class ReportsService {
       ORDER BY TO_CHAR(fecha, 'YYYY-MM') DESC
     `);
 
-    return rows;
+    return (rows || []).map((row: any) => ({
+      mes: row.mes,
+      cantidad_ventas: Number(row.cantidad_ventas || 0),
+      total_mes: Number(row.total_mes || 0),
+    }));
   }
 
   async getFinancialSummary(inicio?: string, fin?: string) {
@@ -77,11 +93,11 @@ export class ReportsService {
     const params: any[] = [];
 
     if (inicio) {
-      dateFilter += ` AND v.fecha >= $${params.length + 1}::date`;
+      dateFilter += ` AND v.fecha::date >= $${params.length + 1}::date`;
       params.push(inicio);
     }
     if (fin) {
-      dateFilter += ` AND v.fecha <= $${params.length + 1}::date`;
+      dateFilter += ` AND v.fecha::date <= $${params.length + 1}::date`;
       params.push(fin);
     }
 
@@ -173,7 +189,11 @@ export class ReportsService {
     `;
 
     const [rows] = await this.db.query<any>(sql);
-    return rows;
+    return (rows || []).map((row: any) => ({
+      categoria: row.categoria,
+      unidades_vendidas: Number(row.unidades_vendidas || 0),
+      total_ingresos: Number(row.total_ingresos || 0),
+    }));
   }
 
   async getVentasPorMetodo() {
@@ -189,7 +209,11 @@ export class ReportsService {
     `;
 
     const [rows] = await this.db.query<any>(sql);
-    return rows;
+    return (rows || []).map((row: any) => ({
+      metodo: row.metodo,
+      transacciones: Number(row.transacciones || 0),
+      total_recaudado: Number(row.total_recaudado || 0),
+    }));
   }
 
   async getProductosRentabilidad() {
@@ -221,7 +245,15 @@ export class ReportsService {
     `;
 
     const [rows] = await this.db.query<any>(sql);
-    return rows;
+    return (rows || []).map((row: any) => ({
+      id_productos: Number(row.id_productos),
+      nombre: row.nombre,
+      categoria: row.categoria,
+      unidades_vendidas: Number(row.unidades_vendidas || 0),
+      total_facturado: Number(row.total_facturado || 0),
+      ganancia_total: Number(row.ganancia_total || 0),
+      margen_pct: Number(row.margen_pct || 0),
+    }));
   }
 
   async buildResumenPdf(): Promise<Buffer> {
